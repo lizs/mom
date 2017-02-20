@@ -15,7 +15,7 @@ typedef struct
 #pragma pack()
 
 TcpClient::TcpClient(const char * ip, int port, bool auto_reconnect_enabled) :
-	m_ip(ip), m_port(port),
+	m_ip(ip), m_port(port), m_session(nullptr),
 	m_autoReconnect(auto_reconnect_enabled)
 {
 }
@@ -30,6 +30,12 @@ int TcpClient::connect(std::function<void(int)> cb)
 	uv_loop_t* loop;
 	int r;
 
+	// ensure do not cover previous non-empty cb
+	if(cb != nullptr)
+		m_connectedCallback = cb;
+
+	ASSERT(m_session == nullptr);
+	m_session = new Session();
 	loop = uv_default_loop();
 	
 	r = uv_ip4_addr(m_ip.c_str(), m_port, &addr);
@@ -38,7 +44,7 @@ int TcpClient::connect(std::function<void(int)> cb)
 		return 1;
 	}
 
-	r = uv_tcp_init(loop, &m_client);
+	r = uv_tcp_init(loop, &m_session->get_stream());
 	if (r) {
 		LOG_UV_ERR(r);
 		return 1;
@@ -50,7 +56,7 @@ int TcpClient::connect(std::function<void(int)> cb)
 	cr->established_flag = &m_established;
 
 	r = uv_tcp_connect(&cr->req,
-		&m_client,
+		&m_session->get_stream(),
 		(const struct sockaddr*) &addr,
 		[](uv_connect_t * ct, int status) {
 		connect_req_t * cr = (connect_req_t*)ct;
@@ -59,7 +65,7 @@ int TcpClient::connect(std::function<void(int)> cb)
 			if (cr->cb)
 				cr->cb(status);
 
-			cr->client->reconnect(cr->cb);
+			cr->client->reconnect();
 
 			delete cr;
 			return;
@@ -88,44 +94,53 @@ int TcpClient::connect(std::function<void(int)> cb)
 	return 0;
 }
 
-void TcpClient::reconnect(std::function<void(int)> cb)
+void TcpClient::double_reonn_delay()
 {
-	uint64_t delay = m_retryInterval * 2;
-	if (delay > MAX_RETRY_INTERVAL)
-		delay = MAX_RETRY_INTERVAL;
+	m_reconnDelay *= 2;
+	if (m_reconnDelay > MAX_RECONN_DELAY)
+		m_reconnDelay = MAX_RECONN_DELAY;
+}
 
-	m_scheduler.invoke(delay, [this, cb]()
+void TcpClient::reconnect()
+{
+	double_reonn_delay();
+
+	if (m_session)
 	{
-		connect(cb);
+		delete m_session;
+		m_session = nullptr;
+	}
+
+	m_scheduler.invoke(m_reconnDelay, [this]()
+	{
+		connect();
 	});
+}
+
+void TcpClient::reconnect(uint64_t delay)
+{
+	set_reconn_delay(delay);
+	reconnect();
+}
+
+void TcpClient::set_reconn_delay(uint64_t delay)
+{
+	m_reconnDelay = delay;
 }
 
 int TcpClient::close()
 {
 	if (!m_established) return 0;
+	if (m_session == nullptr) return 0;
 
 	m_established = false;
-	m_shutdownReq.data = this;
+	int r = m_session->close();
+	m_session = nullptr;
 
-	int r = uv_shutdown(&m_shutdownReq,
-		(uv_stream_t*)&m_client,
-		[](uv_shutdown_t * req, int status) {
-
-		TcpClient * client = (TcpClient*)req->data;
-
-		ASSERT(req->handle == (uv_stream_t*)&client->get_stream());
-		ASSERT(req->handle->write_queue_size == 0);
-
-		req->handle->data = client;
-
-		uv_close((uv_handle_t*)req->handle, [](uv_handle_t * handle) {
-			TcpClient * client = (TcpClient*)handle->data;
-			ASSERT(handle == (uv_handle_t*)&client->get_stream());
-
-			if (client->auto_reconnect_enabled())
-				client->reconnect(nullptr);
-		});
-	});
+	if(m_autoReconnect){
+		set_reconn_delay(DEFAULT_RECONN_DELAY);
+		reconnect();
+	}
 
 	if (r) {
 		LOG_UV_ERR(r);
@@ -135,58 +150,13 @@ int TcpClient::close()
 	return r;
 }
 
-uv_tcp_t& TcpClient::get_stream()
+int TcpClient::write(const char * data, u_short size, std::function<void(int)> cb) const
 {
-	return m_client;
-}
-
-void write_cb(uv_write_t* req, int status) {
-	write_req_t* wr;
-
-	/* Free the read/write buffer and the request */
-	wr = (write_req_t*)req;
-	if (wr->cb != nullptr) {
-		wr->cb(status);
-	}
-
-	free(wr->buf.base);
-	free(wr);
-
-	LOG_UV_ERR(status);
-}
-
-bool TcpClient::auto_reconnect_enabled() const
-{
-	return m_autoReconnect;
-}
-
-int TcpClient::write(const char * data, u_short size, std::function<void(int)> cb)
-{
-	write_req_t* wr;
-	if (!m_established) {
+	if(m_session == nullptr || !m_established)
+	{
 		LOG("Tcp write error, session not established\n");
 		return 1;
 	}
 
-	wr = new write_req_t();
-	ZeroMemory(wr, sizeof(write_req_t));
-	wr->cb = cb;
-
-	char * mixed = (char*)malloc(size + sizeof(u_short));
-	memcpy(mixed, (char*)(&size), sizeof(u_short));
-	memcpy(mixed + sizeof(u_short), data, size);
-	wr->buf = uv_buf_init(mixed, size + sizeof(u_short));
-	
-	int r = uv_write(&wr->req,
-		(uv_stream_t*)&m_client,
-		&wr->buf, 1,
-		write_cb);
-
-	if (r) {
-		delete wr;
-		LOG_UV_ERR(r);
-		return 1;
-	}
-
-	return 0;
+	return m_session->write(data, size, cb);
 }

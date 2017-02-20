@@ -38,6 +38,7 @@ typedef enum {
     fprintf(stdout,                                       \
             format,										\
 			##__VA_ARGS__);                                       \
+	printf("\n");                                      \
  } while (0)
 
 /* Die with fatal error. */

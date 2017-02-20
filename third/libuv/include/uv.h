@@ -154,7 +154,7 @@ extern "C" {
   XX(PROCESS, process)                                                        \
   XX(STREAM, stream)                                                          \
   XX(TCP, tcp)                                                                \
-  XX(TIMER, StopWatch)                                                            \
+  XX(TIMER, timer)                                                            \
   XX(TTY, tty)                                                                \
   XX(UDP, udp)                                                                \
   XX(SIGNAL, signal)                                                          \

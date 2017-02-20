@@ -160,15 +160,19 @@ xcopy /Y/F/I/S "$(OutputPath)$(TargetName).pdb" "$(SolutionDir)../publish"</Comm
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="scheduler.cpp" />
+    <ClCompile Include="session.cpp" />
+    <ClCompile Include="session_mgr.cpp" />
     <ClCompile Include="tcp_client.cpp" />
     <ClCompile Include="tcp_server.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="circular_buf.h" />
-    <ClInclude Include="define.h" />
     <ClInclude Include="session.h" />
+    <ClInclude Include="session_mgr.h" />
     <ClInclude Include="tcp_client.h" />
     <ClInclude Include="tcp_server.h" />
+    <ClInclude Include="scheduler.h" />
     <ClInclude Include="uv_plus.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

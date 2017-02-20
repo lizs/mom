@@ -1,58 +1,57 @@
 #pragma once
-#include <ctime>
 #include "uv_plus.h"
 #include "circular_buf.h"
+#include <functional>
 
+#define DEFAULT_CIRCULAR_BUF_SIZE 1024
+
+#pragma pack(1)
+typedef struct {
+	uv_write_t req;
+	uv_buf_t buf;
+	std::function<void(int)> cb;
+} write_req_t;
+#pragma pack()
+
+class SessionMgr;
+// represents a session between server and client
 class Session {
-private:
+	friend class TcpServer;
+	friend class TcpClient;
+
+	SessionMgr * m_host;
 	circular_buf_t m_cbuf;
 	uv_tcp_t m_stream;
 	uv_shutdown_t m_sreq;
-	const u_short DefaultCircularBufSize = 1024;
+	uint32_t m_id;
 
-	int m_read;
-	clock_t m_startTime;
+	// record packages readed since last reset
+	// shared between sessions
+	static uint64_t g_read;
+	static uint32_t g_id;
 
+	// dispatch packages
+	bool Session::dispatch(ssize_t nread);
 public:
-	Session(int capacity) : m_startTime(0) {
-		init_circular_buffer(capacity, &m_cbuf);
-	}
+	explicit Session(uint16_t capacity = DEFAULT_CIRCULAR_BUF_SIZE);
+	virtual ~Session();
+	virtual void on_message(package_t* package);	
 
-	Session() : Session(DefaultCircularBufSize) {}
+	void set_host(SessionMgr * mgr) { m_host = mgr; }
 
-	~Session() {
-		free(m_cbuf.body);
-	}
-
-	virtual void on_message(package_t * package) {
-		//printf("%s\n", package->body);
-		free_package(package);
-
-		if (m_read == 0)
-			m_startTime = clock();
-
-		++m_read;
-		if (clock() - m_startTime > 1000){
-			printf("%d /s", m_read);
-			m_read = 0;
-		}
-	}
+	// id
+	// normally identified by underline fd
+	int get_id() const { return m_id; }
 
 	uv_tcp_t & get_stream() { return m_stream; }
 	circular_buf_t & get_cbuf() { return m_cbuf; }
+	int close();
 
-	int shutdown() {
-		int r;
-		m_sreq.data = this;
-		r = uv_shutdown(&m_sreq, (uv_stream_t*)&m_stream, [](uv_shutdown_t* req, int status) {
-			req->handle->data = req->data;
-			uv_close((uv_handle_t*)req->handle, [](uv_handle_t* stream) {
-				Session * session = (Session *)stream->data;
-				delete session;
-			});
-		});
+	// performance monitor
+	static const uint64_t & get_read() { return g_read; }
+	static void set_read(uint64_t cnt) { g_read = cnt; }
 
-		ASSERT(0 == r);
-		return r;
-	}
+	// write data through underline stream
+	int write(const char* data, u_short size, std::function<void(int)> cb);
+	int request(const char* data, u_short size, std::function<void(int)> cb);
 };

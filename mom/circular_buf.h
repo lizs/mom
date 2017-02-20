@@ -1,6 +1,7 @@
 #pragma once
 #include "uv_plus.h"
 
+#pragma pack(1)
 typedef struct
 {
 	u_short pack_desired_size;
@@ -17,6 +18,7 @@ typedef struct
 	u_short len;
 	char* body;
 } package_t;
+#pragma pack()
 
 static void init_package(char* data, u_short len, package_t* package)
 {
@@ -61,8 +63,12 @@ static void arrange_cbuf(circular_buf_t* cbuf)
 {
 	if (cbuf->tail * 1.2 > cbuf->cap)
 	{
-		ASSERT(cbuf->tail - cbuf->head < 2);
-		memcpy(cbuf->body, get_cbuf_head(cbuf), get_cbuf_len(cbuf));
+		//ASSERT(cbuf->tail - cbuf->head < 2);
+		u_short len = get_cbuf_len(cbuf);
+		memcpy(cbuf->body, get_cbuf_head(cbuf), len);
+
+		cbuf->head = 0;
+		cbuf->tail = len;
 	}
 }
 

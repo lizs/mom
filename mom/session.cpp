@@ -17,8 +17,8 @@ Session::~Session()
 void Session::on_message(package_t* package)
 {
 	//printf("%s\n", package->body);
-	free_package(package);
-	++g_read;
+	//char * response = "Awsome man!!!";
+	//write(response, strlen(response), [](int) {});
 }
 
 int Session::close()
@@ -117,6 +117,8 @@ bool Session::dispatch(ssize_t nread)
 			// package construct
 			package_t* package = make_package(get_cbuf_head(&cbuf), cbuf.pack_desired_size);
 			on_message(package);
+			free_package(package);
+			++g_read;
 
 			cbuf.head += cbuf.pack_desired_size;
 			cbuf.pack_desired_size = 0;

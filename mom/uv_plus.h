@@ -10,10 +10,35 @@ typedef enum {
 	PIPE
 } stream_type;
 
+#define LOG_UV_ERR(code)         \
+ do {                                                     \
+	if (code) {                                          \
+		fprintf(stderr,                                       \
+            "%s : %s\n",    \
+			uv_err_name(code),				\
+			uv_strerror(code));                                       \
+	 }                                                       \
+ } while (0)
 
-#define TEST_IMPL(name)                                                  \
-  int run_mom_##name(void);                                             \
-  int run_mom_##name(void)
+#define LOG_UV_ERR_DETAIL(code)         \
+ do {                                                     \
+	if (code) {                                          \
+		fprintf(stderr,                                       \
+            "%s : %s [%s : %s : %d]\n",    \
+			uv_err_name(code),				\
+			uv_strerror(code),					\
+            __FILE__,                                     \
+			__FUNCTION__	,							\
+            __LINE__);                                       \
+	}                                                       \
+ } while (0)
+
+#define LOG(format, ...)         \
+ do {                                                     \
+    fprintf(stdout,                                       \
+            format,										\
+			##__VA_ARGS__);                                       \
+ } while (0)
 
 /* Die with fatal error. */
 #define FATAL(msg)                                        \

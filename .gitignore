@@ -11,3 +11,15 @@
 *.lai
 *.la
 *.a
+*.obj
+
+.suo
+*.VC.VC.opendb
+*.VC.db
+*.sln.DotSettings.user
+*.vcxproj.user
+
+Debug/
+Release/
+x64/
+Obj/

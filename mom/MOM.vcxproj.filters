@@ -18,19 +18,22 @@
     <ClInclude Include="uv_plus.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="define.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="circular_buf.h">
       <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="session.h">
-      <Filter>源文件</Filter>
     </ClInclude>
     <ClInclude Include="tcp_client.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="tcp_server.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="session.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="scheduler.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="session_mgr.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -42,6 +45,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="tcp_server.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="session.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="scheduler.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="session_mgr.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

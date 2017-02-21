@@ -167,7 +167,9 @@ xcopy /Y/F/I/S "$(OutputPath)$(TargetName).pdb" "$(SolutionDir)../publish"</Comm
     <ClCompile Include="tcp_server.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="package.h" />
     <ClInclude Include="circular_buf.h" />
+    <ClInclude Include="mem_pool.h" />
     <ClInclude Include="session.h" />
     <ClInclude Include="session_mgr.h" />
     <ClInclude Include="tcp_client.h" />

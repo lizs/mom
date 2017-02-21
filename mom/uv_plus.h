@@ -2,7 +2,11 @@
 
 #include "uv.h"
 
-#define TEST_PORT 5001
+#pragma region("≈‰÷√")
+#define MONITOR_ENABLED true
+#pragma endregion
+
+using ushort = unsigned short;
 
 typedef enum {
 	TCP = 0,

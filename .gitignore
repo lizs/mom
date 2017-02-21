@@ -18,6 +18,8 @@
 *.VC.db
 *.sln.DotSettings.user
 *.vcxproj.user
+*.vsp
+*.psess
 
 Debug/
 Release/

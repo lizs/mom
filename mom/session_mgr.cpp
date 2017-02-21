@@ -22,6 +22,7 @@ bool SessionMgr::add_session(Session* session)
 	if (it != m_sessions.end())
 		return false;
 
+	LOG("session %d established!", session->get_id());
 	session->set_host(this);
 	m_sessions.insert(m_sessions.end(), std::make_pair(session->get_id(), session));
 	return true;

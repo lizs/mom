@@ -3,6 +3,7 @@
 #include "tcp_client.h"
 
 char data[] = "Hello, world!";
+const char * default_ip = "192.168.1.17";
 TcpClient * client;
 
 void write();
@@ -28,9 +29,9 @@ int main(int argc, char** argv)
 			server.start("0.0.0.0", 5001);
 		}
 		else if (strcmp(argv[1], "c") == 0) {
-			client = new TcpClient("127.0.0.1", 5001);
+			client = new TcpClient(argc > 2 ? argv[2] : default_ip, 5001);
 			client->connect([](int status) {
-				if(!status)
+				if (!status)
 					write();
 			});
 

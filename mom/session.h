@@ -1,7 +1,7 @@
 #pragma once
+#include <functional>
 #include "uv_plus.h"
 #include "circular_buf.h"
-#include <functional>
 
 #define DEFAULT_CIRCULAR_BUF_SIZE 1024
 
@@ -10,6 +10,7 @@ typedef struct {
 	uv_write_t req;
 	uv_buf_t buf;
 	std::function<void(int)> cb;
+	CircularBuf<64>* pcb;
 } write_req_t;
 #pragma pack()
 
@@ -20,38 +21,50 @@ class Session {
 	friend class TcpClient;
 
 	SessionMgr * m_host;
-	circular_buf_t m_cbuf;
+	CircularBuf<> m_cbuf;
 	uv_tcp_t m_stream;
 	uv_shutdown_t m_sreq;
+
+	// session id
+	// unique in current process
 	uint32_t m_id;
 
+#if MONITOR_ENABLED
 	// record packages readed since last reset
 	// shared between sessions
-	static uint64_t g_read;
+	static uint64_t g_readed;
+	// record packages wroted since last reset
+	// shared between sessions
+	static uint64_t g_wroted;
+#endif
+
+	// session id seed
 	static uint32_t g_id;
+
+	// tmp len
+	ushort pack_desired_size = 0;
 
 	// dispatch packages
 	bool Session::dispatch(ssize_t nread);
+
 public:
-	explicit Session(uint16_t capacity = DEFAULT_CIRCULAR_BUF_SIZE);
+	explicit Session();
 	virtual ~Session();
-	virtual void on_message(package_t* package);	
 
-	void set_host(SessionMgr * mgr) { m_host = mgr; }
-
-	// id
-	// normally identified by underline fd
-	int get_id() const { return m_id; }
-
-	uv_tcp_t & get_stream() { return m_stream; }
-	circular_buf_t & get_cbuf() { return m_cbuf; }
+	void set_host(SessionMgr* mgr);
+	int get_id() const;
+	uv_tcp_t& get_stream();
+	CircularBuf<>& get_cbuf();
 	int close();
-
-	// performance monitor
-	static const uint64_t & get_read() { return g_read; }
-	static void set_read(uint64_t cnt) { g_read = cnt; }
 
 	// write data through underline stream
 	int write(const char* data, u_short size, std::function<void(int)> cb);
-	int request(const char* data, u_short size, std::function<void(int)> cb);
+
+#if MONITOR_ENABLED
+	// performance monitor
+	static const uint64_t & get_readed() { return g_readed; }
+	static void set_readed(uint64_t cnt) { g_readed = cnt; }
+	static const uint64_t & get_wroted() { return g_wroted; }
+	static void set_wroted(uint64_t cnt) { g_wroted = cnt; }
+#endif
 };

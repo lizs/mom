@@ -1,29 +1,54 @@
 #include "session.h"
 #include "session_mgr.h"
+#include "mem_pool.h"
 
-uint64_t Session::g_read = 0;
+static MemoryPool<write_req_t> g_wrPool;
+static MemoryPool<CircularBuf<64>> g_messagePool;
+uint64_t Session::g_readed = 0;
 uint32_t Session::g_id = 0;
 
-Session::Session(uint16_t capacity) : m_host(nullptr), m_id(++g_id)
+Session::Session() : m_host(nullptr), m_id(++g_id)
 {
-	init_circular_buffer(capacity, &m_cbuf);
 }
 
 Session::~Session()
 {
-	free(m_cbuf.body);
 }
 
-void Session::on_message(package_t* package)
+//void Session::on_message(package_t* package)
+//{
+//	//printf("%s\n", package->body);
+//	//char * response = "Awsome man!!!";
+//	//write(response, strlen(response), [](int) {});
+//}
+
+void Session::set_host(SessionMgr* mgr)
 {
-	//printf("%s\n", package->body);
-	//char * response = "Awsome man!!!";
-	//write(response, strlen(response), [](int) {});
+	m_host = mgr;
+}
+
+int Session::get_id() const
+{
+	return m_id;
+}
+
+uv_tcp_t& Session::get_stream()
+{
+	return m_stream;
+}
+
+CircularBuf<>& Session::get_cbuf()
+{
+	return m_cbuf;
 }
 
 int Session::close()
 {
-	m_host->remove(this);
+	if(m_host)
+	{
+		m_host->remove(this);
+		m_host = nullptr;
+	}
 
 	int r;
 	m_sreq.data = this;
@@ -33,50 +58,58 @@ int Session::close()
 		                uv_close((uv_handle_t*)req->handle, [](uv_handle_t* stream)
 		                         {
 			                         Session* session = (Session *)stream->data;
+									 LOG("Session %d closed!", session->get_id());
 			                         delete session;
 		                         });
 	                });
 
-	ASSERT(0 == r);
+	if(r)
+	{
+		LOG_UV_ERR(r);
+		return 1;
+	}
+
 	return r;
 }
-
 
 int Session::write(const char* data, uint16_t size, std::function<void(int)> cb)
 {
 	write_req_t* wr;
 
-	wr = new write_req_t();
-	ZeroMemory(wr, sizeof(write_req_t));
+	wr = g_wrPool.newElement();
 	wr->cb = cb;
 
-	char * mixed = (char*)malloc(size + sizeof(uint16_t));
-	memcpy(mixed, (char*)(&size), sizeof(uint16_t));
-	memcpy(mixed + sizeof(uint16_t), data, size);
-	wr->buf = uv_buf_init(mixed, size + sizeof(uint16_t));
+	auto * pcb = g_messagePool.newElement();
+	pcb->reset();
+	pcb->write(size);
+	pcb->write_binary(const_cast<char*>(data), size);
+
+	wr->pcb = pcb;
+	wr->buf = uv_buf_init(pcb->get_head(), pcb->get_readable_len());
 
 	int r = uv_write(&wr->req,
-	                 (uv_stream_t*)&m_stream,
+	                 reinterpret_cast<uv_stream_t*>(&m_stream),
 	                 &wr->buf, 1,
 	                 [](uv_write_t* req, int status)
 	                 {
 		                 write_req_t* wr;
 
 		                 /* Free the read/write buffer and the request */
-		                 wr = (write_req_t*)req;
+		                 wr = reinterpret_cast<write_req_t*>(req);
 		                 if (wr->cb != nullptr)
 		                 {
 			                 wr->cb(status);
 		                 }
 
-		                 free(wr->buf.base);
-		                 free(wr);
+						 g_messagePool.deleteElement(wr->pcb);
+						 g_wrPool.deleteElement(wr);
 
 		                 LOG_UV_ERR(status);
 	                 });
 
 	if (r) {
-		delete wr;
+		g_messagePool.deleteElement(wr->pcb);
+		g_wrPool.deleteElement(wr);
 		LOG_UV_ERR(r);
 		return 1;
 	}
@@ -86,49 +119,46 @@ int Session::write(const char* data, uint16_t size, std::function<void(int)> cb)
 
 bool Session::dispatch(ssize_t nread)
 {
-	circular_buf_t & cbuf = get_cbuf();
-	cbuf.tail += (uint16_t)nread;
+	auto & cbuf = get_cbuf();
+	cbuf.move_tail(static_cast<ushort>(nread));
 
 	while (true)
 	{
-		if (cbuf.pack_desired_size == 0)
+		if (pack_desired_size == 0)
 		{
 			// get package len
-			if (get_cbuf_len(&cbuf) >= 2)
+			if (cbuf.get_len() >= sizeof(ushort))
 			{
-				char * data = get_cbuf_head(&cbuf);
-				cbuf.pack_desired_size = ((uint16_t)data[1] << 8) + data[0];
+				pack_desired_size = cbuf.read<ushort>();
 
-				if (cbuf.pack_desired_size > DEFAULT_CIRCULAR_BUF_SIZE)
+				if (pack_desired_size > DEFAULT_CIRCULAR_BUF_SIZE)
 				{
-					LOG("package much too huge : %d bytes\n", cbuf.pack_desired_size);
+					LOG("package much too huge : %d bytes", pack_desired_size);
 					return false;
 				}
-
-				cbuf.head += 2;
 			}
 			else
 				break;
 		}
 
 		// get package body
-		if (cbuf.pack_desired_size > 0 && cbuf.pack_desired_size <= get_cbuf_len(&cbuf))
+		if (pack_desired_size > 0 && pack_desired_size <= cbuf.get_len())
 		{
 			// package construct
-			package_t* package = make_package(get_cbuf_head(&cbuf), cbuf.pack_desired_size);
-			on_message(package);
-			free_package(package);
-			++g_read;
+//			package_t* package = make_package(cbuf.get_head(), pack_desired_size);
+//			on_message(package);
+//			free_package(package);
+			++g_readed;
 
-			cbuf.head += cbuf.pack_desired_size;
-			cbuf.pack_desired_size = 0;
+			cbuf.move_head(pack_desired_size);
+			pack_desired_size = 0;
 		}
 		else
 			break;
 	}
 
 	// arrange cicular buffer
-	arrange_cbuf(&cbuf);
+	cbuf.arrange();
 
 	return true;
 }

@@ -36,13 +36,13 @@
     <ClInclude Include="include\tcp_server.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\packers.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="include\bull.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\monitor.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\packer.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -21,7 +21,9 @@ namespace Bull {
 		virtual ~TcpClient();
 		int startup();
 		int shutdown();
-		int write(const char* data, u_short size, std::function<void(int)> cb) const;
+#pragma region("Message patterns")
+		int request(const char* data, u_short size, std::function<void(bool, typename T::cirbular_buf_t*)> cb);
+#pragma endregion("Message patterns")
 
 	private:
 		void reconnect();
@@ -73,10 +75,7 @@ namespace Bull {
 
 	template <typename T>
 	int TcpClient<T>::startup() {
-		uv_loop_t* loop;
 		int r;
-
-		loop = uv_default_loop();
 
 		// session start
 		r = m_session->prepare();
@@ -101,6 +100,8 @@ namespace Bull {
 		});
 #endif
 
+		uv_loop_t* loop;
+		loop = uv_default_loop();
 		// main loop
 		r = uv_run(loop, UV_RUN_DEFAULT);
 		if (r) {
@@ -158,8 +159,7 @@ namespace Bull {
 	}
 
 	template <typename T>
-	int TcpClient<T>::write(const char* data, u_short size, std::function<void(int)> cb) const {
-		return m_session->write(data, size, cb);
+	int TcpClient<T>::request(const char* data, u_short size, std::function<void(bool, typename T::cirbular_buf_t*)> cb) {
+		return m_session->request(data, size, cb);
 	}
-
 }

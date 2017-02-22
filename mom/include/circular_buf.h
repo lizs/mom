@@ -4,24 +4,24 @@
 #include <exception>
 
 namespace Bull {
-	template <ushort Capacity = 1024>
+	template <uint16_t Capacity = 1024>
 	class CircularBuf {
 	public:
 		explicit CircularBuf()
 			: m_head(0),
 			  m_tail(0) { }
 
-		ushort get_len() const {
+		uint16_t get_len() const {
 			if (m_tail < m_head) throw std::exception("get_len");
 			return m_tail - m_head;
 		}
 
-		ushort get_writable_len() const {
+		uint16_t get_writable_len() const {
 			if (Capacity < m_tail) throw std::exception("get_writable_len");
 			return Capacity - m_tail;
 		}
 
-		ushort get_readable_len() const {
+		uint16_t get_readable_len() const {
 			if (m_tail < m_head) throw std::exception("get_readable_len");
 			return m_tail - m_head;
 		}
@@ -68,8 +68,7 @@ namespace Bull {
 		}
 
 		template <typename T>
-		void write(T value, short offset) {
-			move_tail(offset);
+		void write(const T& value) {
 			if (get_writable_len() < sizeof(T))
 				throw std::exception("write");
 
@@ -79,13 +78,21 @@ namespace Bull {
 			move_tail(sizeof(T));
 		}
 
-		template <typename T>
-		void write(T value) {
-			write<T>(value, 0);
+		template <typename T, typename ... Args>
+		void write(const T& value, Args ... args) {
+			write(value);
+			write(args ...);
 		}
 
-		void write_binary(char* data, ushort len, ushort offset) {
-			move_tail(offset);
+		template <typename ... Args>
+		void write(Args ... args) {
+			write(args ...);
+		}
+
+		void write() { }
+
+		void write_binary(char* data, uint16_t len/*, uint16_t offset*/) {
+			//move_tail(offset);
 			if (get_writable_len() < len)
 				throw std::exception("write");
 
@@ -93,9 +100,9 @@ namespace Bull {
 			move_tail(len);
 		}
 
-		void write_binary(char* data, ushort len) {
-			write_binary(data, len, 0);
-		}
+		//void write_binary(char* data, uint16_t len) {
+		//	write_binary(data, len, 0);
+		//}
 
 		template <typename T>
 		T read() {
@@ -108,8 +115,8 @@ namespace Bull {
 		}
 
 	private:
-		ushort m_head;
-		ushort m_tail;
+		uint16_t m_head;
+		uint16_t m_tail;
 
 		// use array to avoid heap allocation
 		char m_buf[Capacity];

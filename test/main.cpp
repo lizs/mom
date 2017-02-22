@@ -2,26 +2,26 @@
 #include "tcp_server.h"
 #include "tcp_client.h"
 #include <session.h>
-#include "packers.h"
+#include "packer.h"
 
 using namespace Bull;
 char data[1024] = "Hello, world!";
 const char * default_ip = "192.168.1.17";
-using Client = TcpClient<Session<SerialPacker<64>>>;
-using Server = TcpServer<Session<SerialPacker<64>>>;
+using Client = TcpClient<Session<Packer<64>>>;
+using Server = TcpServer<Session<Packer<64>>>;
 Client * client;
 Server * server;
 
-void write();
+void request();
 
-void write_cb(int status) {
-	if (!status) {
-		write();
+void request_cb(bool success, CircularBuf<Packer<64>::CircularBufCapacity::Value>* pcb) {
+	if (success) {
+		request();
 	}
 }
 
-void write() {
-	client->write(data, strlen(data) + 1, write_cb);
+void request() {
+	client->request(data, strlen(data) + 1, request_cb);
 }
 
 int main(int argc, char** argv) {
@@ -31,14 +31,16 @@ int main(int argc, char** argv) {
 		if (strcmp(argv[1], "s") == 0) {
 			server = new Server("0.0.0.0", 5001);
 			server->startup();
+			RUN_UV_DEFAULT_LOOP();
 			server->shutdown();
 			delete server;
 		}
 		else if (strcmp(argv[1], "c") == 0) {
 			client = new Client(argc > 2 ? argv[2] : default_ip, 5001, []() {
-				                    write();
+				                    request();
 			                    }, []() { }, true);
 			client->startup();
+			RUN_UV_DEFAULT_LOOP();
 			client->shutdown();
 			delete client;
 		}

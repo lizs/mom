@@ -77,10 +77,6 @@ namespace Bull {
 		                   });
 #endif
 
-		// main loop
-		uv_run(loop, UV_RUN_DEFAULT);
-
-		MAKE_VALGRIND_HAPPY();
 		return 0;
 	}
 

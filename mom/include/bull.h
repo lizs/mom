@@ -8,7 +8,7 @@
 #define MONITOR_ENABLED true
 #pragma endregion
 
-using ushort = unsigned short;
+using uint16_t = unsigned short;
 
 typedef enum {
 	TCP = 0,
@@ -102,3 +102,15 @@ UNUSED static void close_loop(uv_loop_t* loop) {
 	uv_walk(loop, close_walk_cb, nullptr);
 	uv_run(loop, UV_RUN_DEFAULT);
 }
+
+#define RUN_UV_DEFAULT_LOOP()		\
+do{												\
+	int r;												\
+	uv_loop_t* loop;							\
+	loop = uv_default_loop();			\
+	r = uv_run(loop, UV_RUN_DEFAULT);	\
+	if(r)												\
+		LOG_UV_ERR(r);						\
+	MAKE_VALGRIND_HAPPY();		\
+}while(0)
+

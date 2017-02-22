@@ -6,48 +6,42 @@
 #include "bull.h"
 #include "scheduler.h"
 #include "session_mgr.h"
+#include <string>
+#include <thread>
 
 namespace Bull {
 	template <typename T>
 	class TcpServer {
 	public:
-		TcpServer();
-		int start(const char* ip, int port);
+		TcpServer(const char* ip, int port);
+		int startup();
+		int shutdown();
 		SessionMgr<T>& get_session_mgr();
 
 	private:
-		static void alloc_cb(uv_handle_t* handle,
-		                     size_t suggested_size,
-		                     uv_buf_t* buf);
-
-		static void read_cb(uv_stream_t* handle,
-		                    ssize_t nread,
-		                    const uv_buf_t* buf);
-
 		static void connection_cb(uv_stream_t* server, int status);
 
 		uv_tcp_t m_server;
 		Scheduler m_scheduler;
 		SessionMgr<T> m_sessions;
+
+		std::string m_ip;
+		int m_port;
 	};
 
 	template <typename T>
-	void TcpServer<T>::alloc_cb(uv_handle_t* handle,
-	                            size_t suggested_size,
-	                            uv_buf_t* buf) {
-		auto& cbuf = static_cast<T*>(handle->data)->get_read_cbuf();
-		buf->base = cbuf.get_tail();
-		buf->len = cbuf.get_writable_len();
+	TcpServer<T>::TcpServer(const char* ip, int port) : m_ip(ip), m_port(port) {
+		m_server.data = this;
 	}
 
 	template <typename T>
-	int TcpServer<T>::start(const char* ip, int port) {
+	int TcpServer<T>::startup(){
 		struct sockaddr_in addr;
 		int r;
 		uv_loop_t* loop;
 
 		loop = uv_default_loop();
-		r = uv_ip4_addr(ip, port, &addr);
+		r = uv_ip4_addr(m_ip.c_str(), m_port, &addr);
 		if (r) {
 			LOG_UV_ERR(r);
 			return 1;
@@ -71,7 +65,7 @@ namespace Bull {
 			return 1;
 		}
 
-		LOG("Server listening on port : %d", port);
+		LOG("Server listening on port : %d", m_port);
 
 #if MONITOR_ENABLED
 		// performance monitor
@@ -90,6 +84,16 @@ namespace Bull {
 	}
 
 	template <typename T>
+	int TcpServer<T>::shutdown() {
+		m_sessions.close_all();
+		while (m_sessions.size()) {
+			std::this_thread::sleep_for(std::chrono::microseconds(10));
+		}
+
+		return 0;
+	}
+
+	template <typename T>
 	SessionMgr<T>& TcpServer<T>::get_session_mgr() {
 		return m_sessions;
 	}
@@ -97,16 +101,28 @@ namespace Bull {
 	template <typename T>
 	void TcpServer<T>::connection_cb(uv_stream_t* server, int status) {
 		uv_stream_t* stream;
+		uv_loop_t * loop;
 		int r;
 
 		LOG_UV_ERR(status);
 
 		// make session
-		auto session = new T();
+		auto session = new T(nullptr, [](T* session) {
+								 auto host = session->get_host();
+								 if(host) {
+									 host->remove(session);
+								 }
+		                     });
+
+		// init session
+		session->prepare();
+
 		stream = reinterpret_cast<uv_stream_t*>(&session->get_stream());
 		ASSERT(stream != NULL);
+		loop = uv_default_loop();
+		ASSERT(loop != NULL);
 
-		r = uv_tcp_init(uv_default_loop(), reinterpret_cast<uv_tcp_t*>(stream));
+		r = uv_tcp_init(loop, reinterpret_cast<uv_tcp_t*>(stream));
 		ASSERT(r == 0);
 		if (r) {
 			delete session;
@@ -127,44 +143,7 @@ namespace Bull {
 			return;
 		}
 
-		r = uv_read_start(stream, alloc_cb, read_cb);
-		ASSERT(r == 0);
-		if (r) {
-			LOG_UV_ERR(r);
-			return;
-		}
-	}
-
-	template <typename T>
-	TcpServer<T>::TcpServer() {
-		m_server.data = this;
-	}
-
-	template <typename T>
-	void TcpServer<T>::read_cb(uv_stream_t* handle,
-	                           ssize_t nread,
-	                           const uv_buf_t* buf) {
-		auto session = static_cast<T*>(handle->data);
-
-		if (nread < 0) {
-			/* Error or EOF */
-			//ASSERT(nread == UV_EOF);
-			if (nread != UV_EOF) {
-				LOG_UV_ERR(nread);
-			}
-
-			session->close();
-			return;
-		}
-
-		if (nread == 0) {
-			/* Everything OK, but nothing read. */
-			session->close();
-			return;
-		}
-
-		if (!session->dispatch(nread)) {
-			session->close();
-		}
+		// post first read request
+		session->post_read_req();
 	}
 }

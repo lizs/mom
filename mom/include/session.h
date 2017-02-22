@@ -22,17 +22,24 @@ namespace Bull {
 		friend class TcpClient;
 
 	public:
-		explicit Session();
+		explicit Session(std::function<void(int, Session<T>*)> open_cb, std::function<void(Session<T>*)> close_cb);
 		~Session();
 
+		int prepare();
+		int close();
+		int connect(const char* ip, int port);
+
 		void set_host(SessionMgr<Session<T>>* mgr);
+		SessionMgr<Session<T>>* get_host();
+
 		int get_id() const;
 		uv_tcp_t& get_stream();
 		CircularBuf<T::CircularBufCapacity::Value>& get_read_cbuf();
-		int close();
 
 		// write data through underline stream
 		int write(const char* data, u_short size, std::function<void(int)> cb);
+		// read requests are managed by session self
+		int post_read_req();
 
 #if MONITOR_ENABLED
 		// performance monitor
@@ -57,11 +64,36 @@ namespace Bull {
 		// dispatch packages
 		bool Session::dispatch(ssize_t nread);
 
+
+	private:
 		T m_packer;
 		SessionMgr<Session<T>>* m_host;
+
+		std::function<void(int, Session<T>*)> m_openCallback;
+		std::function<void(Session<T>*)> m_closeCallback;
+
+		// read buf
 		CircularBuf<T::CircularBufCapacity::Value> m_cbuf;
+		// underline uv stream
 		uv_tcp_t m_stream;
-		uv_shutdown_t m_sreq;
+
+		typedef struct {
+			uv_connect_t req;
+			Session<T>* session;
+			std::function<void(int, Session<T>*)> cb;
+		} connect_req_t;
+
+		// connect request
+		connect_req_t m_creq;
+
+		typedef struct {
+			uv_shutdown_t req;
+			Session<T>* session;
+			std::function<void(Session<T>*)> cb;
+		} shutdown_req_t;
+
+		// shutdown request
+		shutdown_req_t m_sreq;
 
 		// session id
 		// unique in current process
@@ -84,7 +116,7 @@ namespace Bull {
 		} write_req_t;
 
 		static MemoryPool<write_req_t> g_wrPool;
-		static MemoryPool<CircularBuf<64>> g_messagePool;
+		static MemoryPool<CircularBuf<T::CircularBufCapacity::Value>> g_messagePool;
 
 		// session id seed
 		static uint32_t g_id;
@@ -101,17 +133,130 @@ namespace Bull {
 	template <typename T>
 	MemoryPool<typename Session<T>::write_req_t> Session<T>::g_wrPool;
 	template <typename T>
-	MemoryPool<CircularBuf<64>> Session<T>::g_messagePool;
+	MemoryPool<CircularBuf<T::CircularBufCapacity::Value>> Session<T>::g_messagePool;
 
 	template <typename T>
-	Session<T>::Session() : m_host(nullptr), m_id(++g_id) { }
+	Session<T>::Session(std::function<void(int, Session<T>*)> open_cb, std::function<void(Session<T>*)> close_cb) :
+		m_host(nullptr),
+		m_closeCallback(close_cb), m_openCallback(open_cb),
+		m_id(++g_id) { }
 
 	template <typename T>
 	Session<T>::~Session() { }
 
 	template <typename T>
+	int Session<T>::prepare() {
+		uv_loop_t* loop;
+		int r;
+
+		loop = uv_default_loop();
+
+		r = uv_tcp_init(loop, &m_stream);
+		if (r) {
+			LOG_UV_ERR(r);
+			return 1;
+		}
+
+		// post first read request
+		//return read();
+
+		return 0;
+	}
+
+	template <typename T>
+	int Session<T>::post_read_req() {
+		int r;
+
+		m_stream.data = this;
+		r = uv_read_start(reinterpret_cast<uv_stream_t*>(&m_stream),
+		                  [](uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
+			                  auto& cbuf = static_cast<Session<T>*>(handle->data)->get_read_cbuf();
+			                  buf->base = cbuf.get_tail();
+			                  buf->len = cbuf.get_writable_len();
+		                  },
+		                  [](uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf) {
+			                  auto session = static_cast<Session<T>*>(handle->data);
+
+			                  if (nread < 0) {
+				                  /* Error or EOF */
+				                  if (nread != UV_EOF) {
+					                  LOG_UV_ERR(nread);
+				                  }
+
+				                  session->close();
+				                  return;
+			                  }
+
+			                  if (nread == 0) {
+				                  /* Everything OK, but nothing read. */
+				                  session->close();
+				                  return;
+			                  }
+
+			                  if (!session->dispatch(nread)) {
+				                  session->close();
+			                  }
+		                  });
+
+		if (r) {
+			LOG_UV_ERR(r);
+			return 1;
+		}
+
+		return 0;
+	}
+
+	template <typename T>
+	int Session<T>::connect(const char* ip, int port) {
+		struct sockaddr_in addr;
+		uv_loop_t* loop;
+		int r;
+
+		loop = uv_default_loop();
+
+		r = uv_ip4_addr(ip, port, &addr);
+		if (r) {
+			LOG_UV_ERR(r);
+			return 1;
+		}
+
+		ZeroMemory(&m_creq, sizeof(connect_req_t));
+		m_creq.cb = m_openCallback;
+		m_creq.session = this;
+
+		r = uv_tcp_connect(&m_creq.req,
+		                   &m_stream,
+		                   reinterpret_cast<const sockaddr*>(&addr),
+		                   [](uv_connect_t* ct, int status) {
+			                   auto cr = reinterpret_cast<connect_req_t*>(ct);
+			                   if (status) {
+				                   LOG_UV_ERR(status);
+			                   }
+							   else {
+								   LOG("Session %d established!", cr->session->get_id());
+							   }
+
+			                   if (cr->cb) {
+				                   cr->cb(status, cr->session);
+			                   }
+		                   });
+
+		if (r) {
+			LOG_UV_ERR(r);
+			return 1;
+		}
+
+		return 0;
+	}
+
+	template <typename T>
 	void Session<T>::set_host(SessionMgr<Session<T>>* mgr) {
 		m_host = mgr;
+	}
+
+	template <typename T>
+	SessionMgr<Session<T>>* Session<T>::get_host() {
+		return m_host;
 	}
 
 	template <typename T>
@@ -131,19 +276,23 @@ namespace Bull {
 
 	template <typename T>
 	int Session<T>::close() {
-		if (m_host) {
-			m_host->remove(this);
-			m_host = nullptr;
-		}
-
 		int r;
-		m_sreq.data = this;
-		r = uv_shutdown(&m_sreq, reinterpret_cast<uv_stream_t*>(&m_stream), [](uv_shutdown_t* req, int status) {
-			                req->handle->data = req->data;
+		m_sreq.session = this;
+		m_sreq.cb = m_closeCallback;
+
+		r = uv_shutdown(reinterpret_cast<uv_shutdown_t*>(&m_sreq), reinterpret_cast<uv_stream_t*>(&m_stream), [](uv_shutdown_t* req, int status) {
+			                if (status) {
+				                LOG_UV_ERR(status);
+			                }
+
+			                req->handle->data = req;
 			                uv_close(reinterpret_cast<uv_handle_t*>(req->handle), [](uv_handle_t* stream) {
-				                         auto session = static_cast<Session *>(stream->data);
-				                         LOG("Session %d closed!", session->get_id());
-				                         delete session;
+				                         shutdown_req_t* sr = reinterpret_cast<shutdown_req_t*>(stream->data);
+				                         LOG("Session %d closed!", sr->session->get_id());
+
+				                         if (sr->cb) {
+					                         sr->cb(sr->session);
+				                         }
 			                         });
 		                });
 
@@ -174,7 +323,7 @@ namespace Bull {
 
 		// rewrite the package size
 		pcb->move_tail(-size - offset - sizeof(uint16_t));
-		pcb->write<uint16_t>(size + offset);
+		pcb->write < uint16_t > (size + offset);
 		pcb->move_tail(offset + size);
 
 		wr->pcb = pcb;

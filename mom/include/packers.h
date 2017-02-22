@@ -46,7 +46,7 @@ namespace Bull {
 		}
 
 		void on_message(const char* data, uint16_t len, Session<SerialPacker>* session) const {
-			LOG("%d : %s : %d", m_serial, data, len);
+			//LOG("%d : %s : %d", m_serial, data, len);
 		}
 
 	private:

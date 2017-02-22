@@ -42,5 +42,8 @@
     <ClInclude Include="include\bull.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="include\monitor.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

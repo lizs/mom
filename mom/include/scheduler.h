@@ -20,6 +20,7 @@ namespace Bull {
 		u_int invoke(uint64_t delay, std::function<void()> cb);
 		u_int invoke(uint64_t delay, uint64_t period, std::function<void()> cb);
 		bool cancel(u_int id);
+		void cancel_all();
 
 	private:
 		typedef struct {
@@ -34,7 +35,9 @@ namespace Bull {
 		std::map<u_int, timer_req_t*> m_timers;
 	};
 
-	inline Scheduler::~Scheduler() {}
+	inline Scheduler::~Scheduler() {
+		cancel_all();
+	}
 
 	inline u_int Scheduler::invoke(uint64_t delay, std::function<void()> cb) {
 		return this->invoke(delay, 0, cb);
@@ -95,5 +98,17 @@ namespace Bull {
 
 		m_timers.erase(it);
 		return true;
+	}
+
+	inline void Scheduler::cancel_all() {
+		for(auto kv : m_timers) {
+			kv.second->timer.data = kv.second;
+			uv_close(reinterpret_cast<uv_handle_t*>(&kv.second->timer), [](uv_handle_t* handle) {
+				auto tr = reinterpret_cast<timer_req_t*>(handle->data);
+				delete tr;
+			});
+		}
+
+		m_timers.clear();
 	}
 }

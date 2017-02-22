@@ -91,6 +91,15 @@ namespace Bull {
 			LOG_UV_ERR(r);
 			return 1;
 		}
+		
+#if MONITOR_ENABLED
+		// performance monitor
+		m_scheduler.invoke(1000, 1000, []() {
+			LOG("Read : %llu /s Write : %llu", Monitor::g_readed, Monitor::g_wroted);
+			Monitor::g_readed = 0;
+			Monitor::g_wroted = 0;
+		});
+#endif
 
 		// main loop
 		r = uv_run(loop, UV_RUN_DEFAULT);

@@ -1,3 +1,5 @@
+// author : lizs
+// 2017.2.22
 #pragma once
 
 #include "uv.h"
@@ -14,7 +16,7 @@ typedef enum {
 	PIPE
 } stream_type;
 
-#define LOG_UV_ERR(code)         \
+#define PRINT_UV_ERR(code)         \
  do {                                                     \
 	if (code) {                                          \
 		fprintf(stderr,                                       \
@@ -24,7 +26,7 @@ typedef enum {
 	 }                                                       \
  } while (0)
 
-#define LOG_UV_ERR_DETAIL(code)         \
+#define PRINT_UV_ERR_DETAIL(code)         \
  do {                                                     \
 	if (code) {                                          \
 		fprintf(stderr,                                       \
@@ -36,6 +38,8 @@ typedef enum {
             __LINE__);                                       \
 	}                                                       \
  } while (0)
+
+#define LOG_UV_ERR(code) PRINT_UV_ERR_DETAIL(code)
 
 #define LOG(format, ...)         \
  do {                                                     \
@@ -91,10 +95,10 @@ typedef enum {
 /* Fully close a loop */
 UNUSED static void close_walk_cb(uv_handle_t* handle, void* arg) {
 	if (!uv_is_closing(handle))
-		uv_close(handle, NULL);
+		uv_close(handle, nullptr);
 }
 
 UNUSED static void close_loop(uv_loop_t* loop) {
-	uv_walk(loop, close_walk_cb, NULL);
+	uv_walk(loop, close_walk_cb, nullptr);
 	uv_run(loop, UV_RUN_DEFAULT);
 }

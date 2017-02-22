@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\circular_buf.h" />
+    <ClInclude Include="include\monitor.h" />
     <ClInclude Include="include\packers.h" />
     <ClInclude Include="include\mem_pool.h" />
     <ClInclude Include="include\scheduler.h" />

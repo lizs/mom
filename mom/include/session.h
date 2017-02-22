@@ -99,15 +99,6 @@ namespace Bull {
 		// unique in current process
 		uint32_t m_id;
 
-#if MONITOR_ENABLED
-		// record packages readed since last reset
-		// shared between sessions
-		static uint64_t g_readed;
-		// record packages wroted since last reset
-		// shared between sessions
-		static uint64_t g_wroted;
-#endif
-
 		typedef struct {
 			uv_write_t req;
 			uv_buf_t buf;
@@ -125,8 +116,6 @@ namespace Bull {
 		ushort pack_desired_size = 0;
 	};
 
-	template <typename T>
-	uint64_t Session<T>::g_readed = 0;
 	template <typename T>
 	uint32_t Session<T>::g_id = 0;
 
@@ -338,6 +327,12 @@ namespace Bull {
 				                 wr->cb(status);
 			                 }
 
+#if MONITOR_ENABLED
+			                 if (!status) {
+				                 ++Monitor::g_wroted;
+			                 }
+#endif
+
 			                 g_messagePool.deleteElement(wr->pcb);
 			                 g_wrPool.deleteElement(wr);
 
@@ -381,7 +376,11 @@ namespace Bull {
 				// notify message
 				m_packer.on_message(cbuf.get_head(), pack_desired_size - offset, this);
 
-				++g_readed;
+#if MONITOR_ENABLED
+				// performance monitor
+				++Monitor::g_readed;
+#endif
+
 				cbuf.move_head(pack_desired_size - offset);
 				pack_desired_size = 0;
 			}

@@ -20,30 +20,26 @@ void write_cb(int status) {
 	}
 }
 
-void write(){
+void write() {
 	client->write(data, strlen(data) + 1, write_cb);
 }
 
-int main(int argc, char** argv)
-{
-	if (argc > 1)
-	{
+int main(int argc, char** argv) {
+	if (argc > 1) {
 		printf("%s %s\n", argv[0], argv[1]);
 
 		if (strcmp(argv[1], "s") == 0) {
-			server = new Server();
-			server->start("0.0.0.0", 5001);
-
+			server = new Server("0.0.0.0", 5001);
+			server->startup();
+			server->shutdown();
 			delete server;
 		}
 		else if (strcmp(argv[1], "c") == 0) {
-			client = new Client(argc > 2 ? argv[2] : default_ip, 5001);
-			client->connect([](int status) {
-				if (!status)
-					write();
-			});
-
-			client->close();
+			client = new Client(argc > 2 ? argv[2] : default_ip, 5001, []() {
+				                    write();
+			                    }, []() { }, true);
+			client->startup();
+			client->shutdown();
 			delete client;
 		}
 		return 0;

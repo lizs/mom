@@ -12,6 +12,7 @@ namespace Bull {
 		T* get_session(int id);
 		bool add_session(T* session);
 		void remove(T* session);
+		size_t size();
 
 	private:
 		std::map<int, T*> m_sessions;
@@ -24,12 +25,19 @@ namespace Bull {
 		auto it = m_sessions.find(session->get_id());
 		ASSERT(it != m_sessions.end());
 		if (it != m_sessions.end()) {
+			delete it->second;
 			m_sessions.erase(it);
 		}
 	}
 
 	template <typename T>
+	size_t SessionMgr<T>::size() {
+		return m_sessions.size();
+	}
+
+	template <typename T>
 	void SessionMgr<T>::close_all() {
+		int total = m_sessions.size();
 		for (auto kv : m_sessions) {
 			kv.second->close();
 		}

@@ -37,7 +37,6 @@ namespace Bull {
 
 	template <typename T>
 	void SessionMgr<T>::close_all() {
-		int total = m_sessions.size();
 		for (auto kv : m_sessions) {
 			kv.second->close();
 		}

@@ -13,57 +13,34 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="mempool">
-      <UniqueIdentifier>{091ce006-b503-48ec-82db-83ad7d007e4b}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="uv_plus.h">
+    <ClInclude Include="include\circular_buf.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="tcp_client.h">
+    <ClInclude Include="include\mem_pool.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="tcp_server.h">
+    <ClInclude Include="include\scheduler.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="session.h">
+    <ClInclude Include="include\session.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="scheduler.h">
+    <ClInclude Include="include\session_mgr.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="session_mgr.h">
+    <ClInclude Include="include\tcp_client.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="mem_pool.h">
-      <Filter>mempool</Filter>
-    </ClInclude>
-    <ClInclude Include="package.h">
+    <ClInclude Include="include\tcp_server.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="circular_buf.h">
+    <ClInclude Include="include\packers.h">
       <Filter>头文件</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="tcp_client.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="tcp_server.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="session.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="scheduler.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="session_mgr.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
+    <ClInclude Include="include\bull.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

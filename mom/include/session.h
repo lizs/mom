@@ -7,14 +7,12 @@
 #include "circular_buf.h"
 #include "mem_pool.h"
 
-#define DEFAULT_CIRCULAR_BUF_SIZE 1024
-
 namespace Bull {
 	template <typename T>
 	class SessionMgr;
 
 	// represents a session between server and client
-	template <typename T>
+	template <cbuf_len_t Size = 1024>
 	class Session {
 		template <typename TSession>
 		friend class TcpServer;
@@ -22,27 +20,38 @@ namespace Bull {
 		friend class TcpClient;
 
 	public:
-		typedef CircularBuf<T::CircularBufCapacity::Value> circular_buf_t;
+		typedef Session<Size> session_t;
+		typedef CircularBuf<Size> cbuf_t;
+		typedef std::function<void(session_t*, const char*, cbuf_len_t)> push_handler_t;
+		typedef std::function<bool(session_t*, const char*, cbuf_len_t, char**, cbuf_len_t&)> req_handler_t;
 
-		explicit Session(std::function<void(bool, Session<T>*)> open_cb, std::function<void(Session<T>*)> close_cb);
+		typedef std::function<void(bool, session_t*)> open_cb_t;
+		typedef std::function<void(session_t*)> close_cb_t;
+		typedef std::function<void(bool, cbuf_t*)> req_cb_t;
+		typedef std::function<void(bool)> push_cb_t;
+		typedef std::function<void(bool)> rep_cb_t;
+		typedef std::function<void(bool)> write_cb_0_t;
+		typedef std::function<void(bool, cbuf_t*)> write_cb_1_t;
+
+		explicit Session(open_cb_t open_cb, close_cb_t close_cb, req_handler_t req_handler, push_handler_t push_handler);
 		~Session();
 
 		bool prepare();
 		bool close();
 		bool connect(const char* ip, int port);
 
-		void set_host(SessionMgr<Session<T>>* mgr);
-		SessionMgr<Session<T>>* get_host();
+		void set_host(SessionMgr<session_t>* mgr);
+		SessionMgr<session_t>* get_host();
 
 		int get_id() const;
 		uv_tcp_t& get_stream();
-		circular_buf_t& get_read_cbuf();
+		cbuf_t& get_read_cbuf();
 
 #pragma region("Message patterns")
 		// req/rep pattern
-		bool request(const char* data, pack_size_t size, std::function<void(bool, circular_buf_t*)> cb);
+		bool request(const char* data, pack_size_t size, req_cb_t cb);
 		// push pattern
-		bool push(const char* data, pack_size_t size, std::function<void(bool)> cb);
+		bool push(const char* data, pack_size_t size, push_cb_t cb);
 #pragma endregion("Message patterns")
 
 		// post read request
@@ -55,40 +64,40 @@ namespace Bull {
 		bool dispatch(ssize_t nread);
 
 		// response
-		//void response(bool success, circular_buf_t* pcb, std::function<void(bool)> cb);
-		bool response(bool success, serial_t serial, const char* data, pack_size_t size, std::function<void(bool)> cb);
+		bool response(bool success, serial_t serial, const char* data, pack_size_t size, rep_cb_t cb);
 
 		// handle messages
-		void on_message(circular_buf_t* pcb);
+		void on_message(cbuf_t* pcb);
 
 		// response
-		void on_response(circular_buf_t* pcb);
+		void on_response(cbuf_t* pcb);
 
 		// write data through underline stream
 		template <typename ... Args>
-		bool write(const char* data, pack_size_t size, std::function<void(bool)> cb, Args ... args);
+		bool write(const char* data, pack_size_t size, write_cb_0_t cb, Args ... args);
 		template <typename ... Args>
-		bool write(circular_buf_t* pcb, std::function<void(bool, circular_buf_t*)> cb);
+		bool write(cbuf_t* pcb, write_cb_1_t cb);
 
 	private:
-		T m_handler;
-		SessionMgr<Session<T>>* m_host;
+		SessionMgr<session_t>* m_host;
 
 		// request pool
-		std::map<serial_t, std::function<void(bool, circular_buf_t*)>> m_requestsPool;
+		std::map<serial_t, req_cb_t> m_requestsPool;
 
-		std::function<void(bool, Session<T>*)> m_openCallback;
-		std::function<void(Session<T>*)> m_closeCallback;
+		open_cb_t m_openCB;
+		close_cb_t m_closeCB;
+		req_handler_t m_reqHandler;
+		push_handler_t m_pushHandler;
 
 		// read buf
-		circular_buf_t m_cbuf;
+		cbuf_t m_cbuf;
 		// underline uv stream
 		uv_tcp_t m_stream;
 
 		typedef struct {
 			uv_connect_t req;
-			Session<T>* session;
-			std::function<void(bool, Session<T>*)> cb;
+			session_t* session;
+			std::function<void(bool, session_t*)> cb;
 		} connect_req_t;
 
 		// connect request
@@ -96,8 +105,8 @@ namespace Bull {
 
 		typedef struct {
 			uv_shutdown_t req;
-			Session<T>* session;
-			std::function<void(Session<T>*)> cb;
+			session_t* session;
+			std::function<void(session_t*)> cb;
 		} shutdown_req_t;
 
 		// shutdown request
@@ -110,12 +119,12 @@ namespace Bull {
 		typedef struct {
 			uv_write_t req;
 			uv_buf_t buf;
-			std::function<void(bool, circular_buf_t*)> cb;
-			circular_buf_t* pcb;
+			std::function<void(bool, cbuf_t*)> cb;
+			cbuf_t* pcb;
 		} write_req_t;
 
 		static MemoryPool<write_req_t> g_wrPool;
-		static MemoryPool<circular_buf_t> g_messagePool;
+		static MemoryPool<cbuf_t> g_messagePool;
 
 		// session id seed
 		static session_id_t g_sessionId;
@@ -127,25 +136,26 @@ namespace Bull {
 		uint16_t pack_desired_size = 0;
 	};
 
-	template <typename T>
-	session_id_t Session<T>::g_sessionId = 0;
+	template <cbuf_len_t Size>
+	session_id_t Session<Size>::g_sessionId = 0;
 
-	template <typename T>
-	MemoryPool<typename Session<T>::write_req_t> Session<T>::g_wrPool;
-	template <typename T>
-	MemoryPool<typename Session<T>::circular_buf_t> Session<T>::g_messagePool;
+	template <cbuf_len_t Size>
+	MemoryPool<typename Session<Size>::write_req_t> Session<Size>::g_wrPool;
+	template <cbuf_len_t Size>
+	MemoryPool<typename Session<Size>::cbuf_t> Session<Size>::g_messagePool;
 
-	template <typename T>
-	Session<T>::Session(std::function<void(bool, Session<T>*)> open_cb, std::function<void(Session<T>*)> close_cb) :
+	template <cbuf_len_t Size>
+	Session<Size>::Session(open_cb_t open_cb, close_cb_t close_cb, req_handler_t req_handler, push_handler_t push_handler) :
 		m_host(nullptr),
-		m_openCallback(open_cb), m_closeCallback(close_cb),
-		m_id(++g_sessionId) { }
+		m_openCB(open_cb), m_closeCB(close_cb),
+		m_reqHandler(req_handler),
+		m_pushHandler(push_handler), m_id(++g_sessionId) { }
 
-	template <typename T>
-	Session<T>::~Session() { }
+	template <cbuf_len_t Size>
+	Session<Size>::~Session() { }
 
-	template <typename T>
-	bool Session<T>::prepare() {
+	template <cbuf_len_t Size>
+	bool Session<Size>::prepare() {
 		uv_loop_t* loop;
 		int r;
 
@@ -160,19 +170,19 @@ namespace Bull {
 		return true;
 	}
 
-	template <typename T>
-	bool Session<T>::post_read_req() {
+	template <cbuf_len_t Size>
+	bool Session<Size>::post_read_req() {
 		int r;
 
 		m_stream.data = this;
 		r = uv_read_start(reinterpret_cast<uv_stream_t*>(&m_stream),
 		                  [](uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
-			                  auto& cbuf = static_cast<Session<T>*>(handle->data)->get_read_cbuf();
+			                  auto& cbuf = static_cast<session_t*>(handle->data)->get_read_cbuf();
 			                  buf->base = cbuf.get_tail();
 			                  buf->len = cbuf.get_writable_len();
 		                  },
 		                  [](uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf) {
-			                  auto session = static_cast<Session<T>*>(handle->data);
+			                  auto session = static_cast<session_t*>(handle->data);
 
 			                  if (nread < 0) {
 				                  /* Error or EOF */
@@ -186,7 +196,7 @@ namespace Bull {
 
 			                  if (nread == 0) {
 				                  /* Everything OK, but nothing read. */
-				                  session->close();
+				                 // session->close();
 				                  return;
 			                  }
 
@@ -203,14 +213,11 @@ namespace Bull {
 		return true;
 	}
 
-	template <typename T>
-	bool Session<T>::connect(const char* ip, int port) {
+	template <cbuf_len_t Size>
+	bool Session<Size>::connect(const char* ip, int port) {
 		struct sockaddr_in addr;
-		uv_loop_t* loop;
 		int r;
-
-		loop = uv_default_loop();
-
+		
 		r = uv_ip4_addr(ip, port, &addr);
 		if (r) {
 			LOG_UV_ERR(r);
@@ -218,7 +225,7 @@ namespace Bull {
 		}
 
 		ZeroMemory(&m_creq, sizeof(connect_req_t));
-		m_creq.cb = m_openCallback;
+		m_creq.cb = m_openCB;
 		m_creq.session = this;
 
 		r = uv_tcp_connect(&m_creq.req,
@@ -246,34 +253,34 @@ namespace Bull {
 		return true;
 	}
 
-	template <typename T>
-	void Session<T>::set_host(SessionMgr<Session<T>>* mgr) {
+	template <cbuf_len_t Size>
+	void Session<Size>::set_host(SessionMgr<session_t>* mgr) {
 		m_host = mgr;
 	}
 
-	template <typename T>
-	SessionMgr<Session<T>>* Session<T>::get_host() {
+	template <cbuf_len_t Size>
+	SessionMgr<Session<Size>>* Session<Size>::get_host() {
 		return m_host;
 	}
 
-	template <typename T>
-	int Session<T>::get_id() const {
+	template <cbuf_len_t Size>
+	int Session<Size>::get_id() const {
 		return m_id;
 	}
 
-	template <typename T>
-	uv_tcp_t& Session<T>::get_stream() {
+	template <cbuf_len_t Size>
+	uv_tcp_t& Session<Size>::get_stream() {
 		return m_stream;
 	}
 
-	template <typename T>
-	typename Session<T>::circular_buf_t& Session<T>::get_read_cbuf() {
+	template <cbuf_len_t Size>
+	typename Session<Size>::cbuf_t& Session<Size>::get_read_cbuf() {
 		return m_cbuf;
 	}
 
-	template <typename T>
+	template <cbuf_len_t Size>
 	template <typename ... Args>
-	bool Session<T>::write(const char* data, pack_size_t size, std::function<void(bool)> cb, Args ... args) {
+	bool Session<Size>::write(const char* data, pack_size_t size, write_cb_0_t cb, Args ... args) {
 		auto* pcb = g_messagePool.newElement();
 		pcb->reset();
 
@@ -287,27 +294,34 @@ namespace Bull {
 		// rewrite the package size
 		pcb->template write_head<pack_size_t>(pcb->get_readable_len());
 
-		return write(pcb, [cb](bool success, circular_buf_t* pcb) {
+		return write(pcb, [cb](bool success, cbuf_t* pcb) {
 			             g_messagePool.deleteElement(pcb);
 			             if (cb)
 				             cb(success);
 		             });
 	}
 
-	template <typename T>
-	void Session<T>::on_message(circular_buf_t* pcb) {
+	template <cbuf_len_t Size>
+	void Session<Size>::on_message(cbuf_t* pcb) {
 		auto pattern = static_cast<Pattern>(pcb->template read<pattern_t>());
 		switch (pattern) {
 			case Push:
-				m_handler.on_push(pcb->get_head(), pcb->get_readable_len());
+				if (m_pushHandler)
+					m_pushHandler(this, pcb->get_head(), pcb->get_readable_len());
 				break;
 
 			case Request: {
 				char* responseData;
 				cbuf_len_t responseDataSize;
 				auto serial = pcb->template read<serial_t>();
-				auto result = m_handler.on_request(pcb->get_head(), pcb->get_readable_len(), &responseData, responseDataSize);
-				response(result, serial, responseData, responseDataSize, [](bool) {});
+
+				auto success = false;
+				if (m_reqHandler)
+					success = m_reqHandler(this, pcb->get_head(), pcb->get_readable_len(), &responseData, responseDataSize);
+
+				response(success, serial,
+				         success ? responseData : nullptr,
+				         success ? responseDataSize : 0, [](bool) {});
 
 				break;
 			}
@@ -322,8 +336,8 @@ namespace Bull {
 		g_messagePool.deleteElement(pcb);
 	}
 
-	template <typename T>
-	void Session<T>::on_response(circular_buf_t* pcb) {
+	template <cbuf_len_t Size>
+	void Session<Size>::on_response(cbuf_t* pcb) {
 		auto serial = pcb->template read<serial_t>();
 		auto it = m_requestsPool.find(serial);
 		if (it == m_requestsPool.end()) {
@@ -335,9 +349,9 @@ namespace Bull {
 		m_requestsPool.erase(it);
 	}
 
-	template <typename T>
+	template <cbuf_len_t Size>
 	template <typename ... Args>
-	bool Session<T>::write(circular_buf_t* pcb, std::function<void(bool, circular_buf_t*)> cb) {
+	bool Session<Size>::write(cbuf_t* pcb, write_cb_1_t cb) {
 		auto wr = g_wrPool.newElement();
 		wr->cb = cb;
 		wr->pcb = pcb;
@@ -373,8 +387,8 @@ namespace Bull {
 		return true;
 	}
 
-	template <typename T>
-	bool Session<T>::request(const char* data, pack_size_t size, std::function<void(bool, circular_buf_t*)> cb) {
+	template <cbuf_len_t Size>
+	bool Session<Size>::request(const char* data, pack_size_t size, req_cb_t cb) {
 		auto serial = ++m_serial;
 		if (m_requestsPool.find(serial) != m_requestsPool.end()) {
 			LOG("serial conflict!");
@@ -402,16 +416,16 @@ namespace Bull {
 		             static_cast<pattern_t>(Pattern::Request), serial);
 	}
 
-	template <typename T>
-	bool Session<T>::push(const char* data, pack_size_t size, std::function<void(bool)> cb) {
+	template <cbuf_len_t Size>
+	bool Session<Size>::push(const char* data, pack_size_t size, push_cb_t cb) {
 		return write(data, size,
 		             cb,
 		             static_cast<pattern_t>(Pattern::Push));
 	}
 
 
-	template <typename T>
-	bool Session<T>::response(bool success, serial_t serial, const char* data, pack_size_t size, std::function<void(bool)> cb) {
+	template <cbuf_len_t Size>
+	bool Session<Size>::response(bool success, serial_t serial, const char* data, pack_size_t size, rep_cb_t cb) {
 		return write(success ? data : nullptr, success ? size : 0,
 		             [cb](bool success) {
 			             if (cb)
@@ -420,8 +434,8 @@ namespace Bull {
 		             static_cast<pattern_t>(Pattern::Response), serial);
 	}
 
-	template <typename T>
-	bool Session<T>::close() {
+	template <cbuf_len_t Size>
+	bool Session<Size>::close() {
 		int r;
 
 		// make every requests fail
@@ -431,7 +445,7 @@ namespace Bull {
 		m_requestsPool.clear();
 
 		m_sreq.session = this;
-		m_sreq.cb = m_closeCallback;
+		m_sreq.cb = m_closeCB;
 		r = uv_shutdown(reinterpret_cast<uv_shutdown_t*>(&m_sreq), reinterpret_cast<uv_stream_t*>(&m_stream), [](uv_shutdown_t* req, int status) {
 			                if (status) {
 				                LOG_UV_ERR(status);
@@ -456,8 +470,8 @@ namespace Bull {
 		return true;
 	}
 
-	template <typename T>
-	bool Session<T>::dispatch(ssize_t nread) {
+	template <cbuf_len_t Size>
+	bool Session<Size>::dispatch(ssize_t nread) {
 		auto& cbuf = get_read_cbuf();
 		cbuf.move_tail(static_cast<uint16_t>(nread));
 
@@ -466,7 +480,7 @@ namespace Bull {
 				// get package len
 				if (cbuf.get_len() >= sizeof(uint16_t)) {
 					pack_desired_size = cbuf.template read<uint16_t>();
-					if (pack_desired_size > DEFAULT_CIRCULAR_BUF_SIZE) {
+					if (pack_desired_size > Size) {
 						LOG("package much too huge : %d bytes", pack_desired_size);
 						return false;
 					}

@@ -24,9 +24,6 @@
     <ClInclude Include="include\monitor.h">
       <Filter>头文件\tcp</Filter>
     </ClInclude>
-    <ClInclude Include="include\packer.h">
-      <Filter>头文件\tcp</Filter>
-    </ClInclude>
     <ClInclude Include="include\mem_pool.h">
       <Filter>头文件\tcp</Filter>
     </ClInclude>
@@ -46,6 +43,9 @@
       <Filter>头文件\tcp</Filter>
     </ClInclude>
     <ClInclude Include="include\bull.h">
+      <Filter>头文件\tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="include\default_handler.h">
       <Filter>头文件\tcp</Filter>
     </ClInclude>
   </ItemGroup>

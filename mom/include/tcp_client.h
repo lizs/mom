@@ -14,15 +14,20 @@ namespace Bull {
 		const uint64_t DEFAULT_RECONN_DELAY = 1000;
 
 	public:
+		typedef T session_t;
+		typedef typename T::cbuf_t cbuf_t;
+
 		TcpClient(const char* ip, int port,
-		          std::function<void()> open_cb = nullptr,
-		          std::function<void()> close_cb = nullptr,
+		          typename T::open_cb_t open_cb = nullptr,
+		          typename T::close_cb_t close_cb = nullptr,
+		          typename T::req_handler_t req_handler = nullptr,
+		          typename T::push_handler_t push_handler = nullptr,
 		          bool auto_reconnect_enabled = true);
 		virtual ~TcpClient();
 		bool startup();
 		bool shutdown();
 #pragma region("Message patterns")
-		bool request(const char* data, uint16_t size, std::function<void(bool, typename T::circular_buf_t*)> cb);
+		bool request(const char* data, uint16_t size, std::function<void(bool, typename T::cbuf_t*)> cb);
 		bool push(const char* data, uint16_t size, std::function<void(bool)> cb);
 #pragma endregion("Message patterns")
 
@@ -44,31 +49,36 @@ namespace Bull {
 
 	template <typename T>
 	TcpClient<T>::TcpClient(const char* ip, int port,
-	                        std::function<void()> open_cb,
-	                        std::function<void()> close_cb,
-	                        bool auto_reconnect_enabled) : m_session(nullptr), m_autoReconnect(auto_reconnect_enabled), m_ip(ip), m_port(port) {
-		m_session = new T([=, this](bool success, T* session) {
-			                  if (!success) {
-				                  if (m_autoReconnect) {
-					                  reconnect();
-				                  }
-			                  }
-			                  else if (open_cb) {
-				                  set_reconn_delay(DEFAULT_RECONN_DELAY);
-				                  open_cb();
+	                        typename T::open_cb_t open_cb,
+	                        typename T::close_cb_t close_cb,
+	                        typename T::req_handler_t req_handler,
+	                        typename T::push_handler_t push_handler,
+	                        bool auto_reconnect_enabled) : m_autoReconnect(auto_reconnect_enabled), m_ip(ip), m_port(port) {
+		m_session = new T(
+			[=, this](bool success, T* session) {
+				if (!success) {
+					if (m_autoReconnect) {
+						reconnect();
+					}
+				}
+				else {
+					set_reconn_delay(DEFAULT_RECONN_DELAY);
+					m_session->post_read_req();
+				}
 
-								  m_session->post_read_req();
-			                  }
-		                  }, [=, this](T* session) {
-			                  set_reconn_delay(DEFAULT_RECONN_DELAY);
-			                  if (close_cb) {
-				                  close_cb();
+				if (open_cb)
+					open_cb(success, session);
+			},
+			[=, this](T* session) {
+				set_reconn_delay(DEFAULT_RECONN_DELAY);
+				if (close_cb) {
+					close_cb(session);
 
-				                  if (m_autoReconnect) {
-					                  reconnect();
-				                  }
-			                  }
-		                  });
+					if (m_autoReconnect) {
+						reconnect();
+					}
+				}
+			}, req_handler, push_handler);
 	}
 
 	template <typename T>
@@ -85,19 +95,19 @@ namespace Bull {
 		if (!m_session->connect(m_ip.c_str(), m_port)) {
 			return false;
 		}
-		
+
 #if MONITOR_ENABLED
 		// performance monitor
 		m_scheduler.invoke(1000, 1000, []() {
-			LOG("Read : %llu /s Write : %llu", Monitor::g_readed, Monitor::g_wroted);
-			Monitor::g_readed = 0;
-			Monitor::g_wroted = 0;
-		});
+			                   LOG("Read : %llu /s Write : %llu", Monitor::g_readed, Monitor::g_wroted);
+			                   Monitor::g_readed = 0;
+			                   Monitor::g_wroted = 0;
+		                   });
 #endif
 
 		return true;
 	}
-	
+
 	template <typename T>
 	void TcpClient<T>::double_reonn_delay() {
 		m_reconnDelay *= 2;
@@ -107,7 +117,7 @@ namespace Bull {
 
 	template <typename T>
 	void TcpClient<T>::reconnect() {
-		m_session->prepare();		
+		m_session->prepare();
 		double_reonn_delay();
 
 		m_scheduler.invoke(m_reconnDelay, [this]() {
@@ -128,11 +138,11 @@ namespace Bull {
 
 	template <typename T>
 	bool TcpClient<T>::shutdown() {
-		return  m_session->close();
+		return m_session->close();
 	}
 
 	template <typename T>
-	bool TcpClient<T>::request(const char* data, uint16_t size, std::function<void(bool, typename T::circular_buf_t*)> cb) {
+	bool TcpClient<T>::request(const char* data, uint16_t size, std::function<void(bool, typename T::cbuf_t*)> cb) {
 		return m_session->request(data, size, cb);
 	}
 

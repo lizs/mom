@@ -14,7 +14,10 @@ namespace Bull {
 	template <typename T>
 	class TcpServer {
 	public:
-		TcpServer(const char* ip, int port);
+		typedef T session_t;
+		TcpServer(const char* ip, int port,
+		          typename T::req_handler_t req_handler,
+		          typename T::push_handler_t push_handler);
 		bool startup();
 		bool shutdown();
 		SessionMgr<T>& get_session_mgr();
@@ -25,14 +28,25 @@ namespace Bull {
 		uv_tcp_t m_server;
 		Scheduler m_scheduler;
 		SessionMgr<T> m_sessions;
+		static typename T::req_handler_t m_reqHandler;
+		static typename T::push_handler_t m_pushHandler;
 
 		std::string m_ip;
 		int m_port;
 	};
 
+	template<typename T>
+	typename T::req_handler_t TcpServer<T>::m_reqHandler = nullptr;
+	template<typename T>
+	typename T::push_handler_t TcpServer<T>::m_pushHandler = nullptr;
+
 	template <typename T>
-	TcpServer<T>::TcpServer(const char* ip, int port) : m_ip(ip), m_port(port) {
+	TcpServer<T>::TcpServer(const char* ip, int port,
+	                        typename T::req_handler_t req_handler,
+	                        typename T::push_handler_t push_handler) : m_ip(ip), m_port(port) {
 		m_server.data = this;
+		m_reqHandler = req_handler;
+		m_pushHandler = push_handler;
 	}
 
 	template <typename T>
@@ -98,18 +112,20 @@ namespace Bull {
 	template <typename T>
 	void TcpServer<T>::connection_cb(uv_stream_t* server, int status) {
 		uv_stream_t* stream;
-		uv_loop_t * loop;
+		uv_loop_t* loop;
 		int r;
 
 		LOG_UV_ERR(status);
 
 		// make session
-		auto session = new T(nullptr, [](T* session) {
-								 auto host = session->get_host();
-								 if(host) {
-									 host->remove(session);
-								 }
-		                     });
+		auto session = new T(nullptr,
+		                     [](T* session) {
+			                     auto host = session->get_host();
+			                     if (host) {
+				                     host->remove(session);
+			                     }
+		                     },
+		                     m_reqHandler, m_pushHandler);
 
 		// init session
 		session->prepare();

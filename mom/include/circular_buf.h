@@ -26,6 +26,7 @@ namespace Bull {
 
 		cbuf_len_t get_readable_len() const {
 			if (m_tail < m_head) throw std::exception("get_readable_len");
+			ASSERT(m_tail > m_head);
 			return m_tail - m_head;
 		}
 

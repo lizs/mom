@@ -13,7 +13,7 @@
 *.a
 *.obj
 
-.suo
+*.suo
 *.VC.VC.opendb
 *.VC.db
 *.sln.DotSettings.user
@@ -25,3 +25,4 @@ Debug/
 Release/
 x64/
 Obj/
+.svn/

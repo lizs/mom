@@ -2,7 +2,6 @@
 #include "tcp_server.h"
 #include "tcp_client.h"
 #include <session.h>
-#include <default_handler.h>
 
 using namespace Bull;
 char reqData[1024] = "I'm a request";

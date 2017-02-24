@@ -45,8 +45,5 @@
     <ClInclude Include="include\bull.h">
       <Filter>头文件\tcp</Filter>
     </ClInclude>
-    <ClInclude Include="include\default_handler.h">
-      <Filter>头文件\tcp</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

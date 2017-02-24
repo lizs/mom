@@ -15,8 +15,8 @@ namespace Bull {
 	class TcpServer {
 	public:
 		TcpServer(const char* ip, int port);
-		int startup();
-		int shutdown();
+		bool startup();
+		bool shutdown();
 		SessionMgr<T>& get_session_mgr();
 
 	private:
@@ -36,7 +36,7 @@ namespace Bull {
 	}
 
 	template <typename T>
-	int TcpServer<T>::startup(){
+	bool TcpServer<T>::startup(){
 		struct sockaddr_in addr;
 		int r;
 		uv_loop_t* loop;
@@ -45,25 +45,25 @@ namespace Bull {
 		r = uv_ip4_addr(m_ip.c_str(), m_port, &addr);
 		if (r) {
 			LOG_UV_ERR(r);
-			return 1;
+			return false;
 		}
 
 		r = uv_tcp_init(loop, &m_server);
 		if (r) {
 			LOG_UV_ERR(r);
-			return 1;
+			return false;
 		}
 
 		r = uv_tcp_bind(&m_server, reinterpret_cast<const sockaddr*>(&addr), 0);
 		if (r) {
 			LOG_UV_ERR(r);
-			return 1;
+			return false;
 		}
 
 		r = uv_listen(reinterpret_cast<uv_stream_t*>(&m_server), SOMAXCONN, connection_cb);
 		if (r) {
 			LOG_UV_ERR(r);
-			return 1;
+			return false;
 		}
 
 		LOG("Server listening on port : %d", m_port);
@@ -77,17 +77,17 @@ namespace Bull {
 		                   });
 #endif
 
-		return 0;
+		return true;
 	}
 
 	template <typename T>
-	int TcpServer<T>::shutdown() {
+	bool TcpServer<T>::shutdown() {
 		m_sessions.close_all();
 		while (m_sessions.size()) {
 			std::this_thread::sleep_for(std::chrono::microseconds(10));
 		}
 
-		return 0;
+		return true;
 	}
 
 	template <typename T>

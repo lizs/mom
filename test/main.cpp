@@ -6,22 +6,27 @@
 
 using namespace Bull;
 char data[1024] = "Hello, world!";
-const char * default_ip = "192.168.1.17";
-using Client = TcpClient<Session<Packer<64>>>;
-using Server = TcpServer<Session<Packer<64>>>;
-Client * client;
-Server * server;
+const char* default_ip = "192.168.1.17";
+using Client = TcpClient<Session<Handler<64>>>;
+using Server = TcpServer<Session<Handler<64>>>;
+Client* client;
+Server* server;
 
-void request();
-
-void request_cb(bool success, CircularBuf<Packer<64>::CircularBufCapacity::Value>* pcb) {
-	if (success) {
-		request();
-	}
-}
 
 void request() {
-	client->request(data, strlen(data) + 1, request_cb);
+	client->request(data, strlen(data) + 1, [](bool success, CircularBuf<Handler<64>::CircularBufCapacity::Value>* pcb) {
+		                if (success) {
+			                request();
+		                }
+	                });
+}
+
+void push() {
+	client->push(data, strlen(data) + 1, [](bool status) {
+		             if (status) {
+			             push();
+		             }
+	             });
 }
 
 int main(int argc, char** argv) {

@@ -13,37 +13,40 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="头文件\tcp">
+      <UniqueIdentifier>{43519e04-feff-453c-8125-ca957989a20e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\circular_buf.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mem_pool.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="include\scheduler.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="include\session.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="include\session_mgr.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="include\tcp_client.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="include\tcp_server.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="include\bull.h">
-      <Filter>头文件</Filter>
+      <Filter>头文件\tcp</Filter>
     </ClInclude>
     <ClInclude Include="include\monitor.h">
-      <Filter>头文件</Filter>
+      <Filter>头文件\tcp</Filter>
     </ClInclude>
     <ClInclude Include="include\packer.h">
-      <Filter>头文件</Filter>
+      <Filter>头文件\tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mem_pool.h">
+      <Filter>头文件\tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="include\scheduler.h">
+      <Filter>头文件\tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="include\session.h">
+      <Filter>头文件\tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="include\session_mgr.h">
+      <Filter>头文件\tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tcp_client.h">
+      <Filter>头文件\tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tcp_server.h">
+      <Filter>头文件\tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="include\bull.h">
+      <Filter>头文件\tcp</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

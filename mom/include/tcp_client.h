@@ -19,10 +19,11 @@ namespace Bull {
 		          std::function<void()> close_cb = nullptr,
 		          bool auto_reconnect_enabled = true);
 		virtual ~TcpClient();
-		int startup();
-		int shutdown();
+		bool startup();
+		bool shutdown();
 #pragma region("Message patterns")
-		int request(const char* data, u_short size, std::function<void(bool, typename T::cirbular_buf_t*)> cb);
+		bool request(const char* data, uint16_t size, std::function<void(bool, typename T::circular_buf_t*)> cb);
+		bool push(const char* data, uint16_t size, std::function<void(bool)> cb);
 #pragma endregion("Message patterns")
 
 	private:
@@ -46,8 +47,8 @@ namespace Bull {
 	                        std::function<void()> open_cb,
 	                        std::function<void()> close_cb,
 	                        bool auto_reconnect_enabled) : m_session(nullptr), m_autoReconnect(auto_reconnect_enabled), m_ip(ip), m_port(port) {
-		m_session = new T([=, this](int status, T* session) {
-			                  if (status) {
+		m_session = new T([=, this](bool success, T* session) {
+			                  if (!success) {
 				                  if (m_autoReconnect) {
 					                  reconnect();
 				                  }
@@ -74,21 +75,15 @@ namespace Bull {
 	TcpClient<T>::~TcpClient() {}
 
 	template <typename T>
-	int TcpClient<T>::startup() {
-		int r;
-
+	bool TcpClient<T>::startup() {
 		// session start
-		r = m_session->prepare();
-		if(r) {
-			LOG_UV_ERR(r);
-			return r;
+		if (!m_session->prepare()) {
+			return false;
 		}
 
 		// connect
-		r = m_session->connect(m_ip.c_str(), m_port);
-		if (r) {
-			LOG_UV_ERR(r);
-			return 1;
+		if (!m_session->connect(m_ip.c_str(), m_port)) {
+			return false;
 		}
 		
 #if MONITOR_ENABLED
@@ -100,17 +95,7 @@ namespace Bull {
 		});
 #endif
 
-		uv_loop_t* loop;
-		loop = uv_default_loop();
-		// main loop
-		r = uv_run(loop, UV_RUN_DEFAULT);
-		if (r) {
-			LOG_UV_ERR(r);
-			return 1;
-		}		
-
-		MAKE_VALGRIND_HAPPY();
-		return 0;
+		return true;
 	}
 	
 	template <typename T>
@@ -122,17 +107,11 @@ namespace Bull {
 
 	template <typename T>
 	void TcpClient<T>::reconnect() {
-		int r = m_session->prepare();
-		if (r) {
-			LOG_UV_ERR(r);
-		}	
-		
+		m_session->prepare();		
 		double_reonn_delay();
+
 		m_scheduler.invoke(m_reconnDelay, [this]() {
-			                   int r = m_session->connect(m_ip.c_str(), m_port);
-			                   if (r) {
-				                   LOG_UV_ERR(r);
-			                   }
+			                   m_session->connect(m_ip.c_str(), m_port);
 		                   });
 	}
 
@@ -148,18 +127,17 @@ namespace Bull {
 	}
 
 	template <typename T>
-	int TcpClient<T>::shutdown() {
-		int r = m_session->close();
-		if (r) {
-			LOG_UV_ERR(r);
-			return 1;
-		}
-
-		return r;
+	bool TcpClient<T>::shutdown() {
+		return  m_session->close();
 	}
 
 	template <typename T>
-	int TcpClient<T>::request(const char* data, u_short size, std::function<void(bool, typename T::cirbular_buf_t*)> cb) {
+	bool TcpClient<T>::request(const char* data, uint16_t size, std::function<void(bool, typename T::circular_buf_t*)> cb) {
 		return m_session->request(data, size, cb);
+	}
+
+	template <typename T>
+	bool TcpClient<T>::push(const char* data, uint16_t size, std::function<void(bool)> cb) {
+		return m_session->push(data, size, cb);
 	}
 }

@@ -8,42 +8,44 @@
 #include <memory>
 
 namespace Bull {
+	typedef uint32_t timer_id_t;
+
 	// scheduler based on libuv
 	class Scheduler {
 	public:
-		const u_int INVALID_TIMER_ID = 0;
+		const timer_id_t INVALID_TIMER_ID = 0;
 
 		Scheduler() : m_seed(INVALID_TIMER_ID) {}
 
 		virtual ~Scheduler();
 
-		u_int invoke(uint64_t delay, std::function<void()> cb);
-		u_int invoke(uint64_t delay, uint64_t period, std::function<void()> cb);
-		bool cancel(u_int id);
+		timer_id_t invoke(uint64_t delay, std::function<void()> cb);
+		timer_id_t invoke(uint64_t delay, uint64_t period, std::function<void()> cb);
+		bool cancel(timer_id_t id);
 		void cancel_all();
 
 	private:
 		typedef struct {
 			uv_timer_t timer;
-			u_int id;
+			timer_id_t id;
 			uint64_t period;
 			Scheduler* scheduler;
 			std::function<void()> cb;
 		} timer_req_t;
 
-		u_int m_seed;
-		std::map<u_int, timer_req_t*> m_timers;
+		timer_id_t m_seed;
+		std::map<timer_id_t, timer_req_t*> m_timers;
 	};
 
 	inline Scheduler::~Scheduler() {
 		cancel_all();
 	}
 
-	inline u_int Scheduler::invoke(uint64_t delay, std::function<void()> cb) {
+	inline timer_id_t Scheduler::invoke(uint64_t delay, std::function<void()> cb) {
 		return this->invoke(delay, 0, cb);
 	}
 
-	inline u_int Scheduler::invoke(uint64_t delay, uint64_t period, std::function<void()> cb) {
+	inline timer_id_t Scheduler::invoke(uint64_t delay, uint64_t period, std::function<void()> cb) {
 		int r;
 		timer_req_t* treq;
 		uv_loop_t* loop;
@@ -86,7 +88,7 @@ namespace Bull {
 		return m_seed;
 	}
 
-	inline bool Scheduler::cancel(u_int id) {
+	inline bool Scheduler::cancel(timer_id_t id) {
 		auto it = m_timers.find(id);
 		if (m_timers.end() == it) return false;
 

@@ -5,14 +5,14 @@
 #include "bull.h"
 
 namespace Bull {
-	const cbuf_len_t ReserverdSize = 8;
 
 	template <cbuf_len_t Capacity>
 	class CircularBuf {
+		const cbuf_len_t ReserverdSize = sizeof(pack_size_t);
 	public:
 		explicit CircularBuf()
-			: m_head(0),
-			  m_tail(0) { }
+			: m_head(ReserverdSize),
+			  m_tail(ReserverdSize) { }
 
 		cbuf_len_t get_len() const {
 			if (m_tail < m_head) throw std::exception("get_len");
@@ -24,27 +24,18 @@ namespace Bull {
 			return Capacity - m_tail;
 		}
 
-		cbuf_len_t get_readable_len() const {
-			if (m_tail < m_head) throw std::exception("get_readable_len");
-			ASSERT(m_tail > m_head);
-			return m_tail - m_head;
-		}
-
-		void move_all(cbuf_len_t offset) {
-			move_head(offset);
-			move_tail(offset);
-		}
-
-		void move_head(cbuf_len_t offset) {
+		bool move_head(cbuf_len_t offset) {
 			m_head += offset;
 			if (m_head < 0 || m_head > Capacity)
-				throw std::exception("move_head");
+				return false;
+			return true;
 		}
 
-		void move_tail(cbuf_len_t offset) {
+		bool move_tail(cbuf_len_t offset) {
 			m_tail += offset;
 			if (m_tail < 0 || m_tail > Capacity)
-				throw std::exception("move_tail");
+				return false;
+			return true;
 		}
 
 		char* get_head() {
@@ -72,57 +63,57 @@ namespace Bull {
 		}
 
 		template <typename T>
-		void write_head(const T& value) {
+		bool write_head(const T& value) {
 			if (m_head < sizeof(T))
-				throw std::exception("write");
+				return false;
 
-			move_head(-sizeof(T));
+			if (!move_head(-sizeof(T))) return false;
 			T* p = reinterpret_cast<T*>(get_head());
 			*p = value;
+			return true;
 		}
 
 		template <typename T>
-		void write(const T& value) {
+		bool write(const T& value) {
 			if (get_writable_len() < sizeof(T))
-				throw std::exception("write");
+				return false;
 
 			T* p = reinterpret_cast<T*>(get_tail());
 			*p = value;
 
-			move_tail(sizeof(T));
+			return move_tail(sizeof(T));
 		}
 
 		template <typename T, typename ... Args>
-		void write(const T& value, Args ... args) {
-			write(value);
-			write(args ...);
+		bool write(const T& value, Args ... args) {
+			return write(value) && write(args ...);
 		}
 
-		void write_binary(char* data, cbuf_len_t len/*, cbuf_len_t offset*/) {
+		bool write_binary(char* data, cbuf_len_t len/*, cbuf_len_t offset*/) {
 			//move_tail(offset);
 			if (get_writable_len() < len)
-				throw std::exception("write");
+				return false;
 
 			memcpy(get_tail(), data, len);
-			move_tail(len);
+			return move_tail(len);
 		}
 
 		template <typename T>
-		T read() {
-			if (get_readable_len() < sizeof(T))
-				throw std::exception("read");
+		bool read(T& out) {
+			if (get_len() < sizeof(T))
+				return false;
 
-			T ret = *reinterpret_cast<T*>(get_head());
-			move_head(sizeof(T));
-			return ret;
+			out = *reinterpret_cast<T*>(get_head());
+			return move_head(sizeof(T));
 		}
 
 		template <typename T>
-		T get(cbuf_len_t offset = 0) {
+		bool get(T& out, cbuf_len_t offset = 0) {
 			if (offset < m_head || offset + sizeof(T) > m_tail)
-				throw std::exception("get");
+				return false;
 
-			return *reinterpret_cast<T*>(get_head() + offset);;
+			out = *reinterpret_cast<T*>(get_head() + offset);
+			return true;
 		}
 
 	private:
@@ -130,7 +121,7 @@ namespace Bull {
 		cbuf_len_t m_tail;
 
 		// use array to avoid heap allocation
-		char m_buf[Capacity + ReserverdSize];
+		char m_buf[Capacity];
 	};
 
 }

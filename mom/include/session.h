@@ -282,63 +282,87 @@ namespace Bull {
 	template <typename ... Args>
 	bool Session<Size>::write(const char* data, pack_size_t size, write_cb_0_t cb, Args ... args) {
 		auto* pcb = g_messagePool.newElement();
-		pcb->reset();
+		do {
+			pcb->reset();
 
-		// 1 pattern
-		// 2 serial
-		pcb->write(args...);
+			// 1 pattern
+			// 2 serial
+			if (!pcb->write(args...))
+				break;
 
-		// 3 data
-		pcb->write_binary(const_cast<char*>(data), size);
+			// 3 data
+			if (!pcb->write_binary(const_cast<char*>(data), size))
+				break;
 
-		// rewrite the package size
-		pcb->template write_head<pack_size_t>(pcb->get_readable_len());
+			// rewrite the package size
+			if (!pcb->template write_head<pack_size_t>(pcb->get_len()))
+				break;
 
-		return write(pcb, [cb](bool success, cbuf_t* pcb) {
-			             g_messagePool.deleteElement(pcb);
-			             if (cb)
-				             cb(success);
-		             });
+			return write(pcb, [cb](bool success, cbuf_t* pcb) {
+				             g_messagePool.deleteElement(pcb);
+				             if (cb)
+					             cb(success);
+			             });
+		}
+		while (0);
+
+		g_messagePool.deleteElement(pcb);
+		return false;
 	}
 
 	template <cbuf_len_t Size>
 	void Session<Size>::on_message(cbuf_t* pcb) {
-		auto pattern = static_cast<Pattern>(pcb->template read<pattern_t>());
-		switch (pattern) {
-			case Push:
-				if (m_pushHandler)
-					m_pushHandler(this, pcb->get_head(), pcb->get_readable_len());
-				break;
-
-			case Request: {
-				char* responseData;
-				cbuf_len_t responseDataSize;
-				auto serial = pcb->template read<serial_t>();
-
-				auto success = false;
-				if (m_reqHandler)
-					success = m_reqHandler(this, pcb->get_head(), pcb->get_readable_len(), &responseData, responseDataSize);
-
-				response(success, serial,
-				         success ? responseData : nullptr,
-				         success ? responseDataSize : 0, [](bool) {});
-
+		do {
+			pattern_t pattern;
+			if (!static_cast<Pattern>(pcb->template read<pattern_t>(pattern))) {
+				close();
 				break;
 			}
 
-			case Response:
-				on_response(pcb);
-				break;
+			switch (pattern) {
+				case Push:
+					if (m_pushHandler)
+						m_pushHandler(this, pcb->get_head(), pcb->get_len());
+					break;
 
-			default: break;
+				case Request: {
+					char* responseData;
+					cbuf_len_t responseDataSize;
+					serial_t serial;
+					if (!pcb->template read<serial_t>(serial)) {
+						close();
+						break;
+					}
+
+					auto success = false;
+					if (m_reqHandler)
+						success = m_reqHandler(this, pcb->get_head(), pcb->get_len(), &responseData, responseDataSize);
+
+					response(success, serial,
+					         success ? responseData : nullptr,
+					         success ? responseDataSize : 0, [](bool) {});
+
+					break;
+				}
+
+				case Response:
+					on_response(pcb);
+					break;
+
+				default: break;
+			}
 		}
+		while (0);
 
 		g_messagePool.deleteElement(pcb);
 	}
 
 	template <cbuf_len_t Size>
 	void Session<Size>::on_response(cbuf_t* pcb) {
-		auto serial = pcb->template read<serial_t>();
+		serial_t serial;
+		if (!pcb->template read<serial_t>(serial))
+			return;
+
 		auto it = m_requestsPool.find(serial);
 		if (it == m_requestsPool.end()) {
 			LOG("request serial %d not found", serial);
@@ -355,7 +379,7 @@ namespace Bull {
 		auto wr = g_wrPool.newElement();
 		wr->cb = cb;
 		wr->pcb = pcb;
-		wr->buf = uv_buf_init(pcb->get_head(), pcb->get_readable_len());
+		wr->buf = uv_buf_init(pcb->get_head(), pcb->get_len());
 
 		int r = uv_write(&wr->req,
 		                 reinterpret_cast<uv_stream_t*>(&m_stream),
@@ -446,7 +470,9 @@ namespace Bull {
 
 		m_sreq.session = this;
 		m_sreq.cb = m_closeCB;
-		r = uv_shutdown(reinterpret_cast<uv_shutdown_t*>(&m_sreq), reinterpret_cast<uv_stream_t*>(&m_stream), [](uv_shutdown_t* req, int status) {
+		r = uv_shutdown(reinterpret_cast<uv_shutdown_t*>(&m_sreq),
+		                reinterpret_cast<uv_stream_t*>(&m_stream),
+		                [](uv_shutdown_t* req, int status) {
 			                if (status) {
 				                LOG_UV_ERR(status);
 			                }
@@ -473,13 +499,15 @@ namespace Bull {
 	template <cbuf_len_t Size>
 	bool Session<Size>::dispatch(ssize_t nread) {
 		auto& cbuf = get_read_cbuf();
-		cbuf.move_tail(static_cast<uint16_t>(nread));
+		cbuf.move_tail(static_cast<pack_size_t>(nread));
 
 		while (true) {
 			if (pack_desired_size == 0) {
 				// get package len
-				if (cbuf.get_len() >= sizeof(uint16_t)) {
-					pack_desired_size = cbuf.template read<uint16_t>();
+				if (cbuf.get_len() >= sizeof(pack_size_t)) {
+					if (!cbuf.template read<pack_size_t>(pack_desired_size))
+						return false;
+
 					if (pack_desired_size > Size) {
 						LOG("package much too huge : %d bytes", pack_desired_size);
 						return false;

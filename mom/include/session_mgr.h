@@ -6,7 +6,7 @@
 
 namespace Bull {
 	template <typename T>
-	class SessionMgr {
+	class SessionMgr final {
 	public:
 		void close_all();
 		T* get_session(int id);

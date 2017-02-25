@@ -13,7 +13,7 @@ namespace Bull {
 
 	// represents a session between server and client
 	template <cbuf_len_t Size = 1024>
-	class Session {
+	class Session final {
 		template <typename TSession>
 		friend class TcpServer;
 		template <typename TSession>

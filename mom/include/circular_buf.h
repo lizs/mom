@@ -7,7 +7,7 @@
 namespace Bull {
 
 	template <cbuf_len_t Capacity>
-	class CircularBuf {
+	class CircularBuf final{
 		const cbuf_len_t ReserverdSize = sizeof(pack_size_t);
 	public:
 		explicit CircularBuf()
@@ -26,15 +26,19 @@ namespace Bull {
 
 		bool move_head(cbuf_len_t offset) {
 			m_head += offset;
-			if (m_head < 0 || m_head > Capacity)
+			if (m_head < 0 || m_head > Capacity) {
+				LOG("move_head failed, m_head : %d offset : %d", m_head, offset);
 				return false;
+			}
 			return true;
 		}
 
 		bool move_tail(cbuf_len_t offset) {
 			m_tail += offset;
-			if (m_tail < 0 || m_tail > Capacity)
+			if (m_tail < 0 || m_tail > Capacity) {
+				LOG("move_tail failed, m_tail : %d offset : %d", m_tail, offset);
 				return false;
+			}
 			return true;
 		}
 
@@ -89,10 +93,11 @@ namespace Bull {
 			return write(value) && write(args ...);
 		}
 
-		bool write_binary(char* data, cbuf_len_t len/*, cbuf_len_t offset*/) {
-			//move_tail(offset);
-			if (get_writable_len() < len)
+		bool write_binary(char* data, cbuf_len_t len) {
+			if (get_writable_len() < len) {
+				LOG("write_binary failed, writable_len : %d < len : %d", get_writable_len(), len);
 				return false;
+			}
 
 			memcpy(get_tail(), data, len);
 			return move_tail(len);

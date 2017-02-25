@@ -8,7 +8,7 @@
 
 namespace Bull {
 	template <typename T>
-	class TcpClient {
+	class TcpClient final {
 
 		const uint64_t MAX_RECONN_DELAY = 32000;
 		const uint64_t DEFAULT_RECONN_DELAY = 1000;
@@ -23,7 +23,7 @@ namespace Bull {
 		          typename T::req_handler_t req_handler = nullptr,
 		          typename T::push_handler_t push_handler = nullptr,
 		          bool auto_reconnect_enabled = true);
-		virtual ~TcpClient();
+		~TcpClient();
 		bool startup();
 		bool shutdown();
 #pragma region("Message patterns")

@@ -4,11 +4,11 @@
 #include "session.h"
 
 using namespace Bull;
-char reqData[1024] = "I'm a request";
+char reqData[1024] = "I'm a request I'm a request I'm a request I'm a request I'm a request I'm a request I'm a request I'm a request I'm a request I'm a request I'm a request I'm a request I'm a request I'm a request I'm a request I'm a request ";
 char repData[1024] = "I'm a response";
 char pushData[1024] = "I'm a push";
 const char* default_ip = "127.0.0.1";
-using session_t = Session<128>;
+using session_t = Session<1024>;
 using Client = TcpClient<session_t>;
 using Server = TcpServer<session_t>;
 Client* client;
@@ -65,7 +65,8 @@ int main(int argc, char** argv) {
 			                    // session established callback
 			                    [](bool success, Client::session_t* session) {
 				                    if (success) {
-					                    push(session);
+					                    //push(session);
+										request();
 				                    }
 			                    },
 

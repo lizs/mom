@@ -12,7 +12,7 @@
 
 namespace Bull {
 	template <typename T>
-	class TcpServer {
+	class TcpServer final {
 	public:
 		typedef T session_t;
 		TcpServer(const char* ip, int port,

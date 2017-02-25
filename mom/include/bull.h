@@ -28,68 +28,7 @@ enum Pattern {
 	Response = 2,
 };
 
-/*
-Pattern(4 bit) NodesCnt(4bit) Command(8 bit)
-*/
-enum Mask {
-	MaskPattern = 0xC000,
-	MaskNodesCnt = 0xC000,
-	MaskCmd = 0x00FF,
-};
-
-/*
-暂支持最多64个MOM命令
-*/
-enum SysCommand {
-	Null,
-	KeepAlive,
-	Register,
-};
-
-//static Pattern get_pattern(mask_t mask) {
-//	return static_cast<Pattern>(mask & MaskPattern);
-//}
-//
-//static mask_t make_pattern(Pattern pattern) {
-//	return static_cast<mask_t>(pattern) << 12;
-//}
-//
-////static bool get_error(mask_t mask) {
-////	return mask & MaskError;
-////}
-////
-////static mask_t make_error(bool error) {
-////	return error ? MaskError : 0;
-////}
-//
-//static uint8_t get_nodes_cnt(mask_t mask) {
-//	return static_cast<uint8_t>(mask & MaskPattern) >> 8;
-//}
-//
-//static mask_t make_nodes_cnt(uint8_t cnt) {
-//	return static_cast<mask_t>(cnt) << 8;
-//}
-//
-//static SysCommand get_cmd(mask_t mask) {
-//	return static_cast<SysCommand>(mask & MaskCmd);
-//}
-//
-//static mask_t make_cmd(SysCommand cmd) {
-//	return static_cast<mask_t>(cmd);
-//}
-
-// MOM系统错误
-// < 0 为系统错误码
-// > 0 为业务错误码
-enum SysError {
-	Invalid = SHRT_MIN,
-	ServerNotFound,
-	Success = 0,
-};
-
 #pragma endregion 
-
-
 
 #define PRINT_UV_ERR(code)         \
  do {                                                     \

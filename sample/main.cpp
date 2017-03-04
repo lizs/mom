@@ -1,94 +1,34 @@
-#include<functional>
-#include "tcp_server.h"
-#include "tcp_client.h"
-#include "session.h"
+#include <iostream>
+#include <boost/signals2.hpp>
+#include <observable/signal.h>
 
-using namespace Bull;
-char reqData[1024] = "I'm a request I'm a request I'm a request I'm a request I'm a request I'm a request I'm a request I'm a request I'm a request I'm a request I'm a request I'm a request I'm a request I'm a request I'm a request I'm a request ";
-char repData[1024] = "I'm a response";
-char pushData[1024] = "I'm a push";
-const char* default_ip = "127.0.0.1";
-using session_t = Session<1024>;
-using Client = TcpClient<session_t>;
-using Server = TcpServer<session_t>;
-Client* client;
-Server* server;
-
-void push() {
-	client->push(pushData, strlen(pushData) + 1, [](bool success) {
-		             if (success)
-			             push();
-	             });
+void print() {
+	std::cout << "Hello, free function!" << std::endl;
 }
 
-void push(session_t * session) {
-	session->push(pushData, strlen(pushData) + 1, [](bool success) {});
-}
-
-void request() {
-	client->request(reqData, strlen(reqData) + 1, [](bool success, Client::cbuf_t* pcb) {
-		                if (success) {
-			                request();
-		                }
-	                });
-}
+struct Test {
+	void print() {
+		std::cout << "Hello, member function!" << std::endl;
+	}
+};
 
 int main(int argc, char** argv) {
-	if (argc > 1) {
-		printf("%s %s\n", argv[0], argv[1]);
+	using namespace VK;
+	
+	Signal<void(*)()> sig1;
+	auto slot1 = make_slot(print);
+	sig1.connect(slot1);
+	sig1.emit();
+	sig1.disconnect(make_slot(print));
+	sig1.emit();
 
-		if (strcmp(argv[1], "s") == 0) {
-			server = new Server("0.0.0.0", 5001,
-			                    // request handler
-			                    [](Server::session_t * session, const char* data, cbuf_len_t len, char** responseData, cbuf_len_t& responseLen) {
-				                    // response
-				                    *responseData = repData;
-				                    responseLen = strlen(repData) + 1;
+	Test test;
+	Signal<void(Test::*)()> sig2;
+	auto slot2 = make_slot(&Test::print, test);
+	sig2.connect(slot2);
+	sig2.emit();
+	sig2.disconnect(slot2);
+	sig2.emit();
 
-				                    // true=>target request has been responsed correctly
-				                    return true;
-			                    },
-
-			                    // push handler
-			                    [](Server::session_t * session, const char* data, cbuf_len_t len) {
-				                    // for example
-				                    // do nothing here
-				                    push(session);
-			                    });
-			server->startup();
-			RUN_UV_DEFAULT_LOOP();
-			server->shutdown();
-			delete server;
-		}
-		else if (strcmp(argv[1], "c") == 0) {
-			client = new Client(argc > 2 ? argv[2] : default_ip, 5001,
-			                    // session established callback
-			                    [](bool success, Client::session_t* session) {
-				                    if (success) {
-					                    //push(session);
-										request();
-				                    }
-			                    },
-
-			                    // session closed callback
-			                    [](Client::session_t* session) { },
-
-			                    // request handler
-			                    [](Server::session_t* session, const char* data, cbuf_len_t len, char** responseData, cbuf_len_t& responseLen) {
-				                    return false;
-			                    },
-			                    // push handler
-			                    [](Server::session_t* session, const char* data, cbuf_len_t len) {
-				                    push(session);
-			                    },
-			                    true);
-			client->startup();
-			RUN_UV_DEFAULT_LOOP();
-			client->shutdown();
-			delete client;
-		}
-		return 0;
-	}
-
-	return -1;
+	return 0;
 }

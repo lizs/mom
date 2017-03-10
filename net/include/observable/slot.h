@@ -40,12 +40,6 @@ namespace VK {
 			return !((*this) == other);
 		}
 
-		// 增加 < 比较
-//		bool operator <(const slot& other) const {
-//			if (&callee_ == &other.callee_) return func_ < other.func_;
-//			return &callee_ < &other.callee_;
-//		}
-
 	private:
 		T& callee_;
 		func_type func_;
@@ -106,11 +100,6 @@ namespace VK {
 		bool operator!=(const slot& other) const {
 			return !((*this) == other);
 		}
-
-		// 增加 < 比较
-		//bool operator <(const slot& other) const {
-		//	return func_ < other.func_;
-		//}
 
 	private:
 		func_type func_;

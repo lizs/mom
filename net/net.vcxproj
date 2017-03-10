@@ -88,10 +88,13 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_LIB;EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../net/include;../../net/include/cluster;../third/libuv/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
+      <AdditionalLibraryDirectories>../third/libuv</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libuv.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Lib>
       <AdditionalDependencies>libuv.lib</AdditionalDependencies>
@@ -99,6 +102,10 @@
     <Lib>
       <AdditionalLibraryDirectories>../third/libuv</AdditionalLibraryDirectories>
     </Lib>
+    <PostBuildEvent>
+      <Command>xcopy /Y/F/I/S "$(OutputPath)$(TargetFileName)" "$(SolutionDir)../publish"
+xcopy /Y/F/I/S "$(OutputPath)$(TargetName).pdb" "$(SolutionDir)../publish"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -124,26 +131,33 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_LIB;EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../net/include;../third/libuv/include</AdditionalIncludeDirectories>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>../third/libuv</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libuv.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /Y/F/I/S "$(OutputPath)$(TargetFileName)" "$(SolutionDir)../publish"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\bytes_pool.h" />
     <ClInclude Include="include\cluster\game.h" />
     <ClInclude Include="include\cluster\node.h" />
     <ClInclude Include="include\cluster\coordination.h" />
     <ClInclude Include="include\data\kv.h" />
-    <ClInclude Include="include\net.h" />
+    <ClInclude Include="include\mem_pool.h" />
+    <ClInclude Include="include\defines.h" />
     <ClInclude Include="include\circular_buf.h" />
     <ClInclude Include="include\cluster\gate.h" />
     <ClInclude Include="include\cluster\mom_client.h" />
     <ClInclude Include="include\cluster\mom_server.h" />
-    <ClInclude Include="include\cluster\proto.h" />
-    <ClInclude Include="include\mem_pool.h" />
     <ClInclude Include="include\monitor.h" />
     <ClInclude Include="include\observable\signal.h" />
     <ClInclude Include="include\observable\slot.h" />
@@ -153,6 +167,21 @@
     <ClInclude Include="include\singleton.h" />
     <ClInclude Include="include\tcp_client.h" />
     <ClInclude Include="include\tcp_server.h" />
+    <ClInclude Include="include\util.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\bytes_pool.cpp" />
+    <ClCompile Include="src\circular_buf.cpp" />
+    <ClCompile Include="src\cluster\coordination.cpp" />
+    <ClCompile Include="src\cluster\game.cpp" />
+    <ClCompile Include="src\cluster\gate.cpp" />
+    <ClCompile Include="src\cluster\mom_server.cpp" />
+    <ClCompile Include="src\cluster\node.cpp" />
+    <ClCompile Include="src\scheduler.cpp" />
+    <ClCompile Include="src\session.cpp" />
+    <ClCompile Include="src\session_mgr.cpp" />
+    <ClCompile Include="src\tcp_client.cpp" />
+    <ClCompile Include="src\tcp_server.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

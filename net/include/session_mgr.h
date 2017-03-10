@@ -3,74 +3,38 @@
 
 #pragma once
 #include <map>
+#include "defines.h"
+#include <vector>
 
 namespace VK {
+	namespace Net {		
+		class TcpServer;	
+		class Session;
+		class CircularBuf;
 
-	namespace Net {
-		template <typename T>
-		class TcpServer;
-
-		template <typename T>
-		class SessionMgr final {
+		class NET_API SessionMgr final {
+			typedef CircularBuf cbuf_t;
 		public:
-			explicit SessionMgr(TcpServer<T>* host) : m_host(host) {}
+			explicit SessionMgr(TcpServer* host) : m_host(host) {}
 
-			TcpServer<T>* get_host() {
+			TcpServer* get_host() const {
 				return m_host;
 			}
 
 			void close_all();
-			T* get_session(int id);
-			bool add_session(T* session);
-			void remove(T* session);
-			size_t size();
+			Session* get_session(int id);
+			bool add_session(Session* session);
+			void remove(Session* session);
+			size_t size() const;
 
+#pragma region ("¹ã²¥¡¢×é²¥")
+			void broadcast(cbuf_ptr_t pcb);
+			static void multicast(cbuf_ptr_t pcb, std::vector<Session*>& sessions);
+#pragma endregion 
+			
 		private:
-			std::map<int, T*> m_sessions;
-			TcpServer<T>* m_host;
+			std::map<int, Session*> m_sessions;
+			TcpServer* m_host;
 		};
-
-		template <typename T>
-		void SessionMgr<T>::remove(T* session) {
-			// vs algrithm compile bug?
-			// C2166
-			auto it = m_sessions.find(session->get_id());
-			ASSERT(it != m_sessions.end());
-			if (it != m_sessions.end()) {
-				delete it->second;
-				m_sessions.erase(it);
-			}
-		}
-
-		template <typename T>
-		size_t SessionMgr<T>::size() {
-			return m_sessions.size();
-		}
-
-		template <typename T>
-		void SessionMgr<T>::close_all() {
-			for (auto kv : m_sessions) {
-				kv.second->close();
-			}
-		}
-
-		template <typename T>
-		T* SessionMgr<T>::get_session(int id) {
-			auto it = m_sessions.find(id);
-			if (it != m_sessions.end()) return it->second;
-			return nullptr;
-		}
-
-		template <typename T>
-		bool SessionMgr<T>::add_session(T* session) {
-			auto it = m_sessions.find(session->get_id());
-			if (it != m_sessions.end())
-				return false;
-
-			LOG("session %d established!", session->get_id());
-			session->set_host(this);
-			m_sessions.insert(m_sessions.end(), std::make_pair(session->get_id(), session));
-			return true;
-		}
 	}
 }

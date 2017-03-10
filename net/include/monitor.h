@@ -1,5 +1,5 @@
 #pragma once
-#include "net.h"
+#include "defines.h"
 #include "scheduler.h"
 
 namespace VK {
@@ -9,7 +9,7 @@ namespace VK {
 		public:
 			Monitor()
 				: m_readed(0),
-				  m_wroted(0), m_writingQueued(0), m_timerID(INVALID_TIMER_ID) {}
+				  m_wroted(0), m_pending(0), m_timerID(INVALID_TIMER_ID) { }
 
 			uint64_t get_readed() const {
 				return m_readed;
@@ -19,8 +19,8 @@ namespace VK {
 				return m_wroted;
 			}
 
-			uint64_t get_writing() const {
-				return m_writingQueued;
+			uint64_t get_pending() const {
+				return m_pending;
 			}
 
 			void inc_readed() {
@@ -31,19 +31,19 @@ namespace VK {
 				++m_wroted;
 			}
 
-			void inc_writing() {
-				++m_writingQueued;
+			void inc_pending() {
+				++m_pending;
 			}
 
-			void dec_writing() {
-				--m_writingQueued;
+			void dec_pending() {
+				--m_pending;
 			}
 
 			void start() {
 #if MONITOR_ENABLED
 				// performance monitor
 				m_timerID = m_scheduler.invoke(DefaultPeriod, DefaultPeriod, [this]() {
-					                               LOG("Read : %llu /s Write : %llu /s, Queued : %llu", get_readed() * 1000 / DefaultPeriod, get_wroted() * 1000 / DefaultPeriod, get_writing()) ;
+					                               LOG("Read : %llu /s Write : %llu /s, Pending : %llu", get_readed() * 1000 / DefaultPeriod, get_wroted() * 1000 / DefaultPeriod, get_pending());
 					                               reset_readed();
 					                               reset_wroted();
 				                               });
@@ -73,7 +73,7 @@ namespace VK {
 			// shared between sessions
 			uint64_t m_wroted;
 			// record packages writing
-			uint64_t m_writingQueued;
+			uint64_t m_pending;
 
 			Scheduler m_scheduler;
 			timer_id_t m_timerID;

@@ -1,5 +1,4 @@
 #include <iostream>
-#include <boost/signals2.hpp>
 #include <observable/signal.h>
 
 void print() {

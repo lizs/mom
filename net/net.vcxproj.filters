@@ -28,12 +28,18 @@
     <Filter Include="头文件\observable">
       <UniqueIdentifier>{56fac7d3-dab3-41ad-a77f-f7230d918b37}</UniqueIdentifier>
     </Filter>
+    <Filter Include="源文件\net">
+      <UniqueIdentifier>{e7cada55-20ec-4405-b5fd-2a9ba0c87067}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\cluster">
+      <UniqueIdentifier>{a7df4987-dc65-471f-a7e1-0e21c62c5b00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\cluster\business">
+      <UniqueIdentifier>{d1f55289-ac11-4431-a1d0-e4a038cf744f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\circular_buf.h">
-      <Filter>头文件\net</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mem_pool.h">
       <Filter>头文件\net</Filter>
     </ClInclude>
     <ClInclude Include="include\monitor.h">
@@ -63,12 +69,6 @@
     <ClInclude Include="include\cluster\mom_server.h">
       <Filter>头文件\cluster</Filter>
     </ClInclude>
-    <ClInclude Include="include\cluster\proto.h">
-      <Filter>头文件\cluster</Filter>
-    </ClInclude>
-    <ClInclude Include="include\net.h">
-      <Filter>头文件\net</Filter>
-    </ClInclude>
     <ClInclude Include="include\cluster\gate.h">
       <Filter>头文件\cluster\business</Filter>
     </ClInclude>
@@ -90,5 +90,55 @@
     <ClInclude Include="include\observable\slot.h">
       <Filter>头文件\observable</Filter>
     </ClInclude>
+    <ClInclude Include="include\bytes_pool.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mem_pool.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
+    <ClInclude Include="include\util.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
+    <ClInclude Include="include\defines.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\session.cpp">
+      <Filter>源文件\net</Filter>
+    </ClCompile>
+    <ClCompile Include="src\circular_buf.cpp">
+      <Filter>源文件\net</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bytes_pool.cpp">
+      <Filter>源文件\net</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scheduler.cpp">
+      <Filter>源文件\net</Filter>
+    </ClCompile>
+    <ClCompile Include="src\session_mgr.cpp">
+      <Filter>源文件\net</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tcp_client.cpp">
+      <Filter>源文件\net</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tcp_server.cpp">
+      <Filter>源文件\net</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cluster\node.cpp">
+      <Filter>源文件\cluster</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cluster\coordination.cpp">
+      <Filter>源文件\cluster\business</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cluster\game.cpp">
+      <Filter>源文件\cluster\business</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cluster\gate.cpp">
+      <Filter>源文件\cluster\business</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cluster\mom_server.cpp">
+      <Filter>源文件\cluster</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -41,7 +41,7 @@ private:\
 	template <typename R, typename... Params>
 	class Signal<R(*)(Params ...)> {
 	public:
-		typedef VK::slot<R(*)(Params ...)> slot_t;
+		typedef slot<R(*)(Params ...)> slot_t;
 		SIGNAL_IMP
 	};
 
@@ -49,7 +49,7 @@ private:\
 	template <typename T, typename R, typename... Params>
 	class Signal<R(T::*)(Params ...)> {
 	public:
-		typedef VK::slot<R(T::*)(Params ...)> slot_t;
+		typedef slot<R(T::*)(Params ...)> slot_t;
 		SIGNAL_IMP
 	};
 }

@@ -7,10 +7,14 @@ namespace VK {
 		// 本池中的T数量不超过Capacity
 		template <typename T, size_t Capacity = 0>
 		class MemoryPool {
+
+#pragma warning(push)
+#pragma warning(disable:4624)
 			union Slot {
 				T element;
 				Slot* next;
 			};
+#pragma warning(pop) 
 
 			Slot* _free_slots = nullptr;
 			size_t _slot_cnt = 0;

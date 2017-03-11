@@ -24,7 +24,7 @@ namespace VK {
 				return false;
 			}
 
-			// connect
+			// conn
 			m_session->connect_by_host(m_host.c_str(), m_port);
 			return true;
 		}

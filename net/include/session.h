@@ -104,7 +104,7 @@ namespace VK {
 			// underline uv stream
 			uv_tcp_t m_stream;
 
-			// connect request
+			// conn request
 			connect_req_t m_creq;
 			// shutdown request
 			shutdown_req_t m_sreq;

@@ -81,9 +81,6 @@
     <ClInclude Include="include\cluster\game.h">
       <Filter>头文件\cluster\business</Filter>
     </ClInclude>
-    <ClInclude Include="include\data\kv.h">
-      <Filter>头文件\data</Filter>
-    </ClInclude>
     <ClInclude Include="include\observable\slot.h">
       <Filter>头文件\observable</Filter>
     </ClInclude>
@@ -104,6 +101,9 @@
     </ClInclude>
     <ClInclude Include="include\observable\signal2.h">
       <Filter>头文件\observable</Filter>
+    </ClInclude>
+    <ClInclude Include="include\data\value.h">
+      <Filter>头文件\data</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

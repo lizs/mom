@@ -75,7 +75,7 @@ void broadcast() {
 
 	client->push(pcb, [](bool success) {
 		             if (success) {
-						 broadcast();
+			             broadcast();
 			             std::this_thread::sleep_for(std::chrono::nanoseconds(1));
 		             }
 	             });
@@ -144,8 +144,8 @@ void run_coordination() {
 	cfg.nid = COORDINATION_ID;
 	cfg.ntype = NT_Coordination;
 	cfg.gate_addresses = {
-		{ default_host, GATE_1_PORT},
-		{ default_host, GATE_2_PORT},
+		{default_host, GATE_1_PORT},
+		{default_host, GATE_2_PORT},
 	};
 
 	auto game = std::make_unique<Coordination>(cfg);
@@ -159,8 +159,8 @@ void run_game(node_id_t nid) {
 	cfg.nid = nid;
 	cfg.ntype = NT_Game;
 	cfg.gate_addresses = {
-		{ default_host, GATE_1_PORT},
-		{ default_host, GATE_2_PORT},
+		{default_host, GATE_1_PORT},
+		{default_host, GATE_2_PORT},
 	};
 
 	auto game = std::make_unique<Game>(cfg);

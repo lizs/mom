@@ -1,6 +1,7 @@
 #include <iostream>
 #include <observable/signal.h>
 #include <observable/signal2.h>
+#include <data/value.h>
 
 void print() {
 	std::cout << "Hello, free function!" << std::endl;
@@ -42,7 +43,14 @@ int main(int argc, char** argv) {
 	sig3.disconnect_all();
 	sig3();
 
-
+	Value<int> intger = 1;
+	intger.connect([](const int& val) {
+		std::cout << "Changed to : " << val << std::endl;
+	});
+	intger = 2;
+	intger = 3;
+	intger = 4;
+	intger = 4;
 
 	return 0;
 }

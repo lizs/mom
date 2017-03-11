@@ -45,8 +45,8 @@ enum Mode {
 Mode g_mode = M_Request;
 
 void request() {
-	auto pcb = alloc_request(OPS_Request, GAME_ID, strlen(reqData) + 1);
-	pcb->write_binary(reqData, strlen(reqData) + 1);
+	auto pcb = alloc_request(OPS_Request, GAME_ID, cbuf_len_t(strlen(reqData) + 1));
+	pcb->write_binary(reqData, cbuf_len_t(strlen(reqData) + 1));
 
 	client->request(pcb, [](error_no_t error_no, cbuf_ptr_t pcb) {
 		                if (error_no == Success)
@@ -58,8 +58,8 @@ void request() {
 }
 
 void push() {
-	auto pcb = alloc_push(OPS_Push, GAME_ID, strlen(pushData) + 1);
-	pcb->write_binary(pushData, strlen(pushData) + 1);
+	auto pcb = alloc_push(OPS_Push, GAME_ID, cbuf_len_t(strlen(pushData) + 1));
+	pcb->write_binary(pushData, cbuf_len_t(strlen(pushData) + 1));
 
 	client->push(pcb, [](bool success) {
 		             if (success) {
@@ -70,8 +70,8 @@ void push() {
 }
 
 void broadcast() {
-	auto pcb = alloc_broadcast(strlen(broadcastData) + 1);
-	pcb->write_binary(broadcastData, strlen(broadcastData) + 1);
+	auto pcb = alloc_broadcast(cbuf_len_t(strlen(broadcastData) + 1));
+	pcb->write_binary(broadcastData, cbuf_len_t(strlen(broadcastData) + 1));
 
 	client->push(pcb, [](bool success) {
 		             if (success) {

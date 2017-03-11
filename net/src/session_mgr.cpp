@@ -31,7 +31,7 @@ namespace VK {
 		}
 
 		void SessionMgr::multicast(cbuf_ptr_t pcb, std::vector<Session*>& sessions) {
-			if (!Session::pack(pcb, Push)) {
+			if (!pack(pcb, Push)) {
 				return;
 			}
 

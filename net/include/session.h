@@ -43,26 +43,21 @@ namespace VK {
 			void request(cbuf_ptr_t pcb, req_cb_t req_cb);
 			// push pattern
 			void push(cbuf_ptr_t pcb, send_cb_t cb);
+			// ping
+			void ping();
+			// pong
+			void pong();
 #pragma endregion("Message patterns")
 
 			// post read request
 			// normally requested by a TcpServer
 			// TcpClient will post it when session established automatically
 			bool post_read_req();
-
-			// ping
-			void ping();
-			// pong
-			void pong();
-
+			
 			// return seconds
 			time_t get_elapsed_since_last_ping() const;
 			time_t get_elapsed_since_last_response() const;
 			uint8_t get_keep_alive_counter() const;
-
-			// ´ò°ü
-			template <typename ... Args>
-			static bool pack(cbuf_ptr_t pcb, Args ... args);
 
 		private:
 			// dispatch packages
@@ -151,20 +146,6 @@ namespace VK {
 
 			if (cb)
 				cb(false);
-		}
-
-		template <typename ... Args>
-		bool Session::pack(cbuf_ptr_t pcb, Args ... args) {
-			// 1 pattern
-			// 2 serial ...
-			if (!pcb->write_head(args...))
-				return false;
-
-			// rewrite the package size
-			if (!pcb->write_head<pack_size_t>(pcb->get_len()))
-				return false;
-
-			return true;
 		}
 	}
 }

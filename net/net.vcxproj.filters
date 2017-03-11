@@ -84,9 +84,6 @@
     <ClInclude Include="include\data\kv.h">
       <Filter>头文件\data</Filter>
     </ClInclude>
-    <ClInclude Include="include\observable\signal.h">
-      <Filter>头文件\observable</Filter>
-    </ClInclude>
     <ClInclude Include="include\observable\slot.h">
       <Filter>头文件\observable</Filter>
     </ClInclude>
@@ -101,6 +98,12 @@
     </ClInclude>
     <ClInclude Include="include\defines.h">
       <Filter>头文件\net</Filter>
+    </ClInclude>
+    <ClInclude Include="include\observable\signal.h">
+      <Filter>头文件\observable</Filter>
+    </ClInclude>
+    <ClInclude Include="include\observable\signal2.h">
+      <Filter>头文件\observable</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

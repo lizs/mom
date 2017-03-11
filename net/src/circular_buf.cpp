@@ -83,23 +83,11 @@ namespace VK {
 			}
 		}
 
-		void CircularBuf::reset(cbuf_len_t size) {
+		void CircularBuf::reset(cbuf_len_t size, cbuf_len_t reserved_size) {
 			clear();
 
-			m_reserved = CBUF_RESERVED_SIZE;
-			m_capacity = CBUF_RESERVED_SIZE + size;
-			m_buf = Singleton<BytesPool>::instance().alloc(m_capacity);
-			m_head = m_reserved;
-			m_tail = m_reserved;
-
-			ZeroMemory(m_buf, m_capacity);
-		}
-
-		void CircularBuf::reset_without_reserved(cbuf_len_t size) {
-			clear();
-
-			m_reserved = 0;
-			m_capacity = size;
+			m_reserved = reserved_size;
+			m_capacity = reserved_size + size;
 			m_buf = Singleton<BytesPool>::instance().alloc(m_capacity);
 			m_head = m_reserved;
 			m_tail = m_reserved;

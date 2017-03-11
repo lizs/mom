@@ -6,6 +6,7 @@
 
 namespace VK {
 	namespace Net {
+
 		static cbuf_ptr_t alloc_cbuf(cbuf_len_t len) {
 			cbuf_ptr_t pcb(Singleton<cbuf_pool_t>::instance().alloc());
 			pcb->reset(len);
@@ -59,7 +60,22 @@ namespace VK {
 		template <typename T>
 		static cbuf_ptr_t alloc_request(ops_t ops, node_id_t nid) {
 			return alloc_request(ops, nid, sizeof(T));
-		}		
+		}
+
+		// ´ò°ü
+		template <typename ... Args>
+		static bool pack(cbuf_ptr_t pcb, Args ... args) {
+			// 1 pattern
+			// 2 serial ...
+			if (!pcb->write_head(args...))
+				return false;
+
+			// rewrite the package size
+			if (!pcb->write_head<pack_size_t>(pcb->get_len()))
+				return false;
+
+			return true;
+		}
 
 		static const char* net_str_err(error_no_t error_no) {
 			switch (static_cast<NetError>(error_no)) {

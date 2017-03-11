@@ -1,5 +1,6 @@
 #include <iostream>
 #include <observable/signal.h>
+#include <observable/signal2.h>
 
 void print() {
 	std::cout << "Hello, free function!" << std::endl;
@@ -14,7 +15,7 @@ struct Test {
 int main(int argc, char** argv) {
 	using namespace VK;
 	
-	Signal<void(*)()> sig1;
+	Signal2<void(*)()> sig1;
 	auto slot1 = make_slot(print);
 	sig1.connect(slot1);
 	sig1.emit();
@@ -22,12 +23,26 @@ int main(int argc, char** argv) {
 	sig1.emit();
 
 	Test test;
-	Signal<void(Test::*)()> sig2;
+	Signal2<void(Test::*)()> sig2;
 	auto slot2 = make_slot(&Test::print, test);
 	sig2.connect(slot2);
 	sig2.emit();
 	sig2.disconnect(slot2);
 	sig2.emit();
+
+	Signal<void()> sig3;
+	auto cid = sig3.connect(print);
+	sig3.connect(std::bind(&Test::print, test));
+	sig3.connect([]() {
+		std::cout << "Hello, lambda!" << std::endl;
+	});
+	sig3();
+	sig3.disconnect(cid);
+	sig3();
+	sig3.disconnect_all();
+	sig3();
+
+
 
 	return 0;
 }

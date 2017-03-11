@@ -105,6 +105,9 @@
     <ClInclude Include="include\data\value.h">
       <Filter>头文件\data</Filter>
     </ClInclude>
+    <ClInclude Include="include\data\property.h">
+      <Filter>头文件\data</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\session.cpp">

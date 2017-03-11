@@ -4,7 +4,8 @@
 #include <map>
 
 namespace VK {
-	typedef uint32_t connector_t;
+	typedef uint32_t connector_id_t;
+	constexpr connector_id_t INVALID_CONNECTOR_ID = 0;
 
 	template <typename T>
 	class Signal;
@@ -14,20 +15,21 @@ namespace VK {
 	public:
 		typedef std::function<R(Params ...)> slot_t;
 
-		connector_t connect(slot_t slot) {
+		connector_id_t conn(slot_t slot) {
+			if (slot == nullptr) return INVALID_CONNECTOR_ID;
 			++m_seed;
 			m_slots[m_seed] = slot;
 			return m_seed;
 		}
 
-		void disconnect(connector_t cid) {
+		void disconn(connector_id_t cid) {
 			auto it = m_slots.find(cid);
 			if (it != m_slots.end()) {
 				m_slots.erase(it);
 			}
 		}
 
-		void disconnect_all() {
+		void disconn_all() {
 			m_slots.clear();
 		}
 
@@ -46,7 +48,7 @@ namespace VK {
 		}
 
 	private:
-		std::map<connector_t, slot_t> m_slots;
-		connector_t m_seed = 0;
+		std::map<connector_id_t, slot_t> m_slots;
+		connector_id_t m_seed = 0;
 	};
 }

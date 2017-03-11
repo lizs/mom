@@ -1,55 +1,52 @@
-// lizs 2017.3.4
+// lizs 2017.3.11
 #pragma once
+#include <functional>
+#include <map>
 
-#include <list>
-#include "slot.h"
-
-// 参考delegate实现
 namespace VK {
-#pragma region("Macros")
-#define SIGNAL_IMP \
-void connect(slot_t slot) { \
-m_slots.push_back(slot); \
-} \
- \
-void disconnect(slot_t slot) { \
-	auto it = std::find(m_slots.begin(), m_slots.end(), slot); \
-	if (it != m_slots.end()) { \
-		m_slots.erase(it); \
-	} \
-}\
-\
-void emit(Params ... args) const {\
-	for (auto it = m_slots.begin(); it != m_slots.end();) {\
-		(*(it++))(args...);\
-	}\
-}\
-\
-bool empty() const {\
-	return m_slots.empty();\
-}\
-\
-private:\
-	std::list<slot_t> m_slots;
-#pragma endregion ("Macros")
+	typedef uint32_t connector_t;
 
-	// 泛型
 	template <typename T>
 	class Signal;
 
-	// 普通方法特化
 	template <typename R, typename... Params>
-	class Signal<R(*)(Params ...)> {
+	class Signal<R(Params ...)> {
 	public:
-		typedef slot<R(*)(Params ...)> slot_t;
-		SIGNAL_IMP
-	};
+		typedef std::function<R(Params ...)> slot_t;
 
-	// 成员方法特化
-	template <typename T, typename R, typename... Params>
-	class Signal<R(T::*)(Params ...)> {
-	public:
-		typedef slot<R(T::*)(Params ...)> slot_t;
-		SIGNAL_IMP
+		connector_t connect(slot_t slot) {
+			++m_seed;
+			m_slots[m_seed] = slot;
+			return m_seed;
+		}
+
+		void disconnect(connector_t cid) {
+			auto it = m_slots.find(cid);
+			if (it != m_slots.end()) {
+				m_slots.erase(it);
+			}
+		}
+
+		void disconnect_all() {
+			m_slots.clear();
+		}
+
+		void operator()(Params ... args) const {
+			for (auto it = m_slots.begin(); it != m_slots.end(); ++it) {
+				(it->second)(args...);
+			}
+		}
+
+		void emit(Params ... args) const {
+			operator()(args ...);
+		}
+
+		bool empty() const {
+			return m_slots.empty();
+		}
+
+	private:
+		std::map<connector_t, slot_t> m_slots;
+		connector_t m_seed = 0;
 	};
 }

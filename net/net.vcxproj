@@ -170,6 +170,7 @@ xcopy /Y/F/I/S "$(OutputPath)$(TargetName).pdb" "$(SolutionDir)../publish"</Comm
     <ClInclude Include="include\tcp_client.h" />
     <ClInclude Include="include\tcp_server.h" />
     <ClInclude Include="include\util.h" />
+    <ClInclude Include="include\watch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\bytes_pool.cpp" />

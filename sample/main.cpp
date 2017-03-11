@@ -3,6 +3,15 @@
 #include <observable/signal2.h>
 #include <data/value.h>
 #include <data/property.h>
+#include <watch.h>
+
+using namespace VK;
+
+enum Pid {
+	One,
+	Two,
+	Three,
+};
 
 void print() {
 	std::cout << "Hello, free function!" << std::endl;
@@ -14,9 +23,7 @@ struct Test {
 	}
 };
 
-int main(int argc, char** argv) {
-	using namespace VK;
-	
+void run_signal2_test() {
 	Signal2<void(*)()> sig1;
 	auto slot1 = make_slot(print);
 	sig1.connect(slot1);
@@ -24,32 +31,32 @@ int main(int argc, char** argv) {
 	sig1.disconnect(make_slot(print));
 	sig1.emit();
 
-	Test test;
 	Signal2<void(Test::*)()> sig2;
+	Test test;
 	auto slot2 = make_slot(&Test::print, test);
 	sig2.connect(slot2);
 	sig2.emit();
 	sig2.disconnect(slot2);
 	sig2.emit();
+}
 
-	Signal<void()> sig3;
-	auto cid = sig3.conn(print);
-	sig3.conn(std::bind(&Test::print, test));
-	sig3.conn([]() {
+void run_signal_test() {
+	Signal<void()> sig;
+	auto cid = sig.conn(print);
+
+	Test test;
+	sig.conn(std::bind(&Test::print, test));
+	sig.conn([]() {
 		std::cout << "Hello, lambda!" << std::endl;
 	});
-	sig3();
-	sig3.disconn(cid);
-	sig3();
-	sig3.disconn_all();
-	sig3();
+	sig();
+	sig.disconn(cid);
+	sig();
+	sig.disconn_all();
+	sig();
+}
 
-	enum Pid {
-		One,
-		Two,
-		Three,
-	};
-
+void run_value_test() {
 	Value<int> intger(One, 1);
 	intger.conn([](val_id_t vid, const int& val) {
 		std::cout << "conn : Value " << vid << " Changed to : " << val << std::endl;
@@ -59,11 +66,14 @@ int main(int argc, char** argv) {
 	intger = 4;
 	// no longer callback here
 	intger = 4;
+}
 
+void run_property_test() {
+	// 初始属性包，初值为0
 	Property<int> intgers({One, Pid::Two, Pid::Three}, 0);
 	auto cid2 = intgers.conn(One, [](val_id_t vid, const int& val) {
-		                        std::cout << "conn : Property " << vid << " Changed to : " << val << std::endl;
-	                        });
+		                         std::cout << "conn : Property " << vid << " Changed to : " << val << std::endl;
+	                         });
 
 	auto gcid = intgers.conn_all([](val_id_t vid, const int& val) {
 		std::cout << "conn_all : Property " << vid << " Changed to : " << val << std::endl;
@@ -73,13 +83,29 @@ int main(int argc, char** argv) {
 	intgers.disconn(One, cid2);
 	intgers.set(One, 10);
 
+	Watch watch;
+	watch.start();
+	// 测试100W订阅者
+	for (auto i = 0; i < 1000000; ++i) {
+		intgers.conn_all([](val_id_t vid, const int& val) {
+			//std::cout << "conn_all : Property " << vid << " Changed to : " << val << std::endl;
+		});
+	}
+	watch.stop();	// 229ms
+	std::cout << "Elapsed " << watch.elapsed_milli_seconds() << " ms" << std::endl;
 
+
+	watch.start();
 	intgers.set(Two, 20);
-	intgers.set(Three, 30);
+	watch.stop();	// 25ms
+	std::cout << "Elapsed " << watch.elapsed_milli_seconds() << " ms" << std::endl;
+}
 
-	auto& one = intgers.get(One);
-	auto& two = intgers.get(Two);
-	auto& three = intgers.get(Three);
+int main(int argc, char** argv) {
+	run_signal2_test();
+	run_signal_test();
+	run_value_test();
+	run_property_test();
 
 	return 0;
 }

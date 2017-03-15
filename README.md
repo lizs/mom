@@ -1,17 +1,15 @@
-# <b>MOM based on libuv</b>
+# <b>基于libuv的MOM（消息中间件）实现</b>
 
-## <b>Features</b>
-* lightweight
-* efficiant
-* PUSH REQ/REP pattern
-* keep alive
-* auto reconnect
-* simple interfaces easy to use
-* signal/timer
+## <b>特性</b>
+* 轻量、高效
+* PUSH REQ/REP BROADCAST消息模型实现
+* 保活、自动重连
+* Signal/Property
+* Scheduler（基于uv_timer）
 
 ## <b>Getting started</b>
 ```c++
-  client = new TcpClient(ip, port,
+  auto client = std::make_unique<TcpClient>(ip, port,
 	                       // session_t established callback
 	                       [=](bool success, session_t* session_t) {
 	                       },
@@ -30,8 +28,6 @@
   client->startup();
   RUN_UV_DEFAULT_LOOP();
   client->shutdown();
-
-  delete client;
 ```
 ### <b>REQ</b>
 ```c++

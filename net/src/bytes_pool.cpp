@@ -6,7 +6,7 @@ namespace VK {
 
 		char* BytesPool::alloc(cbuf_len_t size) {
 			// 对齐
-			auto alignment = align_bottom(size);
+			auto alignment = min_pow_of_2_non_less(size);
 			switch (alignment) {
 				case 2:
 				case 4:
@@ -39,7 +39,7 @@ namespace VK {
 
 		void BytesPool::dealloc(char* buf, cbuf_len_t size) {
 			// 对齐
-			auto alignment = align_bottom(size);
+			auto alignment = min_pow_of_2_non_less(size);
 			switch (alignment) {
 				case 2:
 				case 4:
@@ -76,8 +76,10 @@ namespace VK {
 			return v && !(v & (v - 1));
 		}
 
-		cbuf_len_t BytesPool::align_bottom(cbuf_len_t v) {
+		cbuf_len_t BytesPool::min_pow_of_2_non_less(cbuf_len_t v) {
 			// 参考 ：http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetNaive
+			// 思想：将最高位的1拷贝至所有低位
+			// 10步
 			v--;
 			v |= v >> 1;
 			v |= v >> 2;
@@ -88,18 +90,14 @@ namespace VK {
 			return v;
 		}
 
-		//cbuf_len_t BytesPool::align_top(cbuf_len_t v) {
-		//	// 参考 ：http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetNaive
-		//	//			v--;
-		//	//			v |= v >> 1;
-		//	//			v |= v >> 2;
-		//	//			v |= v >> 4;
-		//	//			v |= v >> 8;
-		//	//			v |= v >> 16;
-		//	//			v++;
-
-		//	// 简单明了的方式
-		//	return static_cast<cbuf_len_t>(log(v) - 1);
-		//}
+		cbuf_len_t BytesPool::max_pow_of_2_non_greater(cbuf_len_t n) {
+			// 参考 ：http://stackoverflow.com/questions/53161/find-the-highest-order-bit-in-c
+			// 思想： 补齐所有低位的1，然后和右移1位的值做差
+			n |= (n >> 1);
+			n |= (n >> 2);
+			n |= (n >> 4);
+			n |= (n >> 8);
+			return n ^ (n >> 1);
+		}
 	}
 }

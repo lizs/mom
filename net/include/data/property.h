@@ -43,7 +43,7 @@ namespace VK {
 			return m_seed;
 		}
 
-		void unsub_all(connector_id_t cid) {
+		void disconn_all(connector_id_t cid) {
 			auto it = m_subscribers.find(cid);
 			if (it == m_subscribers.end()) return;
 			m_subscribers.erase(it);

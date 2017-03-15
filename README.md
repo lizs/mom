@@ -27,36 +27,36 @@
 	                       [](session_t* session_t, cbuf_ptr_t pcb) { },
 	                       true);
 
-	client->startup();
-	RUN_UV_DEFAULT_LOOP();
-	client->shutdown();
+  client->startup();
+  RUN_UV_DEFAULT_LOOP();
+  client->shutdown();
 
-	delete client;
+  delete client;
 ```
 ### <b>REQ</b>
 ```c++
   auto pcb = alloc_request(ops, node_id, buffer_size);
-	pcb->write_binary(reqData, buffer_size);
+  pcb->write_binary(reqData, buffer_size);
 
-	client->request(pcb, [](error_no_t error_no, cbuf_ptr_t pcb) {
-			                LOG(mom_str_err(error_no));
-	                });
+  client->request(pcb, [](error_no_t error_no, cbuf_ptr_t pcb) {
+                      LOG(mom_str_err(error_no));
+                  });
 ```
 
 ### <b>PUSH</b>
 ```c++
   auto pcb = alloc_push(ops, node_id, buffer_size);
-	pcb->write_binary(pushData, buffer_size);
+  pcb->write_binary(pushData, buffer_size);
 
-	client->push(pcb, [](bool success) {
-	             });
+  client->push(pcb, [](bool success) {
+               });
 ```
                
 ### <b>Broadcast</b>
 ```c++
   auto pcb = alloc_broadcast(buffer_size);
-	pcb->write_binary(broadcastData, buffer_size);
+  pcb->write_binary(broadcastData, buffer_size);
 
-	client->push(pcb, [](bool success) {
-	             });
+  client->push(pcb, [](bool success) {
+               });
 ```

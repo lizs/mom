@@ -70,7 +70,7 @@ void run_value_test() {
 
 void run_property_test() {
 	// 初始属性包，初值为0
-	Property<int> intgers({One, Pid::Two, Pid::Three}, 0);
+	Property<int> intgers({ Pid::One, Pid::Two}, 0);
 	auto cid2 = intgers.conn(One, [](val_id_t vid, const int& val) {
 		                         std::cout << "conn : Property " << vid << " Changed to : " << val << std::endl;
 	                         });
@@ -82,6 +82,8 @@ void run_property_test() {
 	intgers.set(One, 1);
 	intgers.disconn(One, cid2);
 	intgers.set(One, 10);
+	intgers.set(Two, 20);
+	intgers.disconn_all(gcid);
 
 	Watch watch;
 	watch.start();

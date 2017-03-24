@@ -1,6 +1,7 @@
 // lizs 2017.2.27
 #pragma once
 #include "tcp_client.h"
+#include <util.h>
 
 namespace VK {
 	namespace Cluster {

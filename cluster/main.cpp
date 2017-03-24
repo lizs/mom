@@ -39,10 +39,38 @@ node_id_t GAME_ID = 0;
 enum Mode {
 	M_Request,
 	M_Push,
-	M_Broadcast
+	M_Broadcast,
+	M_Raw_Push,
+	M_Raw_Request,
 };
 
 Mode g_mode = M_Request;
+
+void raw_push() {
+	auto pcb = alloc_cbuf(cbuf_len_t(strlen(pushData) + 1));
+	pcb->write_binary(pushData, cbuf_len_t(strlen(pushData) + 1));
+
+	client->push(pcb, [](bool success) {
+		             if (success) {
+			             raw_push();
+			             //std::this_thread::sleep_for(std::chrono::nanoseconds(0));
+		             }
+	             });
+}
+
+void raw_request() {
+	auto pcb = alloc_cbuf(cbuf_len_t(strlen(reqData) + 1));
+	pcb->write_binary(reqData, cbuf_len_t(strlen(reqData) + 1));
+
+	client->request(pcb, [](error_no_t error_no, cbuf_ptr_t pcb) {
+		                raw_request();
+		                //if (error_no == Success)
+		                //	raw_request();
+		                //else {
+		                //	LOG(mom_str_err(error_no));
+		                //}
+	                });
+}
 
 void request() {
 	auto pcb = alloc_request(OPS_Request, GAME_ID, cbuf_len_t(strlen(reqData) + 1));
@@ -101,7 +129,8 @@ void coordinate() {
 				                case M_Broadcast:
 					                broadcast();
 					                break;
-				                default: break;
+				                default:
+					                break;
 			                }
 		                }
 		                else {
@@ -111,13 +140,36 @@ void coordinate() {
 	                });
 }
 
+void run_raw_server(const char* ip, int port) {
+	auto game = std::make_unique<TcpServer>(ip, port, nullptr, nullptr, nullptr, [](session_t* session, cbuf_ptr_t pcb) { });
+
+	game->startup();
+	RUN_UV_DEFAULT_LOOP();
+	game->shutdown();
+}
+
 void run_client(const char* ip, int port, Mode mode) {
 	g_mode = mode;
 	client = new TcpClient(ip, port,
 	                       // session_t established callback
 	                       [=](bool success, session_t* session_t) {
 		                       if (success) {
-			                       coordinate();
+			                       switch (g_mode) {
+				                       case M_Request:
+				                       case M_Push:
+				                       case M_Broadcast:
+					                       coordinate();
+					                       break;
+
+				                       case M_Raw_Push:
+					                       raw_push();
+					                       break;
+				                       case M_Raw_Request:
+					                       raw_request();
+					                       break;
+				                       default:
+					                       break;
+			                       }
 		                       }
 	                       },
 
@@ -210,6 +262,12 @@ int main(int argc, char** argv) {
 		}
 		else if (strcmp(argv[1], "client5") == 0) {
 			run_client(default_host, GATE_2_PORT, M_Broadcast);
+		}
+		else if (strcmp(argv[1], "client") == 0) {
+			run_client(default_host, GATE_2_PORT, M_Raw_Push);
+		}
+		else if (strcmp(argv[1], "server") == 0) {
+			run_raw_server(default_ip, GATE_2_PORT);
 		}
 
 		return 0;

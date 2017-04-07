@@ -6,7 +6,6 @@
 
 namespace VK {
 	namespace Net {
-
 		static cbuf_ptr_t alloc_cbuf(cbuf_len_t len) {
 			cbuf_ptr_t pcb(Singleton<cbuf_pool_t>::instance().alloc());
 			pcb->reset(len);

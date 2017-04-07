@@ -49,12 +49,14 @@ Mode g_mode = M_Request;
 void raw_push() {
 	auto pcb = alloc_cbuf(cbuf_len_t(strlen(pushData) + 1));
 	pcb->write_binary(pushData, cbuf_len_t(strlen(pushData) + 1));
-
 	client->push(pcb, [](bool success) {
 		             if (success) {
 			             raw_push();
-			             //std::this_thread::sleep_for(std::chrono::nanoseconds(0));
 		             }
+					 //else {
+						// scheduler.invoke(1000, raw_push);
+					 //}
+		             std::this_thread::sleep_for(std::chrono::seconds(1));
 	             });
 }
 
@@ -64,11 +66,6 @@ void raw_request() {
 
 	client->request(pcb, [](error_no_t error_no, cbuf_ptr_t pcb) {
 		                raw_request();
-		                //if (error_no == Success)
-		                //	raw_request();
-		                //else {
-		                //	LOG(mom_str_err(error_no));
-		                //}
 	                });
 }
 
@@ -271,6 +268,9 @@ int main(int argc, char** argv) {
 		}
 
 		return 0;
+	}
+	else {
+		run_client(default_host, GATE_2_PORT, M_Raw_Push);
 	}
 
 	return -1;

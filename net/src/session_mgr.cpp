@@ -20,7 +20,7 @@ namespace VK {
 		}
 
 		void SessionMgr::broadcast(cbuf_ptr_t pcb) {
-			if (!pcb->write_head(Push)) {
+			if (!pack(pcb, Push)) {
 				return;
 			}
 

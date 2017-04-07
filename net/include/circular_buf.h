@@ -43,6 +43,7 @@ namespace VK {
 			template <typename T>
 			void reset();
 			void reset(cbuf_len_t size = 0, cbuf_len_t reserved_size = CBUF_RESERVED_SIZE);
+			void reuse();
 
 			template <typename T>
 			bool write_head(const T& value);

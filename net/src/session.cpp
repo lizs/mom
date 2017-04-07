@@ -38,6 +38,7 @@ namespace VK {
 		bool Session::post_read_req() {
 			int r;
 
+			m_cbuf.reuse();
 			m_stream.data = this;
 			r = uv_read_start(reinterpret_cast<uv_stream_t*>(&m_stream),
 			                  [](uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
@@ -298,11 +299,6 @@ namespace VK {
 		}
 
 		void Session::get_addr_info(const char* host, int port, std::function<void(bool, sockaddr*)> cb) {
-			//struct addrinfo hints;
-			//hints.ai_family = PF_INET;
-			//hints.ai_socktype = SOCK_STREAM;
-			//hints.ai_protocol = IPPROTO_TCP;
-			//hints.ai_flags = 0;
 			m_greq.cb = cb;
 
 			char device[32] = {0};
@@ -444,6 +440,7 @@ namespace VK {
 
 						if (pack_desired_size > MAX_PACKAGE_SIZE || pack_desired_size == 0) {
 							LOG("package much too huge : %d bytes", pack_desired_size);
+							pack_desired_size = 0;
 							return false;
 						}
 					}
@@ -453,14 +450,12 @@ namespace VK {
 
 				// get package body
 				if (pack_desired_size <= cbuf.get_len()) {
-
 					// copy
 					auto pcb = alloc_cbuf(pack_desired_size);
 					pcb->write_binary(cbuf.get_head_ptr(), pack_desired_size);
 
 					// handle message
 					on_message(pcb);
-
 
 #if MONITOR_ENABLED
 					// performance monitor

@@ -53,7 +53,7 @@ namespace VK {
 			// normally requested by a TcpServer
 			// TcpClient will post it when session established automatically
 			bool post_read_req();
-			
+
 			// return seconds
 			time_t get_elapsed_since_last_ping() const;
 			time_t get_elapsed_since_last_response() const;

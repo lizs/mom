@@ -89,9 +89,12 @@ namespace VK {
 			m_reserved = reserved_size;
 			m_capacity = reserved_size + size;
 			m_buf = Singleton<BytesPool>::instance().alloc(m_capacity);
+			reuse();
+		}
+
+		void CircularBuf::reuse() {
 			m_head = m_reserved;
 			m_tail = m_reserved;
-
 			ZeroMemory(m_buf, m_capacity);
 		}
 

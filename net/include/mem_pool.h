@@ -5,7 +5,7 @@ namespace VK {
 	namespace Net {
 		// 内存池
 		// 本池中的T数量不超过Capacity
-		template <typename T, size_t Capacity = 0>
+		template <typename T, size_t Capacity = 5>
 		class MemoryPool {
 
 #pragma warning(push)

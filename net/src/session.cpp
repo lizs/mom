@@ -32,6 +32,12 @@ namespace VK {
 				return false;
 			}
 
+			r = uv_tcp_nodelay(&m_stream, 1);
+			if (r) {
+				LOG_UV_ERR(r);
+				return false;
+			}
+
 			return true;
 		}
 
@@ -50,7 +56,7 @@ namespace VK {
 			                  [](uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf) {
 				                  auto session = static_cast<session_t*>(handle->data);
 
-				                  if (nread < 0 /*&& nread != UV_ENOBUFS*/) {
+				                  if (nread < 0) {
 					                  /* Error or EOF */
 					                  if (nread != UV_EOF) {
 						                  LOG_UV_ERR((int)nread);
@@ -62,7 +68,6 @@ namespace VK {
 
 				                  if (nread == 0) {
 					                  /* Everything OK, but nothing read. */
-					                  // session->close();
 					                  return;
 				                  }
 
@@ -156,6 +161,10 @@ namespace VK {
 			wr->pcb = pcb;
 			wr->buf = uv_buf_init(pcb->get_head_ptr(), pcb->get_len());
 
+#if MESSAGE_TRACK_ENABLED
+			PRINT_MESSAGE(pcb->get_head_ptr(), pcb->get_len(), "Write : ");
+#endif
+
 			int r = uv_write(&wr->req,
 			                 reinterpret_cast<uv_stream_t*>(&m_stream),
 			                 &wr->buf, 1,
@@ -172,11 +181,14 @@ namespace VK {
 					                 Singleton<Monitor>::instance().inc_wroted();
 				                 }
 #endif
+								 // ÇåÀíwr
+								 wr->clear();
 				                 wr_pool_t::instance().dealloc(wr);
 				                 LOG_UV_ERR(status);
 			                 });
 
 			if (r) {
+				wr->clear();
 				wr_pool_t::instance().dealloc(wr);
 
 				if (cb)
@@ -192,6 +204,10 @@ namespace VK {
 		}
 
 		void Session::on_message(cbuf_ptr_t pcb) {
+#if MESSAGE_TRACK_ENABLED
+			PRINT_MESSAGE(pcb->get_head_ptr(), pcb->get_len(), "Read : ");
+#endif
+
 			m_lastResponseTime = time(nullptr);
 			if (m_keepAliveCounter > 0)
 				--m_keepAliveCounter;
@@ -217,6 +233,7 @@ namespace VK {
 					if (m_pushHandler) {
 						m_pushHandler(this, pcb);
 					}
+
 					break;
 				}
 
@@ -241,7 +258,12 @@ namespace VK {
 				}
 
 				case Response:
-					on_response(pcb);
+					serial_t serial;
+					if (!pcb->read<serial_t>(serial)) {
+						LOG("read serial from response failed");
+						return;
+					}
+					on_response(serial, pcb);
 					return;
 
 				default:
@@ -249,13 +271,7 @@ namespace VK {
 			}
 		}
 
-		void Session::on_response(cbuf_ptr_t pcb) {
-			serial_t serial;
-			if (!pcb->read<serial_t>(serial)) {
-				LOG("read serial from response failed");
-				return;
-			}
-
+		void Session::on_response(serial_t serial, cbuf_ptr_t pcb) {
 			auto it = m_requestsPool.find(serial);
 			if (it == m_requestsPool.end()) {
 				LOG("request serial %d not found", serial);
@@ -268,8 +284,9 @@ namespace VK {
 				pcb->reset();
 				it->second(NE_ReadErrorNo, pcb);
 			}
-			else
+			else {
 				it->second(en, pcb);
+			}
 
 			m_requestsPool.erase(it);
 		}

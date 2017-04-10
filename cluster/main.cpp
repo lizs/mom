@@ -53,10 +53,7 @@ void raw_push() {
 		             if (success) {
 			             raw_push();
 		             }
-					 //else {
-						// scheduler.invoke(1000, raw_push);
-					 //}
-		             std::this_thread::sleep_for(std::chrono::seconds(1));
+		             std::this_thread::sleep_for(std::chrono::microseconds(1));
 	             });
 }
 
@@ -66,6 +63,7 @@ void raw_request() {
 
 	client->request(pcb, [](error_no_t error_no, cbuf_ptr_t pcb) {
 		                raw_request();
+		                //LOG(mom_str_err(error_no));
 	                });
 }
 
@@ -145,7 +143,7 @@ void run_raw_server(const char* ip, int port) {
 	game->shutdown();
 }
 
-void run_client(const char* ip, int port, Mode mode) {
+void run_client(const char* ip, int port, Mode mode, bool connectByHost = true) {
 	g_mode = mode;
 	client = new TcpClient(ip, port,
 	                       // session_t established callback
@@ -163,6 +161,7 @@ void run_client(const char* ip, int port, Mode mode) {
 					                       break;
 				                       case M_Raw_Request:
 					                       raw_request();
+										   //raw_request();
 					                       break;
 				                       default:
 					                       break;
@@ -179,7 +178,7 @@ void run_client(const char* ip, int port, Mode mode) {
 	                       },
 	                       // push handler
 	                       [](session_t* session_t, cbuf_ptr_t pcb) { },
-	                       true);
+	                       true, connectByHost);
 
 	client->startup();
 	RUN_UV_DEFAULT_LOOP();
@@ -261,7 +260,7 @@ int main(int argc, char** argv) {
 			run_client(default_host, GATE_2_PORT, M_Broadcast);
 		}
 		else if (strcmp(argv[1], "client") == 0) {
-			run_client(default_host, GATE_2_PORT, M_Raw_Push);
+			run_client(default_ip, GATE_2_PORT, M_Raw_Request, false);
 		}
 		else if (strcmp(argv[1], "server") == 0) {
 			run_raw_server(default_ip, GATE_2_PORT);

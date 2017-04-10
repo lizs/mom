@@ -70,7 +70,7 @@ namespace VK {
 			void on_message(cbuf_ptr_t pcb);
 
 			// response
-			void on_response(cbuf_ptr_t pcb);
+			void on_response(serial_t serial, cbuf_ptr_t pcb);
 
 			// send data through underline stream
 			template <typename ... Args>

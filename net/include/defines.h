@@ -20,6 +20,8 @@
 
 
 #pragma region("≈‰÷√")
+#define MESSAGE_TRACK_ENABLED false
+#define TRACK_MESSAGE_AS_BINARY true
 #define MONITOR_ENABLED true
 #define CBUF_RESERVED_SIZE 32
 #define MAX_PACKAGE_SIZE 1024
@@ -50,8 +52,6 @@ enum Pattern : pattern_t {
 	Push,
 	Request,
 	Response,
-	//Broadcast,
-	//Multicast,
 	Ping,
 	Pong,
 };
@@ -127,6 +127,35 @@ enum NetError : error_no_t {
  } while (0)
 
 
+#define PRINT_MESSAGE_AS_BINARY(buf, len, format, ...)         \
+ do {                                                     \
+    fprintf(stdout,                                       \
+            format,										\
+			##__VA_ARGS__);                                       \
+	printf("[");                                      \
+	for (auto i = 0; i < len; ++i) {			\
+		printf("%02x ", buf[i]);				\
+	}													\
+	printf("]\n");                                      \
+ } while (0)
+
+
+#define PRINT_MESSAGE_AS_STRING(buf, len, format, ...)         \
+ do {                                                     \
+    fprintf(stdout,                                       \
+            format,										\
+			##__VA_ARGS__);                                       \
+	printf("[");                                      \
+		printf(buf);				\
+	printf("]\n");                                      \
+ } while (0)
+
+#if TRACK_MESSAGE_AS_BINARY
+#define PRINT_MESSAGE PRINT_MESSAGE_AS_BINARY
+#else
+#define PRINT_MESSAGE PRINT_MESSAGE_AS_STRING
+#endif
+
 #if defined(__clang__) ||                                \
     defined(__GNUC__) ||                                 \
     defined(__INTEL_COMPILER) ||                         \
@@ -194,9 +223,14 @@ typedef struct {
 	uv_buf_t buf;
 	send_cb_t cb;
 	cbuf_ptr_t pcb;
+
+	void clear() {
+		pcb = nullptr;
+		cb = nullptr;
+	}
 } write_req_t;
 
-typedef VK::Net::Singleton<VK::Net::MemoryPool<write_req_t>> wr_pool_t;
+typedef VK::Net::Singleton<VK::Net::MemoryPool<write_req_t, 1>> wr_pool_t;
 
 typedef struct {
 	uv_connect_t req;

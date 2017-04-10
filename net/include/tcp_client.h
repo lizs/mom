@@ -22,7 +22,8 @@ namespace VK {
 			          close_cb_t close_cb = nullptr,
 			          req_handler_t req_handler = nullptr,
 			          push_handler_t push_handler = nullptr,
-			          bool auto_reconnect_enabled = true);
+			          bool auto_reconnect_enabled = true,
+			          bool connect_by_host = true);
 			~TcpClient();
 			bool startup() const;
 			bool shutdown() const;
@@ -44,8 +45,10 @@ namespace VK {
 			Session* m_session;
 
 			bool m_autoReconnect = true;
+			bool m_connectByHost = true;
 			std::string m_host;
 			int m_port;
+
 
 			open_cb_t m_open_cb;
 			close_cb_t m_close_cb;

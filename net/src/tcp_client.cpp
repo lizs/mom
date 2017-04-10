@@ -8,7 +8,9 @@ namespace VK {
 		                     close_cb_t close_cb,
 		                     req_handler_t req_handler,
 		                     push_handler_t push_handler,
-		                     bool auto_reconnect_enabled) : m_autoReconnect(auto_reconnect_enabled),
+		                     bool auto_reconnect_enabled,
+		                     bool connect_by_host) : m_autoReconnect(auto_reconnect_enabled),
+		                                                    m_connectByHost(connect_by_host),
 		                                                    m_host(host), m_port(port),
 		                                                    m_open_cb(open_cb), m_close_cb(close_cb),
 		                                                    m_keepAliveTimerId(INVALID_TIMER_ID) {
@@ -25,7 +27,12 @@ namespace VK {
 			}
 
 			// conn
-			m_session->connect_by_host(m_host.c_str(), m_port);
+			if(m_connectByHost) {
+				m_session->connect_by_host(m_host.c_str(), m_port);
+			}
+			else {
+				m_session->connect(m_host.c_str(), m_port);
+			}
 			return true;
 		}
 
@@ -78,7 +85,12 @@ namespace VK {
 			double_reonn_delay();
 
 			m_scheduler.invoke(m_reconnDelay, [this]() {
-				                   m_session->connect_by_host(m_host.c_str(), m_port);
+				                   if (m_connectByHost) {
+					                   m_session->connect_by_host(m_host.c_str(), m_port);
+				                   }
+				                   else {
+					                   m_session->connect(m_host.c_str(), m_port);
+				                   }
 			                   });
 		}
 

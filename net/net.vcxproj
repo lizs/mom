@@ -152,7 +152,9 @@ xcopy /Y/F/I/S "$(OutputPath)$(TargetName).pdb" "$(SolutionDir)../publish"</Comm
     <ClInclude Include="include\cluster\node.h" />
     <ClInclude Include="include\cluster\coordination.h" />
     <ClInclude Include="include\data\property.h" />
+    <ClInclude Include="include\data\any.h" />
     <ClInclude Include="include\data\value.h" />
+    <ClInclude Include="include\ecs\component.h" />
     <ClInclude Include="include\mem_pool.h" />
     <ClInclude Include="include\defines.h" />
     <ClInclude Include="include\circular_buf.h" />

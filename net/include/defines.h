@@ -43,6 +43,7 @@ typedef uint16_t mask_t;
 typedef uint16_t cbuf_len_t;
 typedef int16_t cbuf_offset_t;
 typedef uint8_t pattern_t;
+typedef uint8_t component_id_t;
 
 #pragma endregion 
 
@@ -296,7 +297,7 @@ typedef struct {
 	node_type_t ntype;
 } broadcast_push_t;
 
-// ×é²¥
+// ×é²¥(todo : lizs not implemented yet)
 typedef struct {
 	node_type_t ntype;
 } multicast_push_t;

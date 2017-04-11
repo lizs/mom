@@ -37,6 +37,9 @@
     <Filter Include="源文件\cluster\business">
       <UniqueIdentifier>{d1f55289-ac11-4431-a1d0-e4a038cf744f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\ecs">
+      <UniqueIdentifier>{387bf2d9-c27a-4d31-9a82-413312081cbf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\circular_buf.h">
@@ -102,14 +105,20 @@
     <ClInclude Include="include\observable\signal2.h">
       <Filter>头文件\observable</Filter>
     </ClInclude>
+    <ClInclude Include="include\watch.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ecs\component.h">
+      <Filter>头文件\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="include\data\any.h">
+      <Filter>头文件\data</Filter>
+    </ClInclude>
     <ClInclude Include="include\data\value.h">
       <Filter>头文件\data</Filter>
     </ClInclude>
     <ClInclude Include="include\data\property.h">
       <Filter>头文件\data</Filter>
-    </ClInclude>
-    <ClInclude Include="include\watch.h">
-      <Filter>头文件\net</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

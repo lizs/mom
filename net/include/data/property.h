@@ -6,33 +6,47 @@
 
 namespace VK {
 	// 属性包
-	template <typename T>
 	class Property {
 	public:
-		typedef typename Value<T>::slot_t slot_t;
+		typedef Value::slot_t slot_t;
+		
+		template<typename T>
+		bool add(val_id_t pid, const T& value) {
+			auto it = m_values.find(pid);
+			if (it != m_values.end())
+				return false;
 
-		Property(const std::initializer_list<T>& pids, const T& init_val) {
-			for (auto pid : pids) {
-				auto pval = std::make_shared<Value<T>>(pid, init_val);
-				pval->conn(std::bind(&Property::on_value_changed, this, std::placeholders::_1, std::placeholders::_2));
-				m_values[pid] = pval;
-			}
+			auto val = std::make_shared<Value>(pid, value);
+			val->conn(std::bind(&Property::on_value_changed, this, std::placeholders::_1, std::placeholders::_2));
+			m_values[pid] = val;
+
+			return true;
 		}
 
+		bool remove(val_id_t pid) {
+			auto it = m_values.find(pid);
+			if (it == m_values.end())
+				return false;
+
+			m_values.erase(it);
+			return true;
+		}
+
+		template<typename T>
 		void set(val_id_t pid, const T& value) {
 			auto it = m_values.find(pid);
 			if (it == m_values.end())return;
 			*(it->second) = value;
 		}
 
-		const T& get(val_id_t pid) {
-			return m_values[pid]->get();
+		const Value& get(val_id_t pid) {
+			return *m_values[pid].get();
 		}
 
-		bool try_get(val_id_t pid, T& out) {
+		bool try_get(val_id_t pid, Value& out) {
 			auto it = m_values.find(pid);
 			if (it == m_values.end()) return false;
-			out = it->second->get();
+			out = it->second.get();
 			return true;
 		}
 
@@ -66,15 +80,13 @@ namespace VK {
 		}
 
 	private:
-		void on_value_changed(val_id_t vid, const T& val) {
+		void on_value_changed(val_id_t vid, const Value& val) {
 			for (auto& kv : m_subscribers) {
 				kv.second(vid, val);
 			}
 		}
 
-	private:
-		std::map<val_id_t, std::shared_ptr<Value<T>>> m_values;
-
+		std::map<val_id_t, std::shared_ptr<Value>> m_values;
 		// 包内所有属性监听
 		std::map<connector_id_t, slot_t> m_subscribers;
 		connector_id_t m_seed = INVALID_CONNECTOR_ID;

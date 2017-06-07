@@ -5,6 +5,7 @@
 #include <functional>
 #include <map>
 #include "defines.h"
+#include "data/any.h"
 
 namespace VK {
 	namespace Net {
@@ -15,13 +16,15 @@ namespace VK {
 		// scheduler based on libuv
 		class NET_API Scheduler final {
 		public:
-			typedef std::function<void()> timer_cb_t;
+			typedef std::function<void(any)> timer_cb_t;
 
 			Scheduler() : m_seed(INVALID_TIMER_ID) {}
 			~Scheduler();
 
 			timer_id_t invoke(timer_period_t delay, timer_cb_t cb);
 			timer_id_t invoke(timer_period_t delay, timer_period_t period, timer_cb_t cb);
+			timer_id_t invoke(timer_period_t delay, timer_cb_t cb, any usr_data);
+			timer_id_t invoke(timer_period_t delay, timer_period_t period, timer_cb_t cb, any usr_data);
 			bool cancel(timer_id_t id);
 			void cancel_all();
 
@@ -32,6 +35,7 @@ namespace VK {
 				timer_period_t period;
 				timer_cb_t cb;
 				Scheduler* scheduler;
+				any user_data;
 			} timer_req_t;
 
 			timer_id_t m_seed;

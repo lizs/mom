@@ -9,7 +9,7 @@ namespace VK {
 		public:
 			Monitor()
 				: m_readed(0),
-				  m_wroted(0), m_pending(0), m_timerID(INVALID_TIMER_ID) { }
+				  m_wroted(0), m_pending(0), m_pcbCount(0), m_timerID(INVALID_TIMER_ID) { }
 
 			uint64_t get_readed() const {
 				return m_readed;
@@ -21,6 +21,10 @@ namespace VK {
 
 			uint64_t get_pending() const {
 				return m_pending;
+			}
+
+			uint64_t get_pcb_count() const {
+				return m_pcbCount;
 			}
 
 			void inc_readed() {
@@ -39,11 +43,23 @@ namespace VK {
 				--m_pending;
 			}
 
+			void inc_pcb_count() {
+				++m_pcbCount;
+			}
+
+			void dec_pcb_count() {
+				--m_pcbCount;
+			}
+
 			void start() {
 #if MONITOR_ENABLED
 				// performance monitor
-				m_timerID = m_scheduler.invoke(DefaultPeriod, DefaultPeriod, [this]() {
-					                               LOG("Read : %llu /s Write : %llu /s, Pending : %llu", get_readed() * 1000 / DefaultPeriod, get_wroted() * 1000 / DefaultPeriod, get_pending());
+				m_timerID = m_scheduler.invoke(DefaultPeriod, DefaultPeriod, [this](any usr_data) {
+					                               LOG("Read : %llu /s Write : %llu /s, Pending : %llu PCB : %llu",
+						                               get_readed() * 1000 / DefaultPeriod,
+						                               get_wroted() * 1000 / DefaultPeriod,
+						                               get_pending(),
+						                               get_pcb_count());
 					                               reset_readed();
 					                               reset_wroted();
 				                               });
@@ -74,6 +90,7 @@ namespace VK {
 			uint64_t m_wroted;
 			// record packages writing
 			uint64_t m_pending;
+			uint64_t m_pcbCount;
 
 			Scheduler m_scheduler;
 			timer_id_t m_timerID;

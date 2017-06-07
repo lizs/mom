@@ -1,4 +1,5 @@
 #include "scheduler.h"
+#include <data/any.h>
 
 namespace VK {
 	namespace Net {
@@ -8,6 +9,10 @@ namespace VK {
 
 		timer_id_t Scheduler::invoke(timer_period_t delay, timer_cb_t cb) {
 			return this->invoke(delay, 0, cb);
+		}
+
+		timer_id_t Scheduler::invoke(timer_period_t delay, timer_cb_t cb, any usr_data) {
+			return this->invoke(delay, 0, cb, usr_data);
 		}
 
 		bool Scheduler::cancel(timer_id_t id) {
@@ -36,7 +41,11 @@ namespace VK {
 			m_timers.clear();
 		}
 
-		timer_id_t Scheduler::invoke(timer_period_t delay, timer_period_t period, std::function<void()> cb) {
+		timer_id_t Scheduler::invoke(timer_period_t delay, timer_period_t period, timer_cb_t cb) {
+			return this->invoke(delay, period, cb, any());
+		}
+
+		timer_id_t Scheduler::invoke(timer_period_t delay, timer_period_t period, timer_cb_t cb, any usr_data) {
 			int r;
 			timer_req_t* treq;
 			uv_loop_t* loop;
@@ -46,6 +55,7 @@ namespace VK {
 			treq->id = ++m_seed;
 			treq->period = period;
 			treq->scheduler = this;
+			treq->user_data = usr_data;
 
 			loop = uv_default_loop();
 
@@ -65,7 +75,7 @@ namespace VK {
 					tr->scheduler->cancel(tr->id);
 
 				if (fun)
-					fun();
+					fun(tr->user_data);
 			},
 				delay, period);
 

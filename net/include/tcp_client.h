@@ -9,8 +9,6 @@
 
 namespace VK {
 	namespace Net {
-		class Session;
-
 		class NET_API TcpClient final {
 
 			const uint64_t MAX_RECONN_DELAY = 32000;
@@ -38,8 +36,8 @@ namespace VK {
 			void set_reconn_delay(uint64_t delay);
 			void double_reonn_delay();
 
-			void on_open(bool success, Session* session);
-			void on_close(Session* session);
+			void on_open(bool success, session_t* session);
+			void on_close(session_t* session);
 
 			Scheduler m_scheduler;
 			Session* m_session;

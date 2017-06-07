@@ -1,6 +1,7 @@
 #include "circular_buf.h"
 #include <singleton.h>
 #include <bytes_pool.h>
+#include "monitor.h"
 
 namespace VK {
 	namespace Net {
@@ -8,10 +9,17 @@ namespace VK {
 		                            m_reserved(0),
 		                            m_head(0),
 		                            m_tail(0),
-		                            m_buf(nullptr) { }
+		                            m_buf(nullptr) {
+#if MONITOR_ENABLED
+			Singleton<Monitor>::instance().inc_pcb_count();
+#endif 
+		}
 
 		CircularBuf::~CircularBuf() {
 			clear();
+#if MONITOR_ENABLED
+			Singleton<Monitor>::instance().dec_pcb_count();
+#endif
 		}
 
 		void CircularBuf::clear() {

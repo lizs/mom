@@ -20,23 +20,23 @@ namespace VK {
 		}
 
 		void SessionMgr::broadcast(cbuf_ptr_t pcb) {
-			if (!pack(pcb, Push)) {
+			auto pcbs = std::move(pack(pcb, Push));
+			if(pcbs.size() == 0)
 				return;
-			}
-
+			
 			for (auto& kv : m_sessions) {
 				auto session = kv.second;
-				session->send(pcb, nullptr);
+				session->send(pcbs, nullptr);
 			}
 		}
 
 		void SessionMgr::multicast(cbuf_ptr_t pcb, std::vector<Session*>& sessions) {
-			if (!pack(pcb, Push)) {
+			auto pcbs = std::move(pack(pcb, Push));
+			if (pcbs.size() == 0)
 				return;
-			}
 
 			for (auto session : sessions) {
-				session->send(pcb, nullptr);
+				session->send(pcbs, nullptr);
 			}
 		}
 

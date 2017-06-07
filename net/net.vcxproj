@@ -88,8 +88,9 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_LIB;EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../net/include;../../net/include/cluster;../third/libuv/include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;_LIB;EXPORT;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>include;../../third/libuv/include</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -100,11 +101,11 @@
       <AdditionalDependencies>libuv.lib</AdditionalDependencies>
     </Lib>
     <Lib>
-      <AdditionalLibraryDirectories>../third/libuv</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../../third/libuv</AdditionalLibraryDirectories>
     </Lib>
     <PostBuildEvent>
-      <Command>xcopy /Y/F/I/S "$(OutputPath)$(TargetFileName)" "$(SolutionDir)../publish"
-xcopy /Y/F/I/S "$(OutputPath)$(TargetName).pdb" "$(SolutionDir)../publish"</Command>
+      <Command>xcopy /Y/F/I/S "$(TargetPath)" "../../cluster/lib"
+xcopy /Y/F "$(OutputPath)$(TargetName).pdb" "../../cluster/lib"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -132,7 +133,7 @@ xcopy /Y/F/I/S "$(OutputPath)$(TargetName).pdb" "$(SolutionDir)../publish"</Comm
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_LIB;EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../net/include;../third/libuv/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../../third/libuv/include</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
@@ -143,24 +144,21 @@ xcopy /Y/F/I/S "$(OutputPath)$(TargetName).pdb" "$(SolutionDir)../publish"</Comm
       <AdditionalDependencies>libuv.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y/F/I/S "$(OutputPath)$(TargetFileName)" "$(SolutionDir)../publish"</Command>
+      <Command>xcopy /Y/F/I/S "$(TargetPath)" "../../cluster/lib"</Command>
     </PostBuildEvent>
+    <Lib>
+      <AdditionalLibraryDirectories>../../third/libuv</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libuv.lib</AdditionalDependencies>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\bytes_pool.h" />
-    <ClInclude Include="include\cluster\game.h" />
-    <ClInclude Include="include\cluster\node.h" />
-    <ClInclude Include="include\cluster\coordination.h" />
     <ClInclude Include="include\data\property.h" />
     <ClInclude Include="include\data\any.h" />
     <ClInclude Include="include\data\value.h" />
-    <ClInclude Include="include\ecs\component.h" />
     <ClInclude Include="include\mem_pool.h" />
     <ClInclude Include="include\defines.h" />
     <ClInclude Include="include\circular_buf.h" />
-    <ClInclude Include="include\cluster\gate.h" />
-    <ClInclude Include="include\cluster\mom_client.h" />
-    <ClInclude Include="include\cluster\mom_server.h" />
     <ClInclude Include="include\monitor.h" />
     <ClInclude Include="include\observable\signal2.h" />
     <ClInclude Include="include\observable\signal.h" />
@@ -177,11 +175,6 @@ xcopy /Y/F/I/S "$(OutputPath)$(TargetName).pdb" "$(SolutionDir)../publish"</Comm
   <ItemGroup>
     <ClCompile Include="src\bytes_pool.cpp" />
     <ClCompile Include="src\circular_buf.cpp" />
-    <ClCompile Include="src\cluster\coordination.cpp" />
-    <ClCompile Include="src\cluster\game.cpp" />
-    <ClCompile Include="src\cluster\gate.cpp" />
-    <ClCompile Include="src\cluster\mom_server.cpp" />
-    <ClCompile Include="src\cluster\node.cpp" />
     <ClCompile Include="src\scheduler.cpp" />
     <ClCompile Include="src\session.cpp" />
     <ClCompile Include="src\session_mgr.cpp" />

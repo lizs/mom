@@ -55,7 +55,7 @@ namespace VK {
 				// ping
 				m_keepAliveTimerId = m_scheduler.invoke(KEEP_ALIVE_INTERVAL,
 				                                                           KEEP_ALIVE_INTERVAL,
-				                                                           [this]() {
+				                                                           [this](any usr_data) {
 					                                                           if (m_session->get_keep_alive_counter() > KEEP_ALIVE_COUNTER_DEAD_LINE)
 						                                                           m_session->close();
 					                                                           else if (m_session->get_elapsed_since_last_response() * 1000 > KEEP_ALIVE_INTERVAL)
@@ -84,7 +84,7 @@ namespace VK {
 			m_session->prepare();
 			double_reonn_delay();
 
-			m_scheduler.invoke(m_reconnDelay, [this]() {
+			m_scheduler.invoke(m_reconnDelay, [this](any usr_data) {
 				                   if (m_connectByHost) {
 					                   m_session->connect_by_host(m_host.c_str(), m_port);
 				                   }

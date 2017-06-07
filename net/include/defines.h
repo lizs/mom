@@ -7,6 +7,7 @@
 #include <functional>
 #include "mem_pool.h"
 #include "singleton.h"
+#include <vector>
 
 #ifdef LINK_DYN
 #ifdef NET_EXPORT
@@ -93,7 +94,7 @@ enum NetError : error_no_t {
 	}                                                       \
  } while (0)
 
-#define LOG_UV_ERR(code) PRINT_UV_ERR_DETAIL(code)
+#define LOG_UV_ERR(code) PRINT_UV_ERR(code)
 
 #define LOG(format, ...)         \
  do {                                                     \
@@ -135,7 +136,10 @@ enum NetError : error_no_t {
 			##__VA_ARGS__);                                       \
 	printf("[");                                      \
 	for (auto i = 0; i < len; ++i) {			\
-		printf("%02x ", buf[i]);				\
+		if(i == len -1)	\
+			printf("%02x", buf[i]);	\
+		else	\
+			printf("%02x ", buf[i]);				\
 	}													\
 	printf("]\n");                                      \
  } while (0)
@@ -212,22 +216,31 @@ typedef VK::Net::CircularBuf cbuf_t;
 typedef std::shared_ptr<cbuf_t> cbuf_ptr_t;
 typedef VK::Net::MemoryPool<cbuf_t> cbuf_pool_t;
 typedef VK::Net::Monitor monitor_t;
-typedef std::function<void(bool)> send_cb_t;
+typedef std::function<void(bool, session_t*)> send_cb_t;
 typedef std::function<void(bool, session_t*)> open_cb_t;
 typedef std::function<void(session_t*)> close_cb_t;
-typedef std::function<void(error_no_t, cbuf_ptr_t)> req_cb_t;
+typedef std::function<void(session_t*, error_no_t, cbuf_ptr_t)> req_cb_t;
 typedef std::function<void(session_t*, cbuf_ptr_t)> push_handler_t;
-typedef std::function<void(session_t*, cbuf_ptr_t, req_cb_t)> req_handler_t;
+typedef std::function<void(error_no_t, cbuf_ptr_t)> resp_cb_t;
+typedef std::function<void(session_t*, cbuf_ptr_t, resp_cb_t)> req_handler_t;
 
 typedef struct {
+	enum _ {
+		SliceCount = 10
+	};
 	uv_write_t req;
-	uv_buf_t buf;
 	send_cb_t cb;
-	cbuf_ptr_t pcb;
+	session_t * session;
+	cbuf_ptr_t pcb_array[SliceCount];
+	uv_buf_t uv_buf_array[SliceCount];
 
 	void clear() {
-		pcb = nullptr;
+		//pcb_array.clear();
+		for (auto i = 0; i < SliceCount; ++i) {
+			pcb_array[i] = nullptr;
+		}
 		cb = nullptr;
+		session = nullptr;
 	}
 } write_req_t;
 
@@ -250,70 +263,7 @@ typedef struct {
 	std::function<void(bool, sockaddr *)> cb;
 } getaddr_req_t;
 
-// mom protocols
-#pragma pack(1)
-
-typedef struct {
-	node_id_t nid;
-	node_type_t ntype;
-} node_register_t;
-
-typedef struct {
-	node_id_t nid;
-} node_unregister_t;
-
-typedef struct {
-	///node_type_t ntype;
-	node_id_t nid;
-} coordinate_rep_t;
-
-typedef struct {
-	node_type_t ntype;
-} coordinate_req_t;
-
-// REQ包头
-typedef struct {
-	ops_t ops;
-	node_id_t nid;
-	node_id_t gate_id;
-	session_id_t sid;
-} req_header_t;
-
-// PUSH包头
-typedef struct {
-	ops_t ops;
-	node_id_t nid;
-} push_header_t;
-
-typedef union {
-	req_header_t req;
-	push_header_t push;
-} header_t;
-
-// ping/pong 包头为空
-
-// 广播
-typedef struct {
-	node_type_t ntype;
-} broadcast_push_t;
-
-// 组播(todo : lizs not implemented yet)
-typedef struct {
-	node_type_t ntype;
-} multicast_push_t;
-
 #pragma pack()
-
-// 长度+包头
-#define HEADER_SIZE sizeof(header_t) + sizeof(cbuf_len_t)
-static_assert(CBUF_RESERVED_SIZE > HEADER_SIZE, "Reserved size too small.");
-
-struct node_info_t {
-	node_register_t reg;
-	session_id_t sid;
-
-	node_info_t(node_register_t& reg, session_id_t sid) : reg(reg), sid(sid) { }
-};
 
 // 系统命令 < 0
 // MOM命令

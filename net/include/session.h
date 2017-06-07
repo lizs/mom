@@ -68,6 +68,7 @@ namespace VK {
 
 			// handle messages
 			void on_message(cbuf_ptr_t pcb);
+			void dispatch_message(cbuf_ptr_t pcb);
 
 			// response
 			void on_response(serial_t serial, cbuf_ptr_t pcb);
@@ -76,6 +77,7 @@ namespace VK {
 			template <typename ... Args>
 			void send(cbuf_ptr_t pcb, send_cb_t cb, Args ... args);
 			void send(cbuf_ptr_t pcb, send_cb_t cb);
+			void send(std::vector<cbuf_ptr_t> & pcbs, send_cb_t cb);
 
 			// 
 			bool enqueue_req(req_cb_t cb);
@@ -128,6 +130,9 @@ namespace VK {
 			time_t m_lastPingTime;
 			time_t m_lastResponseTime;
 			uint8_t m_keepAliveCounter;
+
+			// 大包组包
+			std::vector<cbuf_ptr_t> m_pcbArray;
 		};
 
 		template <typename ... Args>
@@ -136,16 +141,18 @@ namespace VK {
 				if (pcb == nullptr)
 					pcb = alloc_cbuf(0);
 
-				if (!pack(pcb, args...))
+				auto slices(pack(pcb, args...));
+				auto cnt = slices.size();
+				if (cnt == 0)
 					break;
-
-				send(pcb, cb);
+				
+				send(slices, cb);
 				return;
 			}
 			while (0);
 
 			if (cb)
-				cb(false);
+				cb(false, this);
 		}
 	}
 }

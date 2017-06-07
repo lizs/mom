@@ -16,12 +16,6 @@
     <Filter Include="头文件\net">
       <UniqueIdentifier>{a30731ba-8ae6-45af-b7f0-001041b32e6e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\cluster">
-      <UniqueIdentifier>{afaace43-0f6d-4345-be64-a41b11b11632}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="头文件\cluster\business">
-      <UniqueIdentifier>{01ac5c6d-493c-434b-9c19-f3cf26b0e714}</UniqueIdentifier>
-    </Filter>
     <Filter Include="头文件\data">
       <UniqueIdentifier>{eadff53e-b471-47cd-b6db-3610fab95a0d}</UniqueIdentifier>
     </Filter>
@@ -30,15 +24,6 @@
     </Filter>
     <Filter Include="源文件\net">
       <UniqueIdentifier>{e7cada55-20ec-4405-b5fd-2a9ba0c87067}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\cluster">
-      <UniqueIdentifier>{a7df4987-dc65-471f-a7e1-0e21c62c5b00}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\cluster\business">
-      <UniqueIdentifier>{d1f55289-ac11-4431-a1d0-e4a038cf744f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="头文件\ecs">
-      <UniqueIdentifier>{387bf2d9-c27a-4d31-9a82-413312081cbf}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -66,24 +51,6 @@
     <ClInclude Include="include\tcp_server.h">
       <Filter>头文件\net</Filter>
     </ClInclude>
-    <ClInclude Include="include\cluster\mom_client.h">
-      <Filter>头文件\cluster</Filter>
-    </ClInclude>
-    <ClInclude Include="include\cluster\mom_server.h">
-      <Filter>头文件\cluster</Filter>
-    </ClInclude>
-    <ClInclude Include="include\cluster\gate.h">
-      <Filter>头文件\cluster\business</Filter>
-    </ClInclude>
-    <ClInclude Include="include\cluster\node.h">
-      <Filter>头文件\cluster</Filter>
-    </ClInclude>
-    <ClInclude Include="include\cluster\coordination.h">
-      <Filter>头文件\cluster\business</Filter>
-    </ClInclude>
-    <ClInclude Include="include\cluster\game.h">
-      <Filter>头文件\cluster\business</Filter>
-    </ClInclude>
     <ClInclude Include="include\observable\slot.h">
       <Filter>头文件\observable</Filter>
     </ClInclude>
@@ -107,9 +74,6 @@
     </ClInclude>
     <ClInclude Include="include\watch.h">
       <Filter>头文件\net</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ecs\component.h">
-      <Filter>头文件\ecs</Filter>
     </ClInclude>
     <ClInclude Include="include\data\any.h">
       <Filter>头文件\data</Filter>
@@ -142,21 +106,6 @@
     </ClCompile>
     <ClCompile Include="src\tcp_server.cpp">
       <Filter>源文件\net</Filter>
-    </ClCompile>
-    <ClCompile Include="src\cluster\node.cpp">
-      <Filter>源文件\cluster</Filter>
-    </ClCompile>
-    <ClCompile Include="src\cluster\coordination.cpp">
-      <Filter>源文件\cluster\business</Filter>
-    </ClCompile>
-    <ClCompile Include="src\cluster\game.cpp">
-      <Filter>源文件\cluster\business</Filter>
-    </ClCompile>
-    <ClCompile Include="src\cluster\gate.cpp">
-      <Filter>源文件\cluster\business</Filter>
-    </ClCompile>
-    <ClCompile Include="src\cluster\mom_server.cpp">
-      <Filter>源文件\cluster</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

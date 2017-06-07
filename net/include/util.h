@@ -3,6 +3,7 @@
 #include "defines.h"
 #include "circular_buf.h"
 #include "singleton.h"
+#include <vector>
 
 namespace VK {
 	namespace Net {
@@ -18,62 +19,60 @@ namespace VK {
 			return alloc_cbuf(sizeof(T));
 		}
 
-		static cbuf_ptr_t alloc_broadcast(cbuf_len_t size) {
-			auto pcb = alloc_cbuf(size);
-			auto broad_cast_header = pcb->pre_write_head<broadcast_push_t>();
-			broad_cast_header->ntype = NT_Game;
-			auto header = pcb->pre_write_head<push_header_t>();
-			header->ops = Broadcast;
-
-			return pcb;
-		}
-
-		template <typename T>
-		static cbuf_ptr_t alloc_broadcast() {
-			return alloc_broadcast(sizeof(T));
-		}
-
-		static cbuf_ptr_t alloc_push(ops_t ops, node_id_t nid, cbuf_len_t size) {
-			auto pcb = alloc_cbuf(size);
-			auto header = pcb->pre_write_head<push_header_t>();
-			header->nid = nid;
-			header->ops = ops;
-
-			return pcb;
-		}
-
-		template <typename T>
-		static cbuf_ptr_t alloc_push(ops_t ops, node_id_t nid) {
-			return alloc_push(ops, nid, sizeof(T));
-		}
-
-		static cbuf_ptr_t alloc_request(ops_t ops, node_id_t nid, cbuf_len_t size) {
-			auto pcb = alloc_cbuf(size);
-			auto header = pcb->pre_write_head<req_header_t>();
-			header->nid = nid;
-			header->ops = ops;
-
-			return pcb;
-		}
-
-		template <typename T>
-		static cbuf_ptr_t alloc_request(ops_t ops, node_id_t nid) {
-			return alloc_request(ops, nid, sizeof(T));
-		}
-
 		// 打包
 		template <typename ... Args>
-		static bool pack(cbuf_ptr_t pcb, Args ... args) {
+		static std::vector<cbuf_ptr_t> pack(cbuf_ptr_t pcb, Args ... args) {
+			auto ret = std::vector<cbuf_ptr_t>();
+
 			// 1 pattern
 			// 2 serial ...
 			if (!pcb->write_head(args...))
-				return false;
+				return ret;
 
-			// rewrite the package size
-			if (!pcb->write_head<pack_size_t>(pcb->get_len()))
-				return false;
+			cbuf_len_t limit = MAX_PACKAGE_SIZE - sizeof(byte_t);
+			if (pcb->get_len() > limit) {
+				// 多包
+				auto cnt = pcb->get_len() / limit;
+				auto lastLen = pcb->get_len() % limit;
+				if (lastLen != 0)
+					++cnt;
 
-			return true;
+				if (cnt == 1)
+					goto Single;
+
+				for (auto i = 0; i < cnt; ++i) {
+					cbuf_ptr_t slice;
+					auto packLen = limit;
+					if (i == cnt - 1 && lastLen != 0)
+						packLen = lastLen;
+
+					slice = alloc_cbuf(packLen);
+					slice->write_binary(pcb->get_head_ptr() + i * limit, packLen);
+
+					if (!slice->write_head<byte_t>(cnt - i))
+						return ret;
+
+					if (!slice->write_head<pack_size_t>(slice->get_len()))
+						return ret;
+
+					ret.push_back(slice);
+				}
+
+				return ret;
+			}
+			else {
+Single:
+				// 单包
+				if (!pcb->write_head<byte_t>(1))
+					return ret;
+
+				if (!pcb->write_head<pack_size_t>(pcb->get_len()))
+					return ret;
+
+				ret.push_back(pcb);
+			}
+
+			return std::move(ret);
 		}
 
 		static const char* net_str_err(error_no_t error_no) {
@@ -115,6 +114,5 @@ namespace VK {
 				default: return "Unknown";
 			}
 		}
-
 	}
 }

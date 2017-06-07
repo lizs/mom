@@ -18,5 +18,19 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="any_test.h">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="property_test.h">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="signal_test.h">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="net_test.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

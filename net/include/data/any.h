@@ -124,8 +124,7 @@ namespace VK {
 		private: // intentionally left unimplemented
 			holder& operator=(const holder&) = delete;
 		};
-
-
+		
 		// representation
 		template <typename ValueType>
 		friend ValueType* any_cast(any*);

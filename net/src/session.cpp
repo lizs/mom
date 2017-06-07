@@ -156,43 +156,65 @@ namespace VK {
 		}
 
 		void Session::send(cbuf_ptr_t pcb, send_cb_t cb) {
+			std::vector<cbuf_ptr_t> pcbs = {pcb};
+			this->send(pcbs, cb);
+		}
+
+		void Session::send(std::vector<cbuf_ptr_t>& pcbs, send_cb_t cb) {
+			auto cnt = pcbs.size();
+			if (cnt == 0) {
+				if (cb)
+					cb(false, this);
+
+				return;
+			}
+
 			auto wr = wr_pool_t::instance().alloc();
 			wr->cb = cb;
-			wr->pcb = pcb;
-			wr->buf = uv_buf_init(pcb->get_head_ptr(), pcb->get_len());
+			for(auto i=0; i < pcbs.size(); ++i) {
+				wr->pcb_array[i] = pcbs[i];
+			}
+
+			for (auto i = 0; i < cnt; ++i) {
+				wr->uv_buf_array[i] = uv_buf_init(wr->pcb_array[i]->get_head_ptr(), wr->pcb_array[i]->get_len());
+			}
 
 #if MESSAGE_TRACK_ENABLED
-			PRINT_MESSAGE(pcb->get_head_ptr(), pcb->get_len(), "Write : ");
+			for (auto pcb : pcbs) {
+				PRINT_MESSAGE(pcb->get_head_ptr(), pcb->get_len(), "Write : ");
+			}
 #endif
 
 			int r = uv_write(&wr->req,
-			                 reinterpret_cast<uv_stream_t*>(&m_stream),
-			                 &wr->buf, 1,
-			                 [](uv_write_t* req, int status) {
-				                 auto wr = reinterpret_cast<write_req_t*>(req);
-
-				                 if (wr->cb) {
-					                 wr->cb(!status);
-				                 }
-
+				reinterpret_cast<uv_stream_t*>(&m_stream),
+				wr->uv_buf_array, cnt,
+				[](uv_write_t* req, int status) {
+				auto wr = reinterpret_cast<write_req_t*>(req);
+				auto cb = wr->cb;
+				auto session = wr->session;
 #if MONITOR_ENABLED
-				                 Singleton<Monitor>::instance().dec_pending();
-				                 if (!status) {
-					                 Singleton<Monitor>::instance().inc_wroted();
-				                 }
+				Singleton<Monitor>::instance().dec_pending();
+				if (!status) {
+					Singleton<Monitor>::instance().inc_wroted();
+				}
 #endif
-								 // 清理wr
-								 wr->clear();
-				                 wr_pool_t::instance().dealloc(wr);
-				                 LOG_UV_ERR(status);
-			                 });
+				// 清理wr
+				wr->clear();
+				wr_pool_t::instance().dealloc(wr);
+
+				if (cb) {
+					cb(!status, session);
+				}
+
+				LOG_UV_ERR(status);
+			});
 
 			if (r) {
 				wr->clear();
 				wr_pool_t::instance().dealloc(wr);
 
 				if (cb)
-					cb(false);
+					cb(false, this);
 
 				LOG_UV_ERR(r);
 			}
@@ -204,14 +226,40 @@ namespace VK {
 		}
 
 		void Session::on_message(cbuf_ptr_t pcb) {
-#if MESSAGE_TRACK_ENABLED
-			PRINT_MESSAGE(pcb->get_head_ptr(), pcb->get_len(), "Read : ");
-#endif
-
 			m_lastResponseTime = time(nullptr);
 			if (m_keepAliveCounter > 0)
 				--m_keepAliveCounter;
 
+			byte_t cnt = 1;
+			if (!static_cast<byte_t>(pcb->read<byte_t>(cnt))) {
+				close();
+				return;
+			}
+
+			if(cnt < 1) {
+				close();
+				return;
+			}
+			
+			m_pcbArray.push_back(pcb);
+			if(cnt == 1) {
+				// 组包
+				auto totalLen = 0;
+				for(auto p : m_pcbArray) {
+					totalLen += p->get_len();
+				}
+
+				auto message = alloc_cbuf(totalLen);
+				for (auto p : m_pcbArray) {
+					message->write_binary(p->get_head_ptr(), p->get_len());
+				}
+
+				dispatch_message(message);
+				m_pcbArray.clear();
+			}
+		}
+
+		void Session::dispatch_message(cbuf_ptr_t pcb) {
 			pattern_t pattern;
 			if (!static_cast<Pattern>(pcb->read<pattern_t>(pattern))) {
 				close();
@@ -219,55 +267,55 @@ namespace VK {
 			}
 
 			switch (pattern) {
-				case Ping: {
-					m_lastPingTime = time(nullptr);
-					pong();
-					break;
+			case Ping: {
+				m_lastPingTime = time(nullptr);
+				pong();
+				break;
+			}
+
+			case Pong: {
+				break;
+			}
+
+			case Push: {
+				if (m_pushHandler) {
+					m_pushHandler(this, pcb);
 				}
 
-				case Pong: {
-					break;
-				}
+				break;
+			}
 
-				case Push: {
-					if (m_pushHandler) {
-						m_pushHandler(this, pcb);
-					}
-
-					break;
-				}
-
-				case Request: {
-					serial_t serial;
-					if (!pcb->read<serial_t>(serial)) {
-						close();
-						return;
-					}
-
-					if (m_reqHandler) {
-						m_reqHandler(this, pcb, [this, serial](error_no_t en, cbuf_ptr_t pcb) {
-							             response(en, serial, pcb, nullptr);
-						             });
-					}
-					else {
-						pcb->reset();
-						response(NE_NoHandler, serial, pcb, nullptr);
-					}
-
+			case Request: {
+				serial_t serial;
+				if (!pcb->read<serial_t>(serial)) {
+					close();
 					return;
 				}
 
-				case Response:
-					serial_t serial;
-					if (!pcb->read<serial_t>(serial)) {
-						LOG("read serial from response failed");
-						return;
-					}
-					on_response(serial, pcb);
-					return;
+				if (m_reqHandler) {
+					m_reqHandler(this, pcb, [this, serial](error_no_t en, cbuf_ptr_t pcb) {
+						response(en, serial, pcb, nullptr);
+					});
+				}
+				else {
+					pcb->reset();
+					response(NE_NoHandler, serial, pcb, nullptr);
+				}
 
-				default:
-					break;
+				return;
+			}
+
+			case Response:
+				serial_t serial;
+				if (!pcb->read<serial_t>(serial)) {
+					LOG("read serial from response failed");
+					return;
+				}
+				on_response(serial, pcb);
+				return;
+
+			default:
+				break;
 			}
 		}
 
@@ -282,10 +330,10 @@ namespace VK {
 			if (!pcb->read<error_no_t>(en)) {
 				LOG("read error no from response failed");
 				pcb->reset();
-				it->second(NE_ReadErrorNo, pcb);
+				it->second(this, NE_ReadErrorNo, pcb);
 			}
 			else {
-				it->second(en, pcb);
+				it->second(this, en, pcb);
 			}
 
 			m_requestsPool.erase(it);
@@ -297,7 +345,7 @@ namespace VK {
 				LOG("serial conflict!");
 
 				if (cb)
-					cb(NE_SerialConflict, nullptr);
+					cb(this, NE_SerialConflict, nullptr);
 
 				return false;
 			}
@@ -377,7 +425,7 @@ namespace VK {
 			}
 
 			auto serial = m_serial;
-			send(pcb, [this, serial](bool success) {
+			send(pcb, [this, serial](bool success, session_t * session) {
 				     if (!success) {
 					     auto it = m_requestsPool.find(serial);
 					     if (it == m_requestsPool.end()) {
@@ -386,7 +434,7 @@ namespace VK {
 						     return;
 					     }
 
-					     it->second(NE_Write, nullptr);
+					     it->second(this, NE_Write, nullptr);
 					     m_requestsPool.erase(it);
 				     }
 			     }, serial, static_cast<pattern_t>(Request));
@@ -406,7 +454,7 @@ namespace VK {
 
 			// make every requests fail
 			for (auto& kv : m_requestsPool) {
-				kv.second(NE_SessionClosed, nullptr);
+				kv.second(this, NE_SessionClosed, nullptr);
 			}
 			m_requestsPool.clear();
 
@@ -470,6 +518,12 @@ namespace VK {
 					// copy
 					auto pcb = alloc_cbuf(pack_desired_size);
 					pcb->write_binary(cbuf.get_head_ptr(), pack_desired_size);
+					
+#if MESSAGE_TRACK_ENABLED
+					pcb->write_head<cbuf_len_t>(pack_desired_size);
+					PRINT_MESSAGE(pcb->get_head_ptr(), pcb->get_len(), "Read : ");
+					pcb->move_head(sizeof(cbuf_len_t));
+#endif
 
 					// handle message
 					on_message(pcb);

@@ -39,12 +39,15 @@ namespace VK {
 			Scheduler m_scheduler;
 			SessionMgr m_sessions;
 
+#pragma warning(push)
+#pragma warning(disable:4251)
 			req_handler_t m_reqHandler;
 			push_handler_t m_pushHandler;
 			open_cb_t m_openCB;
 			close_cb_t m_closeCB;
 
 			std::string m_ip;
+#pragma warning(pop)
 			int m_port;
 		};
 	}

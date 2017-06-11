@@ -187,7 +187,7 @@ namespace VK {
 
 			int r = uv_write(&wr->req,
 				reinterpret_cast<uv_stream_t*>(&m_stream),
-				wr->uv_buf_array, cnt,
+				wr->uv_buf_array, (unsigned int)cnt,
 				[](uv_write_t* req, int status) {
 				auto wr = reinterpret_cast<write_req_t*>(req);
 				auto cb = wr->cb;
@@ -367,7 +367,7 @@ namespace VK {
 			m_greq.cb = cb;
 
 			char device[32] = {0};
-			sprintf(device, "%d", port);
+			sprintf_s(device, "%d", port);
 
 			auto ret = uv_getaddrinfo(uv_default_loop(), &m_greq.req,
 			                          [](uv_getaddrinfo_t* req, int status, struct addrinfo* res) {

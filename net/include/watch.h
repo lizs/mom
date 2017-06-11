@@ -4,7 +4,7 @@
 
 namespace VK {
 	// ¼ÆÊ±Æ÷
-	class Watch {
+	class NET_API Watch {
 		typedef std::chrono::duration<int, std::milli> milliseconds_t;
 		typedef std::chrono::duration<int> seconds_t;
 		typedef std::chrono::high_resolution_clock clock;

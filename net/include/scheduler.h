@@ -39,7 +39,10 @@ namespace VK {
 			} timer_req_t;
 
 			timer_id_t m_seed;
+#pragma warning(push)
+#pragma warning(disable:4251)
 			std::map<timer_id_t, timer_req_t*> m_timers;
+#pragma warning(pop)
 		};
 	}
 }

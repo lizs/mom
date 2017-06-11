@@ -1,12 +1,13 @@
 #pragma once
 #include <list>
+#include "defines.h"
 
 namespace VK {
 	namespace Net {
 		// 内存池
 		// 本池中的T数量不超过Capacity
-		template <typename T, size_t Capacity = 5>
-		class MemoryPool {
+		template <typename T, size_t Capacity>
+		class NET_API MemoryPool {
 
 #pragma warning(push)
 #pragma warning(disable:4624)

@@ -2,23 +2,19 @@
 // 2017.2.22
 #pragma once
 
+#ifdef NET_DYNAMIC
+#ifdef EXPORT
+#define NET_API __declspec( dllexport )
+#else
+#define NET_API __declspec( dllimport )
+#endif
+#else
+#define NET_API
+#endif
+
 #include "uv.h"
 #include <memory>
 #include <functional>
-#include "mem_pool.h"
-#include "singleton.h"
-#include <vector>
-
-#ifdef LINK_DYN
-#ifdef NET_EXPORT
-		#define NET_API __declspec( dllexport )
-#else
-		#define NET_API __declspec( dllimport )
-#endif
-#else
-	#define NET_API
-#endif
-
 
 #pragma region("配置")
 #define MESSAGE_TRACK_ENABLED false
@@ -29,47 +25,6 @@
 #define KEEP_ALIVE_INTERVAL 10 * 1000
 #define KEEP_ALIVE_COUNTER_DEAD_LINE 5
 #pragma endregion
-
-#pragma region("typedefs")
-
-typedef int16_t ops_t;
-typedef uint8_t byte_t;
-typedef uint16_t pack_size_t;
-typedef uint16_t serial_t;
-typedef uint16_t error_no_t;
-typedef uint16_t node_id_t;
-typedef uint8_t node_type_t;
-typedef uint16_t session_id_t;
-typedef uint16_t mask_t;
-typedef uint16_t cbuf_len_t;
-typedef int16_t cbuf_offset_t;
-typedef uint8_t pattern_t;
-typedef uint8_t component_id_t;
-
-#pragma endregion 
-
-#pragma region("enums")
-
-enum Pattern : pattern_t {
-	Push,
-	Request,
-	Response,
-	Ping,
-	Pong,
-};
-
-enum NetError : error_no_t {
-	Success = 0,
-	NE_Write,
-	NE_Read,
-	NE_SerialConflict,
-	NE_NoHandler,
-	NE_ReadErrorNo,
-	NE_SessionClosed,
-	NE_End,
-};
-
-#pragma endregion 
 
 #define PRINT_UV_ERR(code)         \
  do {                                                     \
@@ -161,15 +116,6 @@ enum NetError : error_no_t {
 #define PRINT_MESSAGE PRINT_MESSAGE_AS_STRING
 #endif
 
-#if defined(__clang__) ||                                \
-    defined(__GNUC__) ||                                 \
-    defined(__INTEL_COMPILER) ||                         \
-    defined(__SUNPRO_C)
-# define UNUSED __attribute__((unused))
-#else
-# define UNUSED
-#endif
-
 /* This macro cleans up the main loop. This is used to avoid valgrind
 * warnings about memory being "leaked" by the main event loop.
 */
@@ -181,12 +127,12 @@ enum NetError : error_no_t {
   } while (0)
 
 /* Fully close a loop */
-UNUSED static void close_walk_cb(uv_handle_t* handle, void* arg) {
+static void close_walk_cb(uv_handle_t* handle, void* arg) {
 	if (!uv_is_closing(handle))
 		uv_close(handle, nullptr);
 }
 
-UNUSED static void close_loop(uv_loop_t* loop) {
+static void close_loop(uv_loop_t* loop) {
 	uv_walk(loop, close_walk_cb, nullptr);
 	uv_run(loop, UV_RUN_DEFAULT);
 }
@@ -203,11 +149,34 @@ do{												\
 	MAKE_VALGRIND_HAPPY();		\
 }while(0)
 
+
+#pragma region("typedefs")
+
+typedef int16_t ops_t;
+typedef uint8_t byte_t;
+typedef uint16_t pack_size_t;
+typedef uint16_t serial_t;
+typedef uint16_t error_no_t;
+typedef uint16_t node_id_t;
+typedef uint8_t node_type_t;
+typedef uint16_t session_id_t;
+typedef uint16_t mask_t;
+typedef uint16_t cbuf_len_t;
+typedef int16_t cbuf_offset_t;
+typedef uint8_t pattern_t;
+typedef uint8_t component_id_t;
+
 namespace VK {
 	namespace Net {
 		class Session;
 		class CircularBuf;
 		class Monitor;
+
+		template<typename T, size_t Capacity = 5>
+		class MemoryPool;
+
+		template<typename T>
+		class Singleton;
 	}
 }
 
@@ -223,6 +192,34 @@ typedef std::function<void(session_t*, error_no_t, cbuf_ptr_t)> req_cb_t;
 typedef std::function<void(session_t*, cbuf_ptr_t)> push_handler_t;
 typedef std::function<void(error_no_t, cbuf_ptr_t)> resp_cb_t;
 typedef std::function<void(session_t*, cbuf_ptr_t, resp_cb_t)> req_handler_t;
+
+#pragma endregion 
+
+#pragma region("enums")
+
+enum Pattern : pattern_t {
+	Push,
+	Request,
+	Response,
+	Ping,
+	Pong,
+};
+
+enum NetError : error_no_t {
+	Success = 0,
+	NE_Write,
+	NE_Read,
+	NE_SerialConflict,
+	NE_NoHandler,
+	NE_ReadErrorNo,
+	NE_SessionClosed,
+	NE_End,
+};
+
+#pragma endregion 
+
+#pragma region structs
+
 
 typedef struct {
 	enum _ {
@@ -263,48 +260,4 @@ typedef struct {
 	std::function<void(bool, sockaddr *)> cb;
 } getaddr_req_t;
 
-#pragma pack()
-
-// 系统命令 < 0
-// MOM命令
-enum MomOps : short {
-	Invalid = SHRT_MIN,
-	// 注册至网关
-	Register2Gate,
-	// 注册至协调服
-	Register2Coordination,
-	// 反注册
-	UnregisterFromCoordination,
-	// 协调（请求分配一个目标服务ID）
-	Coordinate,
-	// 广播
-	Broadcast,
-	// 组播
-	Multicast,
-};
-
-enum MomError : error_no_t {
-	ME_Begin = NE_End,
-	ME_ReadHeader,
-	ME_WriteHeader,
-	ME_InvlidOps,
-	ME_ReadRegisterInfo,
-	ME_ReadUnregisterInfo,
-	ME_TargetNodeNotExist,
-	ME_NodeIdAlreadyExist,
-	ME_NoHandler,
-	ME_NotImplemented,
-	ME_TargetSessionNotExist,
-	ME_MomClientsNotReady,
-	ME_CoordinationServerNotExist,
-	ME_TargetServerNotExist,
-	ME_ReadCoordinateInfo,
-	ME_ReadBroadcastInfo,
-	ME_End,
-};
-
-enum NodeType {
-	NT_Game = 1,
-	NT_Gate,
-	NT_Coordination,
-};
+#pragma endregion 

@@ -33,7 +33,10 @@ namespace VK {
 #pragma endregion 
 			
 		private:
+#pragma warning(push)
+#pragma warning(disable:4251)
 			std::map<int, Session*> m_sessions;
+#pragma warning(pop)
 			TcpServer* m_host;
 		};
 	}

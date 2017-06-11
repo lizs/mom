@@ -84,6 +84,9 @@
     <ClInclude Include="include\data\property.h">
       <Filter>头文件\data</Filter>
     </ClInclude>
+    <ClInclude Include="include\net.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\session.cpp">
@@ -107,5 +110,16 @@
     <ClCompile Include="src\tcp_server.cpp">
       <Filter>源文件\net</Filter>
     </ClCompile>
+    <ClCompile Include="include\util.cpp">
+      <Filter>源文件\net</Filter>
+    </ClCompile>
+    <ClCompile Include="include\compile_singletons.cpp">
+      <Filter>源文件\net</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="include\singleton.inl">
+      <Filter>头文件\net</Filter>
+    </None>
   </ItemGroup>
 </Project>

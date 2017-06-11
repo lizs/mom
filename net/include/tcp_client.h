@@ -44,15 +44,16 @@ namespace VK {
 
 			bool m_autoReconnect = true;
 			bool m_connectByHost = true;
-			std::string m_host;
 			int m_port;
 
-
+#pragma warning(push)
+#pragma warning(disable:4251)
+			std::string m_host;
 			open_cb_t m_open_cb;
 			close_cb_t m_close_cb;
+#pragma warning(pop)
 			
 			timer_id_t m_keepAliveTimerId;
-
 			uint64_t m_reconnDelay = DEFAULT_RECONN_DELAY;
 		};
 	}

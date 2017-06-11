@@ -4,12 +4,13 @@
 
 namespace VK {
 	namespace Net {
-		class Monitor {
+		class NET_API Monitor {
 			const timer_period_t DefaultPeriod = 5 * 1000;
 		public:
 			Monitor()
 				: m_readed(0),
-				  m_wroted(0), m_pending(0), m_pcbCount(0), m_timerID(INVALID_TIMER_ID) { }
+				  m_wroted(0), m_pending(0), m_pcbCount(0), m_timerID(INVALID_TIMER_ID) {
+			}
 
 			uint64_t get_readed() const {
 				return m_readed;

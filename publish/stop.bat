@@ -1,1 +1,1 @@
-taskkill /IM "cluster.exe" /F
+taskkill /IM "sample.exe" /F

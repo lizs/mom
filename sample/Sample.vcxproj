@@ -88,14 +88,14 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <TargetName>sample.cpp</TargetName>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <TargetName>sample.cpp</TargetName>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -126,8 +126,8 @@
       <AdditionalDependencies>libuv.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y/F/I/S "$(OutputPath)$(TargetFileName)" "$(SolutionDir)../../../publish"
-xcopy /Y/F/I/S "$(OutputPath)$(TargetName).pdb" "$(SolutionDir)../../../publish"</Command>
+      <Command>xcopy /Y/F/I/S "$(OutputPath)$(TargetFileName)" "../publish"
+xcopy /Y/F/I/S "$(OutputPath)$(TargetName).pdb" "../publish"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -167,8 +167,8 @@ xcopy /Y/F/I/S "$(OutputPath)$(TargetName).pdb" "$(SolutionDir)../../../publish"
       <AdditionalDependencies>libuv.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y/F/I/S "$(OutputPath)$(TargetFileName)" "$(SolutionDir)../../../publish"
-xcopy /Y/F/I/S "$(OutputPath)$(TargetName).pdb" "$(SolutionDir)../../../publish"</Command>
+      <Command>xcopy /Y/F/I/S "$(OutputPath)$(TargetFileName)" "../publish"
+xcopy /Y/F/I/S "$(OutputPath)$(TargetName).pdb" "../publish"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

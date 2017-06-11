@@ -90,6 +90,8 @@ namespace VK {
 		private:
 			void* m_host;
 
+#pragma warning(push)
+#pragma warning(disable:4251)
 			// request pool
 			std::map<serial_t, req_cb_t> m_requestsPool;
 
@@ -100,6 +102,7 @@ namespace VK {
 			// handlers
 			req_handler_t m_reqHandler;
 			push_handler_t m_pushHandler;
+#pragma warning(pop)
 
 			// read buf
 			cbuf_t m_cbuf;
@@ -131,8 +134,11 @@ namespace VK {
 			time_t m_lastResponseTime;
 			uint8_t m_keepAliveCounter;
 
+#pragma warning(push)
+#pragma warning(disable:4251)
 			// 大包组包
 			std::vector<cbuf_ptr_t> m_pcbArray;
+#pragma warning(pop)
 		};
 
 		template <typename ... Args>

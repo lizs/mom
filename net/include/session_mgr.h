@@ -22,20 +22,20 @@ namespace VK {
 			}
 
 			void close_all();
-			Session* get_session(int id);
-			bool add_session(Session* session);
-			void remove(Session* session);
+			session_ptr_t get_session(int id);
+			bool add_session(session_ptr_t session);
+			void remove(session_ptr_t session);
 			size_t size() const;
 
 #pragma region ("¹ã²¥¡¢×é²¥")
 			void broadcast(cbuf_ptr_t pcb);
-			static void multicast(cbuf_ptr_t pcb, std::vector<Session*>& sessions);
+			static void multicast(cbuf_ptr_t pcb, std::vector<session_ptr_t>& sessions);
 #pragma endregion 
 			
 		private:
 #pragma warning(push)
 #pragma warning(disable:4251)
-			std::map<int, Session*> m_sessions;
+			std::map<int, session_ptr_t> m_sessions;
 #pragma warning(pop)
 			TcpServer* m_host;
 		};

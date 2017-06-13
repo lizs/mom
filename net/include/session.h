@@ -12,8 +12,11 @@ namespace VK {
 	namespace Net {
 		class SessionMgr;
 
+#pragma warning(push)
+#pragma warning(disable:4251)
 		// represents a session between server and client
-		class NET_API Session final {
+		class NET_API Session final : public std::enable_shared_from_this<Session>{
+#pragma warning(pop)
 			friend class TcpServer;
 			friend class TcpClient;
 			friend class SessionMgr;
@@ -31,12 +34,9 @@ namespace VK {
 			void set_host(void* host);
 			void* get_host() const;
 
-			// 
-			void notify_established(bool open);
-
 			int get_id() const;
 			uv_tcp_t& get_stream();
-			cbuf_t& get_read_cbuf();
+			cbuf_ptr_t get_read_cbuf() const;
 
 #pragma region("Message patterns")
 			// req/rep pattern
@@ -84,38 +84,15 @@ namespace VK {
 
 			// stop read
 			void stop_read();
-			void get_addr_info(const char* host, int port, std::function<void(bool, sockaddr*)> cb);
+			void get_addr_info(const char* host, int port, std::function<void(bool, sockaddr*)> cb) const;
 			void connect(sockaddr* addr);
 
 		private:
 			void* m_host;
 
-#pragma warning(push)
-#pragma warning(disable:4251)
-			// request pool
-			std::map<serial_t, req_cb_t> m_requestsPool;
-
-			// cb
-			open_cb_t m_openCB;
-			close_cb_t m_closeCB;
-
-			// handlers
-			req_handler_t m_reqHandler;
-			push_handler_t m_pushHandler;
-#pragma warning(pop)
-
-			// read buf
-			cbuf_t m_cbuf;
 			// underline uv stream
 			uv_tcp_t m_stream;
-
-			// conn request
-			connect_req_t m_creq;
-			// shutdown request
-			shutdown_req_t m_sreq;
-			// get address
-			getaddr_req_t m_greq;
-
+			
 			// session id
 			// unique in current process
 			uint32_t m_id;
@@ -136,8 +113,22 @@ namespace VK {
 
 #pragma warning(push)
 #pragma warning(disable:4251)
+			// read buf
+			cbuf_ptr_t m_cbuf;
+
+			// cb
+			open_cb_t m_openCB;
+			close_cb_t m_closeCB;
+
+			// handlers
+			req_handler_t m_reqHandler;
+			push_handler_t m_pushHandler;
+
 			// 大包组包
 			std::vector<cbuf_ptr_t> m_pcbArray;
+
+			// request pool
+			std::map<serial_t, req_cb_t> m_requestsPool;
 #pragma warning(pop)
 		};
 
@@ -147,7 +138,7 @@ namespace VK {
 				if (pcb == nullptr)
 					pcb = alloc_cbuf(0);
 
-				auto slices(pack(pcb, args...));
+				auto slices = std::move(pack(pcb, args...));
 				auto cnt = slices.size();
 				if (cnt == 0)
 					break;
@@ -158,7 +149,7 @@ namespace VK {
 			while (0);
 
 			if (cb)
-				cb(false, this);
+				cb(false, shared_from_this());
 		}
 	}
 }

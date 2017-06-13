@@ -25,7 +25,7 @@ namespace VK {
 
 			// ¹ã²¥Ö§³Ö
 			void broadcast(cbuf_ptr_t pcb);
-			void multicast(cbuf_ptr_t pcb, std::vector<session_t*>& sessions) const;
+			void multicast(cbuf_ptr_t pcb, std::vector<session_ptr_t>& sessions) const;
 
 			req_handler_t get_req_handler() const;
 			push_handler_t get_push_handler() const;

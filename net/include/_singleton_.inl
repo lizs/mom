@@ -1,18 +1,18 @@
 #pragma once
-#include "singleton.h"
+#include "_singleton_.h"
 
 namespace VK {
 	namespace Net {
 		template <typename T>
-		T& Singleton<T>::instance() {
+		T& _singleton_<T>::instance() {
 			static T instance;
 			return instance;
 		}
 
 		template <typename T>
-		Singleton<T>::Singleton() {}
+		_singleton_<T>::_singleton_() {}
 
 		template <typename T>
-		Singleton<T>::~Singleton() {}
+		_singleton_<T>::~_singleton_() {}
 	}
 }

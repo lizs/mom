@@ -5,7 +5,7 @@
 #include "defines.h"
 #include "typedef.h"
 #include "export.h"
-#include "singleton.h"
+#include "_singleton_.h"
 #include "bytes_pool.h"
 #include "circular_buf.h"
 #include "mem_pool.h"

@@ -1,13 +1,12 @@
 #pragma once
 #include <list>
-#include "defines.h"
 
 namespace VK {
 	namespace Net {
 		// 内存池
 		// 本池中的T数量不超过Capacity
 		template <typename T, size_t Capacity>
-		class NET_API MemoryPool {
+		class MemoryPool {
 
 #pragma warning(push)
 #pragma warning(disable:4624)
@@ -24,7 +23,7 @@ namespace VK {
 			template <typename ... Args>
 			T* alloc(Args ... args) {
 				if (_free_slots != nullptr) {
-					T* result = reinterpret_cast<T*>(_free_slots);
+					T* result = &_free_slots->element;
 					_free_slots = _free_slots->next;
 
 					new(result) T(args...);
@@ -32,21 +31,23 @@ namespace VK {
 					return result;
 				}
 
-				auto slot = malloc(sizeof(Slot));
-				auto pelement = reinterpret_cast<T*>(slot);
-				new(pelement) T(args...);
+				auto slot = reinterpret_cast<Slot*>(malloc(sizeof(Slot)));
+				slot->next = nullptr;
+				new(&slot->element) T(args...);
 
-				return pelement;
+				return &slot->element;
 			}
 
 			void dealloc(T* p) {
 				if (p != nullptr) {
+					auto slot = reinterpret_cast<Slot*>(p);
 					if (_slot_cnt >= Capacity) {
 						p->~T();
-						free(p);
+						slot->next = nullptr;
+
+						free(slot);
 					}
 					else {
-						auto slot = reinterpret_cast<Slot*>(p);
 						slot->next = _free_slots;
 						_free_slots = slot;
 						++_slot_cnt;

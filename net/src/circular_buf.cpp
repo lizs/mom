@@ -1,6 +1,6 @@
 #include "circular_buf.h"
-#include <singleton.h>
-#include <bytes_pool.h>
+#include "_singleton_.h"
+#include "bytes_pool.h"
 #include "monitor.h"
 
 namespace VK {
@@ -11,20 +11,20 @@ namespace VK {
 		                            m_tail(0),
 		                            m_buf(nullptr) {
 #if MONITOR_ENABLED
-			Singleton<Monitor>::instance().inc_pcb_count();
+			_singleton_<Monitor>::instance().inc_pcb_count();
 #endif 
 		}
 
 		CircularBuf::~CircularBuf() {
 			clear();
 #if MONITOR_ENABLED
-			Singleton<Monitor>::instance().dec_pcb_count();
+			_singleton_<Monitor>::instance().dec_pcb_count();
 #endif
 		}
 
 		void CircularBuf::clear() {
 			if (m_buf != nullptr) {
-				Singleton<BytesPool>::instance().dealloc(m_buf, m_capacity);
+				_singleton_<BytesPool>::instance().dealloc(m_buf, m_capacity);
 				m_buf = nullptr;
 			}
 		}
@@ -96,7 +96,7 @@ namespace VK {
 
 			m_reserved = reserved_size;
 			m_capacity = reserved_size + size;
-			m_buf = Singleton<BytesPool>::instance().alloc(m_capacity);
+			m_buf = _singleton_<BytesPool>::instance().alloc(m_capacity);
 			reuse();
 		}
 

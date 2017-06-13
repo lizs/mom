@@ -88,7 +88,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_LIB;EXPORT;NET_DYNAMIC;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>include;../../third/libuv/include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
@@ -167,7 +167,7 @@ xcopy /Y/F "$(OutputPath)$(TargetName).pdb" "../publish"</Command>
     <ClInclude Include="include\scheduler.h" />
     <ClInclude Include="include\session.h" />
     <ClInclude Include="include\session_mgr.h" />
-    <ClInclude Include="include\singleton.h" />
+    <ClInclude Include="include\_singleton_.h" />
     <ClInclude Include="include\tcp_client.h" />
     <ClInclude Include="include\tcp_server.h" />
     <ClInclude Include="include\util.h" />
@@ -185,7 +185,7 @@ xcopy /Y/F "$(OutputPath)$(TargetName).pdb" "../publish"</Command>
     <ClCompile Include="src\tcp_server.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="include\singleton.inl" />
+    <None Include="include\_singleton_.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

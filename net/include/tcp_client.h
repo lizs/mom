@@ -36,11 +36,10 @@ namespace VK {
 			void set_reconn_delay(uint64_t delay);
 			void double_reonn_delay();
 
-			void on_open(bool success, session_t* session);
-			void on_close(session_t* session);
+			void on_open(bool success, session_ptr_t session);
+			void on_close(session_ptr_t session);
 
 			Scheduler m_scheduler;
-			Session* m_session;
 
 			bool m_autoReconnect = true;
 			bool m_connectByHost = true;
@@ -48,6 +47,8 @@ namespace VK {
 
 #pragma warning(push)
 #pragma warning(disable:4251)
+			session_ptr_t m_session;
+
 			std::string m_host;
 			open_cb_t m_open_cb;
 			close_cb_t m_close_cb;

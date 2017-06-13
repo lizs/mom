@@ -69,7 +69,7 @@ namespace VK {
 			m_sessions.broadcast(pcb);
 		}
 
-		void TcpServer::multicast(cbuf_ptr_t pcb, std::vector<session_t*>& sessions) const {
+		void TcpServer::multicast(cbuf_ptr_t pcb, std::vector<session_ptr_t>& sessions) const {
 			m_sessions.multicast(pcb, sessions);
 		}
 
@@ -91,57 +91,50 @@ namespace VK {
 
 		void TcpServer::connection_cb(uv_stream_t* server, int status) {
 			uv_stream_t* stream;
-			uv_loop_t* loop;
 			int r;
 
-			LOG_UV_ERR(status);
+			if (status) {
+				LOG_UV_ERR(status);
+			}
 
 			auto tcp_server = static_cast<TcpServer*>(server->data);
 
 			// make session
 			auto open_cb = tcp_server->get_open_cb();
 			auto close_cb = tcp_server->get_close_cb();
-			auto session = new Session([open_cb, tcp_server](bool success, session_t* session) {
-				                           tcp_server->get_session_mgr().add_session(session);
-				                           if (open_cb)
-					                           open_cb(true, session);
-			                           },
-			                           [close_cb, tcp_server](session_t* session) {
-				                           if (close_cb)
-					                           close_cb(session);
-				                           tcp_server->get_session_mgr().remove(session);
-			                           },
+			auto session = std::make_shared<Session>(nullptr, [close_cb, tcp_server](session_ptr_t session) {
+				                                         if (close_cb) {
+					                                         close_cb(session);
+				                                         }
 
-			                           tcp_server->get_req_handler(),
-			                           tcp_server->get_push_handler());
+				                                         tcp_server->get_session_mgr().remove(session);
+			                                         },
+
+			                                         tcp_server->get_req_handler(),
+			                                         tcp_server->get_push_handler());
+
 			session->set_host(tcp_server);
 
 			// init session
-			session->prepare();
-
-			stream = reinterpret_cast<uv_stream_t*>(&session->get_stream());
-			ASSERT(stream != NULL);
-			loop = uv_default_loop();
-			ASSERT(loop != NULL);
-
-			r = uv_tcp_init(loop, reinterpret_cast<uv_tcp_t*>(stream));
-			ASSERT(r == 0);
-			if (r) {
-				delete session;
-				LOG_UV_ERR(r);
+			if (!session->prepare()) {
 				return;
 			}
 
-			/* associate server with stream */
-			stream->data = session;
-			// 通知会话建立
-			session->notify_established(true);
-
+			// accept next
+			stream = reinterpret_cast<uv_stream_t*>(&session->get_stream());
 			r = uv_accept(server, stream);
 			ASSERT(r == 0);
 			if (r) {
 				LOG_UV_ERR(r);
 				return;
+			}
+
+			// add to mgr
+			tcp_server->get_session_mgr().add_session(session);
+
+			// notify
+			if (open_cb) {
+				open_cb(true, session);
 			}
 
 			// post first read request

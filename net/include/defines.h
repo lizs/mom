@@ -142,7 +142,7 @@ do{												\
 	int r;												\
 	uv_loop_t* loop;							\
 	loop = uv_default_loop();			\
-	Singleton<Monitor>::instance().start(); \
+	_singleton_<Monitor>::instance().start(); \
 	r = uv_run(loop, UV_RUN_DEFAULT);	\
 	if(r)												\
 		LOG_UV_ERR(r);						\
@@ -172,26 +172,28 @@ namespace VK {
 		class CircularBuf;
 		class Monitor;
 
-		template<typename T, size_t Capacity = 5>
+		template<typename T, size_t Capacity = 1024>
 		class MemoryPool;
 
 		template<typename T>
-		class Singleton;
+		class _singleton_;
 	}
 }
 
 typedef VK::Net::Session session_t;
+typedef std::shared_ptr<VK::Net::Session> session_ptr_t;
+typedef std::weak_ptr<VK::Net::Session> session_wk_ptr_t;
 typedef VK::Net::CircularBuf cbuf_t;
 typedef std::shared_ptr<cbuf_t> cbuf_ptr_t;
 typedef VK::Net::MemoryPool<cbuf_t> cbuf_pool_t;
 typedef VK::Net::Monitor monitor_t;
-typedef std::function<void(bool, session_t*)> send_cb_t;
-typedef std::function<void(bool, session_t*)> open_cb_t;
-typedef std::function<void(session_t*)> close_cb_t;
-typedef std::function<void(session_t*, error_no_t, cbuf_ptr_t)> req_cb_t;
-typedef std::function<void(session_t*, cbuf_ptr_t)> push_handler_t;
+typedef std::function<void(bool, session_ptr_t)> send_cb_t;
+typedef std::function<void(bool, session_ptr_t)> open_cb_t;
+typedef std::function<void(session_ptr_t)> close_cb_t;
+typedef std::function<void(session_ptr_t, error_no_t, cbuf_ptr_t)> req_cb_t;
+typedef std::function<void(session_ptr_t, cbuf_ptr_t)> push_handler_t;
 typedef std::function<void(error_no_t, cbuf_ptr_t)> resp_cb_t;
-typedef std::function<void(session_t*, cbuf_ptr_t, resp_cb_t)> req_handler_t;
+typedef std::function<void(session_ptr_t, cbuf_ptr_t, resp_cb_t)> req_handler_t;
 
 #pragma endregion 
 
@@ -218,16 +220,24 @@ enum NetError : error_no_t {
 
 #pragma endregion 
 
+#define monitor VK::Net::_singleton_<VK::Net::Monitor>::instance()
+
 #pragma region structs
 
+#define alloc_req(TYPE) VK::Net::_singleton_<VK::Net::MemoryPool<##TYPE>>::instance().alloc()
+#define release_req(TYPE, req) \
+	req->clear();	\
+	VK::Net::_singleton_<VK::Net::MemoryPool<##TYPE>>::instance().dealloc(req);
 
+#define alloc_write_req() alloc_req(write_req_t)
+#define release_write_req(req) release_req(write_req_t, req)
 typedef struct {
 	enum _ {
 		SliceCount = 10
 	};
 	uv_write_t req;
 	send_cb_t cb;
-	session_t * session;
+	session_ptr_t session;
 	cbuf_ptr_t pcb_array[SliceCount];
 	uv_buf_t uv_buf_array[SliceCount];
 
@@ -241,23 +251,89 @@ typedef struct {
 	}
 } write_req_t;
 
-typedef VK::Net::Singleton<VK::Net::MemoryPool<write_req_t, 1>> wr_pool_t;
-
-typedef struct {
+#define alloc_connect_req() alloc_req(connect_req_t)
+#define release_connect_req(req) release_req(connect_req_t, req)
+struct connect_req_t {
 	uv_connect_t req;
-	session_t* session;
-	std::function<void(bool, session_t*)> cb;
-} connect_req_t;
+	session_wk_ptr_t session;
+	std::function<void(bool, session_ptr_t)> cb;
 
-typedef struct {
+	connect_req_t() {
+		clear();
+	}
+
+	~connect_req_t() {
+		clear();
+	}
+
+	void clear() {
+		ZeroMemory(&req, sizeof(req));
+		session.reset();
+		cb = nullptr;
+	}
+};
+
+
+#define alloc_close_req() alloc_req(close_req_t)
+#define release_close_req(req) release_req(close_req_t, req)
+struct close_req_t {
+	session_wk_ptr_t session;
+	std::function<void(session_ptr_t)> cb;
+
+	close_req_t() {
+		clear();
+	}
+
+	~close_req_t() {
+		clear();
+	}
+
+	void clear() {
+		session.reset();
+		cb = nullptr;
+	}
+};
+
+#define alloc_shutdown_req() alloc_req(shutdown_req_t)
+#define release_shutdown_req(req) release_req(shutdown_req_t, req)
+struct shutdown_req_t {
 	uv_shutdown_t req;
-	session_t* session;
-	std::function<void(session_t*)> cb;
-} shutdown_req_t;
+	session_wk_ptr_t session;
+	std::function<void(session_ptr_t)> cb;
 
-typedef struct {
+	shutdown_req_t() {
+		clear();
+	}
+
+	~shutdown_req_t() {
+		clear();
+	}
+
+	void clear() {
+		ZeroMemory(&req, sizeof(req));
+		session.reset();
+		cb = nullptr;
+	}
+};
+
+#define alloc_getaddr_req() alloc_req(getaddr_req_t)
+#define release_getaddr_req(req) release_req(getaddr_req_t, req)
+struct getaddr_req_t {
 	uv_getaddrinfo_t req;
-	std::function<void(bool, sockaddr *)> cb;
-} getaddr_req_t;
+	std::function<void(bool, sockaddr*)> cb;
+
+	getaddr_req_t() {
+		clear();
+	}
+
+	~getaddr_req_t() {
+		clear();
+	}
+
+	void clear() {
+		ZeroMemory(&req, sizeof(req));
+		cb = nullptr;
+	}
+};
 
 #pragma endregion 

@@ -42,9 +42,6 @@
     <ClInclude Include="include\session_mgr.h">
       <Filter>头文件\net</Filter>
     </ClInclude>
-    <ClInclude Include="include\singleton.h">
-      <Filter>头文件\net</Filter>
-    </ClInclude>
     <ClInclude Include="include\tcp_client.h">
       <Filter>头文件\net</Filter>
     </ClInclude>
@@ -87,6 +84,9 @@
     <ClInclude Include="include\net.h">
       <Filter>头文件\net</Filter>
     </ClInclude>
+    <ClInclude Include="include\_singleton_.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\session.cpp">
@@ -118,7 +118,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="include\singleton.inl">
+    <None Include="include\_singleton_.inl">
       <Filter>头文件\net</Filter>
     </None>
   </ItemGroup>

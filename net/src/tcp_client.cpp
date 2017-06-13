@@ -14,11 +14,13 @@ namespace VK {
 		                                                    m_host(host), m_port(port),
 		                                                    m_open_cb(open_cb), m_close_cb(close_cb),
 		                                                    m_keepAliveTimerId(INVALID_TIMER_ID) {
-			m_session = new Session(std::bind(&TcpClient::on_open, this, std::placeholders::_1, std::placeholders::_2),
-			                        std::bind(&TcpClient::on_close, this, std::placeholders::_1), req_handler, push_handler);
+			m_session = std::make_shared<Session>(std::bind(&TcpClient::on_open, this, std::placeholders::_1, std::placeholders::_2),
+			                        std::bind(&TcpClient::on_close, this, std::placeholders::_1), req_handler, push_handler)->shared_from_this();
 		}
 
-		TcpClient::~TcpClient() {}
+		TcpClient::~TcpClient() {
+			m_session = nullptr;
+		}
 
 		bool TcpClient::startup() const {
 			// session start
@@ -42,7 +44,7 @@ namespace VK {
 				m_reconnDelay = MAX_RECONN_DELAY;
 		}
 
-		void TcpClient::on_open(bool success, Session* session) {
+		void TcpClient::on_open(bool success, session_ptr_t session) {
 			if (!success) {
 				if (m_autoReconnect) {
 					reconnect();
@@ -67,7 +69,7 @@ namespace VK {
 				m_open_cb(success, session);
 		}
 
-		void TcpClient::on_close(Session* session) {
+		void TcpClient::on_close(session_ptr_t session) {
 			set_reconn_delay(DEFAULT_RECONN_DELAY);
 			if (m_close_cb) {
 				m_close_cb(session);

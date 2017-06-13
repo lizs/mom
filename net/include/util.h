@@ -2,9 +2,8 @@
 #pragma once
 #include "defines.h"
 #include "mem_pool.h"
-#include "singleton.h"
+#include "_singleton_.h"
 #include "circular_buf.h"
-#include "singleton.h"
 #include <vector>
 
 namespace VK {
@@ -27,7 +26,7 @@ namespace VK {
 			if (!pcb->write_head(args...))
 				return ret;
 
-			cbuf_len_t limit = MAX_PACKAGE_SIZE - sizeof(byte_t);
+			cbuf_len_t limit = MAX_PACKAGE_SIZE;
 			if (pcb->get_len() > limit) {
 				// ¶à°ü
 				auto cnt = pcb->get_len() / limit;

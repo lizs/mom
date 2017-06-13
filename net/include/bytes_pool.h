@@ -16,6 +16,8 @@ namespace VK {
 				char bytes[Capacity];
 			};
 
+#pragma warning(push)
+#pragma warning(disable:4251)
 			MemoryPool<bytes_t<32>> m_32_pool;
 			MemoryPool<bytes_t<64>> m_64_pool;
 			MemoryPool<bytes_t<128>> m_128_pool;
@@ -25,6 +27,7 @@ namespace VK {
 			MemoryPool<bytes_t<2048>> m_2048_pool;
 			MemoryPool<bytes_t<4096>> m_4096_pool;
 			MemoryPool<bytes_t<8192>> m_8192_pool;
+#pragma warning(pop)
 
 		public:
 			char* alloc(cbuf_len_t size);

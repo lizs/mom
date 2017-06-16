@@ -2,14 +2,14 @@
 // 2017.2.22
 #pragma once
 
-#ifdef NET_DYNAMIC
-#ifdef EXPORT
-#define NET_API __declspec( dllexport )
+#ifdef LINK_NET_DYN
+#ifdef INSIDE_NET
+#define NET_EXPORT __declspec( dllexport )
 #else
-#define NET_API __declspec( dllimport )
+#define NET_EXPORT __declspec( dllimport )
 #endif
 #else
-#define NET_API
+#define NET_EXPORT
 #endif
 
 #include "uv.h"
@@ -21,55 +21,15 @@
 #define TRACK_MESSAGE_AS_BINARY true
 #define MONITOR_ENABLED true
 #define CBUF_RESERVED_SIZE 32
-#define MAX_PACKAGE_SIZE 1024
+#define MAX_PACKAGE_SIZE 1 * 1024
 #define KEEP_ALIVE_INTERVAL 10 * 1000
 #define KEEP_ALIVE_COUNTER_DEAD_LINE 5
 #pragma endregion
 
-#define PRINT_UV_ERR(code)         \
- do {                                                     \
-	if (code) {                                          \
-		fprintf(stderr,                                       \
-            "%s : %s\n",    \
-			uv_err_name(code),				\
-			uv_strerror(code));                                       \
-	 }                                                       \
- } while (0)
-
-#define PRINT_UV_ERR_DETAIL(code)         \
- do {                                                     \
-	if (code) {                                          \
-		fprintf(stderr,                                       \
-            "%s : %s [%s : %s : %d]\n",    \
-			uv_err_name(code),				\
-			uv_strerror(code),					\
-            __FILE__,                                     \
-			__FUNCTION__	,							\
-            __LINE__);                                       \
-	}                                                       \
- } while (0)
-
-#define LOG_UV_ERR(code) PRINT_UV_ERR(code)
-
-#define LOG(format, ...)         \
- do {                                                     \
-    fprintf(stdout,                                       \
-            format,										\
-			##__VA_ARGS__);                                       \
-	printf("\n");                                      \
- } while (0)
-
-/* Die with fatal error. */
-#define FATAL(msg)                                        \
-  do {                                                    \
-    fprintf(stderr,                                       \
-            "Fatal error in %s on line %d: %s\n",         \
-            __FILE__,                                     \
-            __LINE__,                                     \
-            msg);                                         \
-    fflush(stderr);                                       \
-    abort();                                              \
-  } while (0)
+#define LOG_UV_ERR(code) \
+	if(code){\
+		VK::Logger::instance().debug("{} : {}", uv_err_name(code), uv_strerror(code));	\
+	}
 
 #define ASSERT(expr)                                      \
  do {                                                     \
@@ -174,10 +134,10 @@ namespace VK {
 
 		template<typename T, size_t Capacity = 1024>
 		class MemoryPool;
-
-		template<typename T>
-		class _singleton_;
 	}
+
+	template<typename T>
+	class _singleton_;
 }
 
 typedef VK::Net::Session session_t;
@@ -220,14 +180,14 @@ enum NetError : error_no_t {
 
 #pragma endregion 
 
-#define monitor VK::Net::_singleton_<VK::Net::Monitor>::instance()
+#define monitor VK::_singleton_<VK::Net::Monitor>::instance()
 
 #pragma region structs
 
-#define alloc_req(TYPE) VK::Net::_singleton_<VK::Net::MemoryPool<##TYPE>>::instance().alloc()
+#define alloc_req(TYPE) VK::_singleton_<VK::Net::MemoryPool<##TYPE>>::instance().alloc()
 #define release_req(TYPE, req) \
 	req->clear();	\
-	VK::Net::_singleton_<VK::Net::MemoryPool<##TYPE>>::instance().dealloc(req);
+	VK::_singleton_<VK::Net::MemoryPool<##TYPE>>::instance().dealloc(req);
 
 #define alloc_write_req() alloc_req(write_req_t)
 #define release_write_req(req) release_req(write_req_t, req)

@@ -1,21 +1,16 @@
 #include "session_mgr.h"
 #include "session.h"
-#include "circular_buf.h"
+#include "logger.h"
 
 namespace VK {
 	namespace Net {
 		void SessionMgr::remove(session_ptr_t session) {
-			// vs algrithm compile bug?
-			// C2166
 			auto it = m_sessions.find(session->get_id());
-			ASSERT(it != m_sessions.end());
 			if (it != m_sessions.end()) {
-#ifdef  _DEBUG
-				if (!it->second.unique()) {
-					LOG("Remove session, but it's not unique!!!");
-				}
-#endif
 				m_sessions.erase(it);
+			}
+			else {
+				Logger::instance().warn("Session not exist.");
 			}
 		}
 
@@ -25,7 +20,7 @@ namespace VK {
 
 		void SessionMgr::broadcast(cbuf_ptr_t pcb) {
 			auto pcbs = std::move(pack(pcb, Push));
-			if(pcbs.size() == 0)
+			if (pcbs.size() == 0)
 				return;
 			
 			for (auto& kv : m_sessions) {
@@ -61,7 +56,7 @@ namespace VK {
 			if (it != m_sessions.end())
 				return false;
 
-			LOG("session %d established!", session->get_id());
+			Logger::instance().debug("session {} established!", session->get_id());
 			session->set_host(this);
 
 			// retain

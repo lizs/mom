@@ -6,7 +6,7 @@
 namespace VK {
 	namespace Net {
 		// bytes ³Ø
-		class NET_API BytesPool {
+		class NET_EXPORT BytesPool {
 			template <cbuf_len_t Capacity>
 			struct bytes_t {
 				enum _ {

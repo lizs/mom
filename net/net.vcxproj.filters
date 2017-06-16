@@ -85,7 +85,10 @@
       <Filter>头文件\net</Filter>
     </ClInclude>
     <ClInclude Include="include\_singleton_.h">
-      <Filter>头文件\net</Filter>
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\logger.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -116,10 +119,13 @@
     <ClCompile Include="include\compile_singletons.cpp">
       <Filter>源文件\net</Filter>
     </ClCompile>
+    <ClCompile Include="src\logger.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="include\_singleton_.inl">
-      <Filter>头文件\net</Filter>
+      <Filter>头文件</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -6,7 +6,7 @@
 
 namespace VK {
 	namespace Net {
-		class NET_API CircularBuf final {
+		class NET_EXPORT CircularBuf final {
 			cbuf_len_t m_capacity;
 			cbuf_len_t m_reserved;
 			cbuf_len_t m_head;

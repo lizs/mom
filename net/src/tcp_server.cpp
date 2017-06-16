@@ -2,6 +2,7 @@
 #include "session.h"
 #include <thread>
 #include <vector>
+#include "logger.h"
 
 namespace VK {
 	namespace Net {
@@ -47,7 +48,7 @@ namespace VK {
 				return false;
 			}
 
-			LOG("Server listening on port : %d", m_port);
+			Logger::instance().info("Server listening on port : {}", m_port);
 
 			return true;
 		}

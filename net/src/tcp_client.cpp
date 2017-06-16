@@ -11,7 +11,7 @@ namespace VK {
 		                     bool auto_reconnect_enabled,
 		                     bool connect_by_host) : m_autoReconnect(auto_reconnect_enabled),
 		                                                    m_connectByHost(connect_by_host),
-		                                                    m_host(host), m_port(port),
+		                                                    m_port(port), m_host(host),
 		                                                    m_open_cb(open_cb), m_close_cb(close_cb),
 		                                                    m_keepAliveTimerId(INVALID_TIMER_ID) {
 			m_session = std::make_shared<Session>(std::bind(&TcpClient::on_open, this, std::placeholders::_1, std::placeholders::_2),

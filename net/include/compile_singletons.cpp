@@ -15,6 +15,8 @@ namespace VK {
 			_singleton_<MemoryPool<close_req_t>>::instance();
 			_singleton_<MemoryPool<connect_req_t>>::instance();
 			_singleton_<MemoryPool<getaddr_req_t>>::instance();
+
+			_singleton_<Logger>::instance();
 		}
 	}
 }

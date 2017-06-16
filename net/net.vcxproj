@@ -42,14 +42,14 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -88,13 +88,13 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;../../third/libuv/include</AdditionalIncludeDirectories>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PreprocessorDefinitions>_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;EXPORT;NET_DYNAMIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>include;../../third/libuv/include;../../third/spdlog/include;</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>../third/libuv</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../../third/libuv</AdditionalLibraryDirectories>
       <AdditionalDependencies>libuv.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Lib>
@@ -104,8 +104,8 @@
       <AdditionalLibraryDirectories>../../third/libuv</AdditionalLibraryDirectories>
     </Lib>
     <PostBuildEvent>
-      <Command>xcopy /Y/F/I/S "$(TargetPath)" "../publish"
-xcopy /Y/F "$(OutputPath)$(TargetName).pdb" "../publish"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -133,18 +133,20 @@ xcopy /Y/F "$(OutputPath)$(TargetName).pdb" "../publish"</Command>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_LIB;EXPORT;NET_DYNAMIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;../../third/libuv/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;../../third/libuv/include;../../third/spdlog/include;</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>../third/libuv</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../../third/libuv</AdditionalLibraryDirectories>
       <AdditionalDependencies>libuv.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y/F/I/S "$(TargetPath)" "../publish"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <Lib>
       <AdditionalLibraryDirectories>../../third/libuv</AdditionalLibraryDirectories>
@@ -156,6 +158,7 @@ xcopy /Y/F "$(OutputPath)$(TargetName).pdb" "../publish"</Command>
     <ClInclude Include="include\data\property.h" />
     <ClInclude Include="include\data\any.h" />
     <ClInclude Include="include\data\value.h" />
+    <ClInclude Include="include\logger.h" />
     <ClInclude Include="include\mem_pool.h" />
     <ClInclude Include="include\defines.h" />
     <ClInclude Include="include\circular_buf.h" />
@@ -178,6 +181,7 @@ xcopy /Y/F "$(OutputPath)$(TargetName).pdb" "../publish"</Command>
     <ClCompile Include="include\util.cpp" />
     <ClCompile Include="src\bytes_pool.cpp" />
     <ClCompile Include="src\circular_buf.cpp" />
+    <ClCompile Include="src\logger.cpp" />
     <ClCompile Include="src\scheduler.cpp" />
     <ClCompile Include="src\session.cpp" />
     <ClCompile Include="src\session_mgr.cpp" />

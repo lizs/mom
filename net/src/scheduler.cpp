@@ -1,4 +1,5 @@
 #include "scheduler.h"
+#include "logger.h"
 #include <data/any.h>
 
 namespace VK {
@@ -61,7 +62,7 @@ namespace VK {
 
 			r = uv_timer_init(loop, &treq->timer);
 			if (r) {
-				LOG("uv_timer_init error : %s\n", uv_strerror(r));
+				Logger::instance().error("uv_timer_init error : %s\n", uv_strerror(r));
 				delete treq;
 				return INVALID_TIMER_ID;
 			}

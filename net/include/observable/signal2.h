@@ -21,7 +21,7 @@ void disconnect(slot_t slot) { \
 \
 void emit(Params ... args) const {\
 	for (auto it = m_slots.begin(); it != m_slots.end();) {\
-		(*(it++))(args...);\
+		(*(it++))(args ...);\
 	}\
 }\
 \

@@ -2,6 +2,7 @@
 #include "_singleton_.h"
 #include "bytes_pool.h"
 #include "monitor.h"
+#include "logger.h"
 
 namespace VK {
 	namespace Net {
@@ -42,7 +43,7 @@ namespace VK {
 		bool CircularBuf::move_head(cbuf_offset_t offset) {
 			m_head += offset;
 			if (m_head < 0 || m_head > m_capacity) {
-				LOG("move_head failed, m_head : %d offset : %d", m_head, offset);
+				Logger::instance().error("move_head failed, m_head : {} offset : {}", m_head, offset);
 				return false;
 			}
 			return true;
@@ -51,7 +52,7 @@ namespace VK {
 		bool CircularBuf::move_tail(cbuf_offset_t offset) {
 			m_tail += offset;
 			if (m_tail < 0 || m_tail > m_capacity) {
-				LOG("move_tail failed, m_tail : %d offset : %d", m_tail, offset);
+				Logger::instance().error("move_tail failed, m_tail : {} offset : {}", m_tail, offset);
 				return false;
 			}
 			return true;
@@ -108,7 +109,7 @@ namespace VK {
 
 		bool CircularBuf::write_binary(char* data, cbuf_len_t len) {
 			if (get_writable_len() < len) {
-				LOG("write_binary failed, writable_len : %d < len : %d", get_writable_len(), len);
+				Logger::instance().error("write_binary failed, writable_len : {} < len : {}", get_writable_len(), len);
 				return false;
 			}
 

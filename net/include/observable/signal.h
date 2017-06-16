@@ -35,7 +35,7 @@ namespace VK {
 
 		void operator()(Params ... args) const {
 			for (auto it = m_slots.begin(); it != m_slots.end(); ++it) {
-				(it->second)(args...);
+				(it->second)(args ...);
 			}
 		}
 

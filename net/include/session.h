@@ -15,7 +15,7 @@ namespace VK {
 #pragma warning(push)
 #pragma warning(disable:4251)
 		// represents a session between server and client
-		class NET_API Session final : public std::enable_shared_from_this<Session>{
+		class NET_EXPORT Session final : public std::enable_shared_from_this<Session>{
 #pragma warning(pop)
 			friend class TcpServer;
 			friend class TcpClient;
@@ -27,6 +27,7 @@ namespace VK {
 
 			bool prepare();
 			bool close();
+
 			void connect(const char* ip, int port);
 			void connect_by_host(const char* host, int port);
 

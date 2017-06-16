@@ -1,15 +1,17 @@
 // lizs 2017.3.8
 #pragma once
 #include "defines.h"
-#include "mem_pool.h"
-#include "_singleton_.h"
 #include "circular_buf.h"
 #include <vector>
 
 namespace VK {
 	namespace Net {
-		NET_API const char* net_str_err(error_no_t error_no);
-		NET_API cbuf_ptr_t alloc_cbuf(cbuf_len_t len);
+		NET_EXPORT bool make_dir(const char* relative);
+		NET_EXPORT bool make_dir(const std::string & relative);
+		NET_EXPORT const char* net_str_err(error_no_t error_no);
+		NET_EXPORT cbuf_ptr_t alloc_cbuf(cbuf_len_t len);
+		NET_EXPORT std::vector<std::string> split(char* input, char* delim);
+		NET_EXPORT std::string join(std::vector<std::string>& items, char delim);
 
 		template <typename T>
 		static cbuf_ptr_t alloc_cbuf() {
@@ -26,7 +28,7 @@ namespace VK {
 			if (!pcb->write_head(args...))
 				return ret;
 
-			cbuf_len_t limit = MAX_PACKAGE_SIZE;
+			cbuf_len_t limit = MAX_PACKAGE_SIZE - sizeof(byte_t);
 			if (pcb->get_len() > limit) {
 				// ¶à°ü
 				auto cnt = pcb->get_len() / limit;

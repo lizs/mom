@@ -11,7 +11,7 @@
 namespace VK {
 	namespace Net {
 
-		class NET_API TcpServer final {
+		class NET_EXPORT TcpServer final {
 		public:
 			TcpServer(const char* ip, int port,
 			          open_cb_t open_cb,

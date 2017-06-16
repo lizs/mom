@@ -29,7 +29,7 @@ namespace VK {
 			  , func_(func) {}
 
 		R operator()(Params ... args) const {
-			return (callee_ .* func_)(args...);
+			return (callee_ .* func_)(args ...);
 		}
 
 		bool operator==(const slot& other) const {
@@ -58,7 +58,7 @@ namespace VK {
 			  , func_(func) {}
 
 		R operator()(Params ... args) const {
-			return (callee_ .* func_)(args...);
+			return (callee_ .* func_)(args ...);
 		}
 
 		bool operator==(const slot& other) const {
@@ -90,7 +90,7 @@ namespace VK {
 			: func_(func) {}
 
 		R operator()(Params ... args) const {
-			return (*func_)(args...);
+			return (*func_)(args ...);
 		}
 
 		bool operator==(const slot& other) const {

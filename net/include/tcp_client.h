@@ -9,7 +9,7 @@
 
 namespace VK {
 	namespace Net {
-		class NET_API TcpClient final {
+		class NET_EXPORT TcpClient final {
 
 			const uint64_t MAX_RECONN_DELAY = 32000;
 			const uint64_t DEFAULT_RECONN_DELAY = 1000;

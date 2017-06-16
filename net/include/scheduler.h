@@ -14,7 +14,7 @@ namespace VK {
 		const timer_id_t INVALID_TIMER_ID = 0;
 
 		// scheduler based on libuv
-		class NET_API Scheduler final {
+		class NET_EXPORT Scheduler final {
 		public:
 			typedef std::function<void(any)> timer_cb_t;
 

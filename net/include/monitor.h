@@ -1,10 +1,11 @@
 #pragma once
 #include "defines.h"
 #include "scheduler.h"
+#include "logger.h"
 
 namespace VK {
 	namespace Net {
-		class NET_API Monitor {
+		class NET_EXPORT Monitor {
 			const timer_period_t DefaultPeriod = 5 * 1000;
 		public:
 			Monitor()
@@ -56,11 +57,8 @@ namespace VK {
 #if MONITOR_ENABLED
 				// performance monitor
 				m_timerID = m_scheduler.invoke(DefaultPeriod, DefaultPeriod, [this](any usr_data) {
-					                               LOG("Read : %llu /s Write : %llu /s, Pending : %llu PCB : %llu",
-						                               get_readed() * 1000 / DefaultPeriod,
-						                               get_wroted() * 1000 / DefaultPeriod,
-						                               get_pending(),
-						                               get_pcb_count());
+					                               Logger::instance().info("Read : {} /s Write : {} /s, Pending : {} PCB : {}", get_readed() * 1000 / DefaultPeriod, get_wroted() * 1000 / DefaultPeriod, get_pending(), get_pcb_count());
+
 					                               reset_readed();
 					                               reset_wroted();
 				                               });

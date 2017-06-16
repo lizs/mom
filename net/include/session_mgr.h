@@ -12,7 +12,7 @@ namespace VK {
 		class Session;
 		class CircularBuf;
 
-		class NET_API SessionMgr final {
+		class NET_EXPORT SessionMgr final {
 			typedef CircularBuf cbuf_t;
 		public:
 			explicit SessionMgr(TcpServer* host) : m_host(host) {}

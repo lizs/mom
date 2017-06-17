@@ -158,10 +158,14 @@
     <ClInclude Include="include\data\property.h" />
     <ClInclude Include="include\data\any.h" />
     <ClInclude Include="include\data\value.h" />
+    <ClInclude Include="include\file.h" />
+    <ClInclude Include="include\ihandler.h" />
+    <ClInclude Include="include\ipeer.h" />
     <ClInclude Include="include\logger.h" />
     <ClInclude Include="include\mem_pool.h" />
     <ClInclude Include="include\defines.h" />
     <ClInclude Include="include\circular_buf.h" />
+    <ClCompile Include="include\mgr.h" />
     <ClInclude Include="include\monitor.h" />
     <ClInclude Include="include\net.h" />
     <ClInclude Include="include\observable\signal2.h" />
@@ -170,21 +174,24 @@
     <ClInclude Include="include\scheduler.h" />
     <ClInclude Include="include\session.h" />
     <ClInclude Include="include\session_mgr.h" />
+    <ClInclude Include="include\str.h" />
+    <ClCompile Include="include\sub_mgr.h" />
     <ClInclude Include="include\_singleton_.h" />
     <ClInclude Include="include\tcp_client.h" />
     <ClInclude Include="include\tcp_server.h" />
-    <ClInclude Include="include\util.h" />
+    <ClInclude Include="include\cbuf_alloc.h" />
     <ClInclude Include="include\watch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="include\compile_singletons.cpp" />
-    <ClCompile Include="include\util.cpp" />
     <ClCompile Include="src\bytes_pool.cpp" />
     <ClCompile Include="src\circular_buf.cpp" />
+    <ClCompile Include="src\file.cpp" />
     <ClCompile Include="src\logger.cpp" />
     <ClCompile Include="src\scheduler.cpp" />
     <ClCompile Include="src\session.cpp" />
     <ClCompile Include="src\session_mgr.cpp" />
+    <ClCompile Include="src\str.cpp" />
     <ClCompile Include="src\tcp_client.cpp" />
     <ClCompile Include="src\tcp_server.cpp" />
   </ItemGroup>

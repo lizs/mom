@@ -131,6 +131,8 @@ namespace VK {
 		class Session;
 		class CircularBuf;
 		class Monitor;
+		struct ISesionHandler;
+		struct IServerHandler;
 
 		template<typename T, size_t Capacity = 1024>
 		class MemoryPool;
@@ -143,17 +145,25 @@ namespace VK {
 typedef VK::Net::Session session_t;
 typedef std::shared_ptr<VK::Net::Session> session_ptr_t;
 typedef std::weak_ptr<VK::Net::Session> session_wk_ptr_t;
+typedef std::shared_ptr<VK::Net::ISesionHandler> session_handler_ptr_t;
+typedef std::shared_ptr<VK::Net::IServerHandler> server_handler_ptr_t;
+
 typedef VK::Net::CircularBuf cbuf_t;
 typedef std::shared_ptr<cbuf_t> cbuf_ptr_t;
 typedef VK::Net::MemoryPool<cbuf_t> cbuf_pool_t;
 typedef VK::Net::Monitor monitor_t;
-typedef std::function<void(bool, session_ptr_t)> send_cb_t;
+
 typedef std::function<void(bool, session_ptr_t)> open_cb_t;
 typedef std::function<void(session_ptr_t)> close_cb_t;
+
+typedef std::function<void(bool, session_ptr_t)> send_cb_t;
 typedef std::function<void(session_ptr_t, error_no_t, cbuf_ptr_t)> req_cb_t;
-typedef std::function<void(session_ptr_t, cbuf_ptr_t)> push_handler_t;
 typedef std::function<void(error_no_t, cbuf_ptr_t)> resp_cb_t;
+
 typedef std::function<void(session_ptr_t, cbuf_ptr_t, resp_cb_t)> req_handler_t;
+typedef std::function<void(session_ptr_t, cbuf_ptr_t)> push_handler_t;
+typedef std::function<void(session_ptr_t, const char*, cbuf_ptr_t)> pub_handler_t;
+typedef std::function<void(session_ptr_t, const char*)> sub_handler_t;
 
 #pragma endregion 
 
@@ -165,6 +175,8 @@ enum Pattern : pattern_t {
 	Response,
 	Ping,
 	Pong,
+	Sub,
+	Unsub,
 };
 
 enum NetError : error_no_t {
@@ -216,7 +228,6 @@ typedef struct {
 struct connect_req_t {
 	uv_connect_t req;
 	session_wk_ptr_t session;
-	std::function<void(bool, session_ptr_t)> cb;
 
 	connect_req_t() {
 		clear();
@@ -229,7 +240,6 @@ struct connect_req_t {
 	void clear() {
 		ZeroMemory(&req, sizeof(req));
 		session.reset();
-		cb = nullptr;
 	}
 };
 
@@ -238,7 +248,6 @@ struct connect_req_t {
 #define release_close_req(req) release_req(close_req_t, req)
 struct close_req_t {
 	session_wk_ptr_t session;
-	std::function<void(session_ptr_t)> cb;
 
 	close_req_t() {
 		clear();
@@ -250,7 +259,6 @@ struct close_req_t {
 
 	void clear() {
 		session.reset();
-		cb = nullptr;
 	}
 };
 

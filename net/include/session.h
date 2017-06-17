@@ -6,7 +6,6 @@
 #include <map>
 #include "defines.h"
 #include "circular_buf.h"
-#include "util.h"
 
 namespace VK {
 	namespace Net {
@@ -15,14 +14,11 @@ namespace VK {
 #pragma warning(push)
 #pragma warning(disable:4251)
 		// represents a session between server and client
-		class NET_EXPORT Session final : public std::enable_shared_from_this<Session>{
+		class NET_EXPORT Session final : public std::enable_shared_from_this<Session> {
 #pragma warning(pop)
-			friend class TcpServer;
-			friend class TcpClient;
-			friend class SessionMgr;
-
+			friend class SubMgr;
 		public:
-			explicit Session(open_cb_t open_cb, close_cb_t close_cb, req_handler_t req_handler, push_handler_t push_handler);
+			explicit Session(session_handler_ptr_t handler);
 			~Session();
 
 			bool prepare();
@@ -30,11 +26,7 @@ namespace VK {
 
 			void connect(const char* ip, int port);
 			void connect_by_host(const char* host, int port);
-
-			// host is TcpClient/TcpServer
-			void set_host(void* host);
-			void* get_host() const;
-
+			
 			int get_id() const;
 			uv_tcp_t& get_stream();
 			cbuf_ptr_t get_read_cbuf() const;
@@ -48,6 +40,10 @@ namespace VK {
 			void ping();
 			// pong
 			void pong();
+			// sub
+			void sub(const char * subject);
+			// unsub
+			void unsub(const char * subject);
 #pragma endregion("Message patterns")
 
 			// post read request
@@ -89,8 +85,6 @@ namespace VK {
 			void connect(sockaddr* addr);
 
 		private:
-			void* m_host;
-
 			// underline uv stream
 			uv_tcp_t m_stream;
 			
@@ -117,13 +111,8 @@ namespace VK {
 			// read buf
 			cbuf_ptr_t m_cbuf;
 
-			// cb
-			open_cb_t m_openCB;
-			close_cb_t m_closeCB;
-
-			// handlers
-			req_handler_t m_reqHandler;
-			push_handler_t m_pushHandler;
+			// handler
+			session_handler_ptr_t m_handler;
 
 			// 大包组包
 			std::vector<cbuf_ptr_t> m_pcbArray;

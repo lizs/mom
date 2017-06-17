@@ -3,31 +3,31 @@
 
 #pragma once
 #include <functional>
+#include <chrono>
 #include "defines.h"
 #include "scheduler.h"
-#include <chrono>
 
 namespace VK {
 	namespace Net {
-		class NET_EXPORT TcpClient final {
 
+		class NET_EXPORT TcpClient final {
 			const uint64_t MAX_RECONN_DELAY = 32000;
 			const uint64_t DEFAULT_RECONN_DELAY = 1000;
 
 		public:
 			TcpClient(const char* ip, int port,
-			          open_cb_t open_cb = nullptr,
-			          close_cb_t close_cb = nullptr,
-			          req_handler_t req_handler = nullptr,
-			          push_handler_t push_handler = nullptr,
+			          session_handler_ptr_t handle = nullptr,
 			          bool auto_reconnect_enabled = true,
 			          bool connect_by_host = true);
 			~TcpClient();
 			bool startup() const;
 			bool shutdown() const;
+
 #pragma region("Message patterns")
 			void request(cbuf_ptr_t pcb, req_cb_t rcb) const;
 			void push(cbuf_ptr_t pcb, send_cb_t cb) const;
+			void sub(const char* sub) const;
+			void unsub(const char* sub) const;
 #pragma endregion("Message patterns")
 
 		private:
@@ -48,10 +48,8 @@ namespace VK {
 #pragma warning(push)
 #pragma warning(disable:4251)
 			session_ptr_t m_session;
-
+			session_handler_ptr_t m_handler;
 			std::string m_host;
-			open_cb_t m_open_cb;
-			close_cb_t m_close_cb;
 #pragma warning(pop)
 			
 			timer_id_t m_keepAliveTimerId;

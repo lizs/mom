@@ -107,6 +107,11 @@ namespace VK {
 			ZeroMemory(m_buf, m_capacity);
 		}
 
+		bool CircularBuf::write(const char* str) {
+			strncpy(get_head_ptr(), str, strnlen(str, m_capacity - m_reserved - 1));
+			return write<byte_t>(0);
+		}
+
 		bool CircularBuf::write_binary(char* data, cbuf_len_t len) {
 			if (get_writable_len() < len) {
 				Logger::instance().error("write_binary failed, writable_len : {} < len : {}", get_writable_len(), len);
@@ -115,6 +120,13 @@ namespace VK {
 
 			memcpy(get_tail_ptr(), data, len);
 			return move_tail(len);
+		}
+
+		cbuf_ptr_t alloc_cbuf(cbuf_len_t len) {
+			cbuf_ptr_t pcb(_singleton_<cbuf_pool_t>::instance().alloc());
+			pcb->reset(len);
+
+			return pcb;
 		}
 	}
 }

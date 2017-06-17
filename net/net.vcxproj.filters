@@ -25,6 +25,12 @@
     <Filter Include="源文件\net">
       <UniqueIdentifier>{e7cada55-20ec-4405-b5fd-2a9ba0c87067}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\util">
+      <UniqueIdentifier>{d84cd60f-2204-41d0-b927-f6492d72ba1b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\util">
+      <UniqueIdentifier>{aa3e9400-88d6-4454-af5f-4fb62d9f4d1d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\circular_buf.h">
@@ -57,9 +63,6 @@
     <ClInclude Include="include\mem_pool.h">
       <Filter>头文件\net</Filter>
     </ClInclude>
-    <ClInclude Include="include\util.h">
-      <Filter>头文件\net</Filter>
-    </ClInclude>
     <ClInclude Include="include\defines.h">
       <Filter>头文件\net</Filter>
     </ClInclude>
@@ -90,6 +93,21 @@
     <ClInclude Include="include\logger.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="include\file.h">
+      <Filter>头文件\util</Filter>
+    </ClInclude>
+    <ClInclude Include="include\str.h">
+      <Filter>头文件\util</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ipeer.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
+    <ClInclude Include="include\cbuf_alloc.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ihandler.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\session.cpp">
@@ -113,14 +131,23 @@
     <ClCompile Include="src\tcp_server.cpp">
       <Filter>源文件\net</Filter>
     </ClCompile>
-    <ClCompile Include="include\util.cpp">
-      <Filter>源文件\net</Filter>
-    </ClCompile>
     <ClCompile Include="include\compile_singletons.cpp">
       <Filter>源文件\net</Filter>
     </ClCompile>
     <ClCompile Include="src\logger.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\file.cpp">
+      <Filter>源文件\util</Filter>
+    </ClCompile>
+    <ClCompile Include="src\str.cpp">
+      <Filter>源文件\util</Filter>
+    </ClCompile>
+    <ClCompile Include="include\sub_mgr.h">
+      <Filter>头文件\net</Filter>
+    </ClCompile>
+    <ClCompile Include="include\mgr.h">
+      <Filter>头文件\util</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

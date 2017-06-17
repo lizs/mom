@@ -1,14 +1,15 @@
 // lizs 2017.6.14
 #include "logger.h"
 #include "_singleton_.inl"
-#include "util.h"
+#include "str.h"
+#include "file.h"
 #include <spdlog/spdlog.h>
 
 namespace VK {
 	const char * LOGGER_ROOT = "log";
 	bool Logger::start(const char* path) {
 		// 确保路径存在
-		auto items = std::move(Net::split(const_cast<char*>(path), "/\\"));
+		auto items = std::move(split(const_cast<char*>(path), "/\\"));
 		if (items.empty()) {
 			return false;
 		}
@@ -20,8 +21,8 @@ namespace VK {
 		auto name = items[items.size() - 1];
 		items.erase(items.end() - 1);
 
-		auto dir = std::move(Net::join(items, '/'));
-		if (!Net::make_dir(dir))
+		auto dir = std::move(join(items, '/'));
+		if (!make_dir(dir))
 			return false;
 
 		// 日志

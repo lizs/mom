@@ -1,37 +1,30 @@
 #include <ctime>
-#include "util.h"
+#include <memory>
 #include "session.h"
 #include "_singleton_.h"
 #include "monitor.h"
 #include "mem_pool.h"
-#include "defines.h"
+#include "ihandler.h"
 
 namespace VK {
 	namespace Net {
 
 		session_id_t Session::g_sessionId = 0;
 
-		Session::Session(open_cb_t open_cb, close_cb_t close_cb, req_handler_t req_handler, push_handler_t push_handler) :
-			m_host(nullptr),
-			m_openCB(open_cb),
-			m_closeCB(close_cb),
-			m_reqHandler(req_handler),
-			m_pushHandler(push_handler),
-			m_cbuf(),
+		Session::Session(session_handler_ptr_t handler) :
 			m_id(++g_sessionId),
 			m_lastPingTime(time(nullptr)),
 			m_lastResponseTime(time(nullptr)),
-			m_keepAliveCounter(0) {
+			m_keepAliveCounter(0),
+			m_cbuf(),
+			m_handler(handler) {
 			m_cbuf = alloc_cbuf(MAX_PACKAGE_SIZE);
 			memset(&m_stream, 0, sizeof(m_stream));
 		}
 
 		Session::~Session() {
 			m_cbuf = nullptr;
-			m_host = nullptr;
-			m_openCB = nullptr;
-			m_closeCB = nullptr;
-			m_reqHandler = nullptr;
+			m_handler = nullptr;
 			m_requestsPool.clear();
 			m_pcbArray.clear();
 		}
@@ -111,6 +104,22 @@ namespace VK {
 			send(pcb, nullptr, static_cast<pattern_t>(Pong));
 		}
 
+		void Session::sub(const char * subject) {
+			auto len = strlen(subject);
+			auto pcb = alloc_cbuf(len + 1);
+			if(pcb->write(subject)) {
+				send(pcb, nullptr, static_cast<pattern_t>(Sub));
+			}
+		}
+
+		void Session::unsub(const char * subject) {
+			auto len = strlen(subject);
+			auto pcb = alloc_cbuf(len + 1);
+			if (pcb->write(subject)) {
+				send(pcb, nullptr, static_cast<pattern_t>(Unsub));
+			}
+		}
+
 		time_t Session::get_elapsed_since_last_ping() const {
 			return time(nullptr) - m_lastPingTime;
 		}
@@ -130,8 +139,8 @@ namespace VK {
 			r = uv_ip4_addr(ip, port, &addr);
 			if (r) {
 				LOG_UV_ERR(r);
-				if (m_openCB != nullptr) {
-					m_openCB(false, shared_from_this());
+				if (m_handler != nullptr) {
+					m_handler->on_connect_finished(false, shared_from_this());
 				}
 				return;
 			}
@@ -146,19 +155,11 @@ namespace VK {
 					              _this->connect(addrinfo);
 				              }
 				              else {
-					              if (_this->m_openCB != nullptr) {
-						              _this->m_openCB(false, _this);
+					              if (_this->m_handler) {
+						              _this->m_handler->on_connect_finished(false, _this);
 					              }
 				              }
 			              });
-		}
-
-		void Session::set_host(void* host) {
-			m_host = host;
-		}
-
-		void* Session::get_host() const {
-			return m_host;
 		}
 
 		int Session::get_id() const {
@@ -294,9 +295,11 @@ namespace VK {
 				}
 
 				case Push: {
-					if (m_pushHandler) {
-						m_pushHandler(shared_from_this(), pcb);
+					if (m_handler) {
+						m_handler->on_push(shared_from_this(), pcb);
 					}
+					else
+						Logger::instance().warn("No handler, push ignored");
 
 					break;
 				}
@@ -308,11 +311,11 @@ namespace VK {
 						return;
 					}
 
-					if (m_reqHandler) {
+					if (m_handler) {
 						auto _this = shared_from_this();
-						m_reqHandler(shared_from_this(), pcb, [_this, serial](error_no_t en, cbuf_ptr_t pcb) {
-							             _this->response(en, serial, pcb, nullptr);
-						             });
+						m_handler->on_req(shared_from_this(), pcb, [_this, serial](error_no_t en, cbuf_ptr_t pcb) {
+							                  _this->response(en, serial, pcb, nullptr);
+						                  });
 					}
 					else {
 						pcb->reset();
@@ -322,14 +325,30 @@ namespace VK {
 					return;
 				}
 
-				case Response:
+				case Response: {
 					serial_t serial;
 					if (!pcb->read<serial_t>(serial)) {
 						Logger::instance().error("read serial from response failed");
-						return;
+						break;
 					}
+
 					on_response(serial, pcb);
-					return;
+					break;
+				}
+
+				case Sub: {
+					if (m_handler) {
+						m_handler->on_sub(shared_from_this(), pcb->get_head_ptr());
+					}
+					break;
+				}
+
+				case Unsub: {
+					if (m_handler) {
+						m_handler->on_unsub(shared_from_this(), pcb->get_head_ptr());
+					}
+					break;
+				}
 
 				default:
 					break;
@@ -416,7 +435,7 @@ namespace VK {
 			int r;
 
 			auto creq = alloc_connect_req();
-			creq->cb = m_openCB;
+			//creq->cb = m_openCB;
 			creq->session = shared_from_this();
 
 			r = uv_tcp_connect(&creq->req,
@@ -431,8 +450,9 @@ namespace VK {
 					                   Logger::instance().debug("Session {} established!", creq->session.lock()->get_id());
 				                   }
 
-				                   if (creq->cb) {
-					                   creq->cb(!status, creq->session.lock());
+				                   auto session = creq->session.lock();
+				                   if (session) {
+					                   session->m_handler->on_connect_finished(!status, session);
 				                   }
 
 				                   release_connect_req(creq);
@@ -442,8 +462,8 @@ namespace VK {
 				LOG_UV_ERR(r);
 				release_connect_req(creq);
 
-				if (m_openCB)
-					m_openCB(false, shared_from_this());
+				if (m_handler)
+					m_handler->on_connect_finished(false, shared_from_this());
 			}
 		}
 
@@ -488,7 +508,6 @@ namespace VK {
 
 			// close handle
 			auto creq = alloc_close_req();
-			creq->cb = m_closeCB;
 			creq->session = shared_from_this();
 			m_stream.data = creq;
 			uv_close(reinterpret_cast<uv_handle_t*>(&m_stream), [](uv_handle_t* stream) {
@@ -496,8 +515,8 @@ namespace VK {
 				         auto session = creq->session.lock();
 				         Logger::instance().debug("Session {} closed!", session->get_id());
 
-				         if (creq->cb) {
-					         creq->cb(session);
+				         if (session->m_handler) {
+							 session->m_handler->on_closed(session);
 				         }
 
 				         release_close_req(creq);

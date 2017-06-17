@@ -140,7 +140,7 @@ namespace VK {
 			if (r) {
 				LOG_UV_ERR(r);
 				if (m_handler != nullptr) {
-					m_handler->on_connect_finished(false, shared_from_this());
+					m_handler->on_connected(false, shared_from_this());
 				}
 				return;
 			}
@@ -156,7 +156,7 @@ namespace VK {
 				              }
 				              else {
 					              if (_this->m_handler) {
-						              _this->m_handler->on_connect_finished(false, _this);
+						              _this->m_handler->on_connected(false, _this);
 					              }
 				              }
 			              });
@@ -452,7 +452,7 @@ namespace VK {
 
 				                   auto session = creq->session.lock();
 				                   if (session) {
-					                   session->m_handler->on_connect_finished(!status, session);
+					                   session->m_handler->on_connected(!status, session);
 				                   }
 
 				                   release_connect_req(creq);
@@ -463,7 +463,7 @@ namespace VK {
 				release_connect_req(creq);
 
 				if (m_handler)
-					m_handler->on_connect_finished(false, shared_from_this());
+					m_handler->on_connected(false, shared_from_this());
 			}
 		}
 

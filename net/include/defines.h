@@ -131,8 +131,8 @@ namespace VK {
 		class Session;
 		class CircularBuf;
 		class Monitor;
-		struct ISesionHandler;
-		struct IServerHandler;
+		struct ISessionHandler;
+		struct IHandler;
 
 		template<typename T, size_t Capacity = 1024>
 		class MemoryPool;
@@ -145,8 +145,8 @@ namespace VK {
 typedef VK::Net::Session session_t;
 typedef std::shared_ptr<VK::Net::Session> session_ptr_t;
 typedef std::weak_ptr<VK::Net::Session> session_wk_ptr_t;
-typedef std::shared_ptr<VK::Net::ISesionHandler> session_handler_ptr_t;
-typedef std::shared_ptr<VK::Net::IServerHandler> server_handler_ptr_t;
+typedef std::shared_ptr<VK::Net::ISessionHandler> session_handler_ptr_t;
+typedef std::shared_ptr<VK::Net::IHandler> handler_ptr_t;
 
 typedef VK::Net::CircularBuf cbuf_t;
 typedef std::shared_ptr<cbuf_t> cbuf_ptr_t;

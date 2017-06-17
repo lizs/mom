@@ -6,17 +6,18 @@
 #include <chrono>
 #include "defines.h"
 #include "scheduler.h"
+#include "ihandler.h"
 
 namespace VK {
 	namespace Net {
 
-		class NET_EXPORT TcpClient final {
+		class NET_EXPORT TcpClient final : public ISessionHandler, public std::enable_shared_from_this<ISessionHandler> {
 			const uint64_t MAX_RECONN_DELAY = 32000;
 			const uint64_t DEFAULT_RECONN_DELAY = 1000;
 
 		public:
 			TcpClient(const char* ip, int port,
-			          session_handler_ptr_t handle = nullptr,
+			          handler_ptr_t handle = nullptr,
 			          bool auto_reconnect_enabled = true,
 			          bool connect_by_host = true);
 			~TcpClient();
@@ -36,9 +37,14 @@ namespace VK {
 			void set_reconn_delay(uint64_t delay);
 			void double_reonn_delay();
 
-			void on_open(bool success, session_ptr_t session);
-			void on_close(session_ptr_t session);
+			void on_req(session_ptr_t, cbuf_ptr_t, resp_cb_t) override;
+			error_no_t on_push(session_ptr_t, cbuf_ptr_t) override;
+			void on_connected(bool, session_ptr_t) override;
+			void on_closed(session_ptr_t) override;
+			void on_sub(session_ptr_t, const char*) override;
+			void on_unsub(session_ptr_t, const char*) override;
 
+		private:
 			Scheduler m_scheduler;
 
 			bool m_autoReconnect = true;
@@ -48,7 +54,7 @@ namespace VK {
 #pragma warning(push)
 #pragma warning(disable:4251)
 			session_ptr_t m_session;
-			session_handler_ptr_t m_handler;
+			handler_ptr_t m_handler;
 			std::string m_host;
 #pragma warning(pop)
 			

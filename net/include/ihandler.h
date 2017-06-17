@@ -4,28 +4,24 @@
 
 namespace VK {
 	namespace Net {
-		struct ISesionHandler {
+		struct IHandler {
 		protected:
-			virtual ~ISesionHandler() {}
-
-		public:
-			virtual void on_req(session_ptr_t, cbuf_ptr_t, resp_cb_t) = 0;
-			virtual error_no_t on_push(session_ptr_t, cbuf_ptr_t) = 0;
-			virtual void on_sub(session_ptr_t, const char*) = 0;
-			virtual void on_unsub(session_ptr_t, const char*) = 0;
-			virtual void on_connect_finished(bool, session_ptr_t) = 0;
-			virtual void on_closed(session_ptr_t) = 0;
-		};
-
-		struct IServerHandler {
-		protected:
-			virtual ~IServerHandler() {}
+			virtual ~IHandler() {}
 
 		public:
 			virtual void on_req(session_ptr_t, cbuf_ptr_t, resp_cb_t) = 0;
 			virtual error_no_t on_push(session_ptr_t, cbuf_ptr_t) = 0;
 			virtual void on_connected(bool, session_ptr_t) = 0;
 			virtual void on_closed(session_ptr_t) = 0;
+		};
+
+		struct ISessionHandler : public IHandler {
+		protected:
+			virtual ~ISessionHandler() {}
+
+		public:
+			virtual void on_sub(session_ptr_t, const char*) = 0;
+			virtual void on_unsub(session_ptr_t, const char*) = 0;
 		};
 	}
 }

@@ -7,7 +7,7 @@
 namespace VK {
 	namespace Net {
 
-		TcpServer::TcpServer(const char* ip, int port, server_handler_ptr_t handler) :
+		TcpServer::TcpServer(const char* ip, int port, handler_ptr_t handler) :
 			m_sessions(this), m_handler(handler), m_ip(ip), m_port(port) {
 			m_server.data = this;
 		}
@@ -94,7 +94,7 @@ namespace VK {
 			m_sessions.add_session(session);
 
 			// notify
-			on_connect_finished(true, session);
+			on_connected(true, session);
 
 			// post first read request
 			session->post_read_req();
@@ -108,7 +108,7 @@ namespace VK {
 			m_subjects.remove(subject, session);
 		}
 
-		void TcpServer::on_connect_finished(bool success, session_ptr_t session) {
+		void TcpServer::on_connected(bool success, session_ptr_t session) {
 			if (m_handler) {
 				m_handler->on_connected(success, session);
 			}

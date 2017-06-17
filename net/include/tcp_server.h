@@ -13,11 +13,11 @@
 namespace VK {
 	namespace Net {
 
-		class NET_EXPORT TcpServer final : public ISesionHandler, public std::enable_shared_from_this<ISesionHandler> {
+		class NET_EXPORT TcpServer final : public ISessionHandler, public std::enable_shared_from_this<ISessionHandler> {
 		public:
 			~TcpServer() {}
 
-			TcpServer(const char* ip, int port, server_handler_ptr_t handler);
+			TcpServer(const char* ip, int port, handler_ptr_t handler);
 
 			bool startup();
 			bool shutdown();
@@ -35,7 +35,7 @@ namespace VK {
 			void establish();
 
 		protected:
-			void on_connect_finished(bool success, session_ptr_t session) override;
+			void on_connected(bool success, session_ptr_t session) override;
 			void on_closed(session_ptr_t session) override;
 			void on_req(session_ptr_t session, cbuf_ptr_t pcb, resp_cb_t cb) override;
 			error_no_t on_push(session_ptr_t session, cbuf_ptr_t pcb) override;
@@ -52,7 +52,7 @@ namespace VK {
 
 #pragma warning(push)
 #pragma warning(disable:4251)
-			server_handler_ptr_t m_handler;
+			handler_ptr_t m_handler;
 			std::string m_ip;
 #pragma warning(pop)
 			int m_port;

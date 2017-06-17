@@ -1,18 +1,19 @@
 #include "tcp_client.h"
 #include "session.h"
 #include "ihandler.h"
+#include <logger.h>
 
 namespace VK {
 	namespace Net {
 		TcpClient::TcpClient(const char* host, int port,
-		                     session_handler_ptr_t handler,
+		                     handler_ptr_t handler,
 		                     bool auto_reconnect_enabled,
 		                     bool connect_by_host) : m_autoReconnect(auto_reconnect_enabled),
 		                                             m_connectByHost(connect_by_host),
 		                                             m_port(port), m_handler(handler),
 		                                             m_host(host),
 		                                             m_keepAliveTimerId(INVALID_TIMER_ID) {
-			m_session = std::make_shared<Session>(handler);
+			m_session = std::make_shared<Session>(shared_from_this());
 		}
 
 		TcpClient::~TcpClient() {
@@ -41,7 +42,21 @@ namespace VK {
 				m_reconnDelay = MAX_RECONN_DELAY;
 		}
 
-		void TcpClient::on_open(bool success, session_ptr_t session) {
+		void TcpClient::on_req(session_ptr_t session, cbuf_ptr_t pcb, resp_cb_t cb) {
+			if (m_handler)
+				m_handler->on_req(session, pcb, cb);
+			else
+				cb(NE_NoHandler, nullptr);
+		}
+
+		error_no_t TcpClient::on_push(session_ptr_t session, cbuf_ptr_t pcb) {
+			if (m_handler)
+				return m_handler->on_push(session, pcb);
+			else
+				return NE_NoHandler;
+		}
+
+		void TcpClient::on_connected(bool success, session_ptr_t session) {
 			if (!success) {
 				if (m_autoReconnect) {
 					reconnect();
@@ -63,10 +78,10 @@ namespace VK {
 			}
 
 			if (m_handler)
-				m_handler->on_connect_finished(success, session);
+				m_handler->on_connected(success, session);
 		}
 
-		void TcpClient::on_close(session_ptr_t session) {
+		void TcpClient::on_closed(session_ptr_t session) {
 			set_reconn_delay(DEFAULT_RECONN_DELAY);
 			if (m_handler) {
 				m_handler->on_closed(session);
@@ -77,6 +92,14 @@ namespace VK {
 
 				m_scheduler.cancel(m_keepAliveTimerId);
 			}
+		}
+
+		void TcpClient::on_sub(session_ptr_t, const char*) {
+			Logger::instance().warn("TcpClient can't handle SUB.");
+		}
+
+		void TcpClient::on_unsub(session_ptr_t, const char*) {
+			Logger::instance().warn("TcpClient can't handle UNSUB.");
 		}
 
 		void TcpClient::reconnect() {

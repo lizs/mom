@@ -1,21 +1,18 @@
 #include "tcp_client.h"
 #include "session.h"
+#include "ihandler.h"
 
 namespace VK {
 	namespace Net {
 		TcpClient::TcpClient(const char* host, int port,
-		                     open_cb_t open_cb,
-		                     close_cb_t close_cb,
-		                     req_handler_t req_handler,
-		                     push_handler_t push_handler,
+		                     session_handler_ptr_t handler,
 		                     bool auto_reconnect_enabled,
 		                     bool connect_by_host) : m_autoReconnect(auto_reconnect_enabled),
-		                                                    m_connectByHost(connect_by_host),
-		                                                    m_port(port), m_host(host),
-		                                                    m_open_cb(open_cb), m_close_cb(close_cb),
-		                                                    m_keepAliveTimerId(INVALID_TIMER_ID) {
-			m_session = std::make_shared<Session>(std::bind(&TcpClient::on_open, this, std::placeholders::_1, std::placeholders::_2),
-			                        std::bind(&TcpClient::on_close, this, std::placeholders::_1), req_handler, push_handler)->shared_from_this();
+		                                             m_connectByHost(connect_by_host),
+		                                             m_port(port), m_handler(handler),
+		                                             m_host(host),
+		                                             m_keepAliveTimerId(INVALID_TIMER_ID) {
+			m_session = std::make_shared<Session>(handler);
 		}
 
 		TcpClient::~TcpClient() {
@@ -65,14 +62,14 @@ namespace VK {
 				                                                           });
 			}
 
-			if (m_open_cb)
-				m_open_cb(success, session);
+			if (m_handler)
+				m_handler->on_connect_finished(success, session);
 		}
 
 		void TcpClient::on_close(session_ptr_t session) {
 			set_reconn_delay(DEFAULT_RECONN_DELAY);
-			if (m_close_cb) {
-				m_close_cb(session);
+			if (m_handler) {
+				m_handler->on_closed(session);
 
 				if (m_autoReconnect) {
 					reconnect();
@@ -115,6 +112,14 @@ namespace VK {
 
 		void TcpClient::push(cbuf_ptr_t pcb, send_cb_t cb) const {
 			m_session->push(pcb, cb);
+		}
+
+		void TcpClient::sub(const char* sub) const {
+			m_session->sub(sub);			
+		}
+
+		void TcpClient::unsub(const char* sub) const {
+			m_session->unsub(sub);
 		}
 	}
 }

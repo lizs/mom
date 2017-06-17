@@ -2,6 +2,7 @@
 // 2017.2.21
 #pragma once
 #include <exception>
+#include <vector>
 #include "defines.h"
 
 namespace VK {
@@ -56,6 +57,8 @@ namespace VK {
 
 			template <typename T>
 			T* pre_write();
+
+			bool write(const char* str);
 
 			template <typename T>
 			bool write(const T& value);
@@ -159,5 +162,70 @@ namespace VK {
 			out = *reinterpret_cast<T*>(get_head_ptr() + offset);
 			return true;
 		}
+
+#pragma region allocator
+		NET_EXPORT cbuf_ptr_t alloc_cbuf(cbuf_len_t len);
+
+		template <typename T>
+		static cbuf_ptr_t alloc_cbuf() {
+			return alloc_cbuf(sizeof(T));
+		}
+
+		// ´ò°ü
+		template <typename ... Args>
+		static std::vector<cbuf_ptr_t> pack(cbuf_ptr_t pcb, Args ... args) {
+			auto ret = std::vector<cbuf_ptr_t>();
+
+			// 1 pattern
+			// 2 serial ...
+			if (!pcb->write_head(args...))
+				return ret;
+
+			cbuf_len_t limit = MAX_PACKAGE_SIZE - sizeof(byte_t);
+			if (pcb->get_len() > limit) {
+				// multi
+				auto cnt = pcb->get_len() / limit;
+				auto lastLen = pcb->get_len() % limit;
+				if (lastLen != 0)
+					++cnt;
+
+				if (cnt == 1)
+					goto Single;
+
+				for (auto i = 0; i < cnt; ++i) {
+					cbuf_ptr_t slice;
+					auto packLen = limit;
+					if (i == cnt - 1 && lastLen != 0)
+						packLen = lastLen;
+
+					slice = alloc_cbuf(packLen);
+					slice->write_binary(pcb->get_head_ptr() + i * limit, packLen);
+
+					if (!slice->write_head<byte_t>(cnt - i))
+						return ret;
+
+					if (!slice->write_head<pack_size_t>(slice->get_len()))
+						return ret;
+
+					ret.push_back(slice);
+				}
+
+				return ret;
+			}
+			else {
+			Single:
+				// single
+				if (!pcb->write_head<byte_t>(1))
+					return ret;
+
+				if (!pcb->write_head<pack_size_t>(pcb->get_len()))
+					return ret;
+
+				ret.push_back(pcb);
+			}
+
+			return std::move(ret);
+		}
+#pragma endregion
 	}
 }

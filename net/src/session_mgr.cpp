@@ -18,27 +18,6 @@ namespace VK {
 			return m_sessions.size();
 		}
 
-		void SessionMgr::broadcast(cbuf_ptr_t pcb) {
-			auto pcbs = std::move(pack(pcb, Push));
-			if (pcbs.size() == 0)
-				return;
-			
-			for (auto& kv : m_sessions) {
-				auto session = kv.second;
-				session->send(pcbs, nullptr);
-			}
-		}
-
-		void SessionMgr::multicast(cbuf_ptr_t pcb, std::vector<session_ptr_t>& sessions) {
-			auto pcbs = std::move(pack(pcb, Push));
-			if (pcbs.size() == 0)
-				return;
-
-			for (auto session : sessions) {
-				session->send(pcbs, nullptr);
-			}
-		}
-
 		void SessionMgr::close_all() {
 			for (auto kv : m_sessions) {
 				kv.second->close();
@@ -57,7 +36,6 @@ namespace VK {
 				return false;
 
 			Logger::instance().debug("session {} established!", session->get_id());
-			session->set_host(this);
 
 			// retain
 			m_sessions.insert(m_sessions.end(), std::make_pair(session->get_id(), session));

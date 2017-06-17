@@ -7,14 +7,8 @@
 namespace VK {
 	namespace Net {
 
-		TcpServer::TcpServer(const char* ip, int port,
-		                     open_cb_t open_cb,
-		                     close_cb_t close_cb,
-		                     req_handler_t req_handler,
-		                     push_handler_t push_handler) :
-			m_sessions(this),
-			m_reqHandler(req_handler), m_pushHandler(push_handler),
-			m_openCB(open_cb), m_closeCB(close_cb), m_ip(ip), m_port(port) {
+		TcpServer::TcpServer(const char* ip, int port, server_handler_ptr_t handler) :
+			m_sessions(this), m_handler(handler), m_ip(ip), m_port(port) {
 			m_server.data = this;
 		}
 
@@ -62,59 +56,25 @@ namespace VK {
 			return true;
 		}
 
-		SessionMgr& TcpServer::get_session_mgr() {
-			return m_sessions;
+		void TcpServer::pub(const char* subject, cbuf_ptr_t pcb) {
+			m_subjects.pub(subject, pcb);
 		}
 
-		void TcpServer::broadcast(cbuf_ptr_t pcb) {
-			m_sessions.broadcast(pcb);
+		void TcpServer::sub(const char* subject, session_ptr_t session) {
+			m_subjects.add(subject, session);
 		}
 
-		void TcpServer::multicast(cbuf_ptr_t pcb, std::vector<session_ptr_t>& sessions) const {
-			m_sessions.multicast(pcb, sessions);
+		void TcpServer::unsub(session_ptr_t session) {
+			m_subjects.remove(session);
 		}
 
-		req_handler_t TcpServer::get_req_handler() const {
-			return m_reqHandler;
+		void TcpServer::unsub(const char* sub, session_ptr_t session) {
+			m_subjects.remove(sub, session);
 		}
 
-		push_handler_t TcpServer::get_push_handler() const {
-			return m_pushHandler;
-		}
-
-		open_cb_t TcpServer::get_open_cb() const {
-			return m_openCB;
-		}
-
-		close_cb_t TcpServer::get_close_cb() const {
-			return m_closeCB;
-		}
-
-		void TcpServer::connection_cb(uv_stream_t* server, int status) {
-			uv_stream_t* stream;
-			int r;
-
-			if (status) {
-				LOG_UV_ERR(status);
-			}
-
-			auto tcp_server = static_cast<TcpServer*>(server->data);
-
+		void TcpServer::establish() {
 			// make session
-			auto open_cb = tcp_server->get_open_cb();
-			auto close_cb = tcp_server->get_close_cb();
-			auto session = std::make_shared<Session>(nullptr, [close_cb, tcp_server](session_ptr_t session) {
-				                                         if (close_cb) {
-					                                         close_cb(session);
-				                                         }
-
-				                                         tcp_server->get_session_mgr().remove(session);
-			                                         },
-
-			                                         tcp_server->get_req_handler(),
-			                                         tcp_server->get_push_handler());
-
-			session->set_host(tcp_server);
+			auto session = std::make_shared<Session>(shared_from_this());
 
 			// init session
 			if (!session->prepare()) {
@@ -122,8 +82,8 @@ namespace VK {
 			}
 
 			// accept next
-			stream = reinterpret_cast<uv_stream_t*>(&session->get_stream());
-			r = uv_accept(server, stream);
+			auto stream = reinterpret_cast<uv_stream_t*>(&session->get_stream());
+			auto r = uv_accept(reinterpret_cast<uv_stream_t*>(&m_server), stream);
 			ASSERT(r == 0);
 			if (r) {
 				LOG_UV_ERR(r);
@@ -131,15 +91,61 @@ namespace VK {
 			}
 
 			// add to mgr
-			tcp_server->get_session_mgr().add_session(session);
+			m_sessions.add_session(session);
 
 			// notify
-			if (open_cb) {
-				open_cb(true, session);
-			}
+			on_connect_finished(true, session);
 
 			// post first read request
 			session->post_read_req();
+		}
+
+		void TcpServer::on_sub(session_ptr_t session, const char* subject) {
+			m_subjects.add(subject, session);
+		}
+
+		void TcpServer::on_unsub(session_ptr_t session, const char* subject) {
+			m_subjects.remove(subject, session);
+		}
+
+		void TcpServer::on_connect_finished(bool success, session_ptr_t session) {
+			if (m_handler) {
+				m_handler->on_connected(success, session);
+			}
+		}
+
+		void TcpServer::on_closed(session_ptr_t session) {
+			if (m_handler) {
+				m_handler->on_closed(session);
+			}
+
+			m_sessions.remove(session);
+		}
+
+		void TcpServer::on_req(session_ptr_t session, cbuf_ptr_t pcb, resp_cb_t cb) {
+			if (m_handler) {
+				m_handler->on_req(session, pcb, cb);
+			}
+			else {
+				cb(NE_NoHandler, nullptr);
+			}
+		}
+
+		error_no_t TcpServer::on_push(session_ptr_t session, cbuf_ptr_t pcb) {
+			if (m_handler) {
+				return m_handler->on_push(session, pcb);
+			}
+
+			return NE_NoHandler;
+		}
+
+		void TcpServer::connection_cb(uv_stream_t* server, int status) {
+			if (status) {
+				LOG_UV_ERR(status);
+			}
+
+			auto tcp_server = static_cast<TcpServer*>(server->data);
+			tcp_server->establish();
 		}
 	}
 }

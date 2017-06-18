@@ -17,8 +17,10 @@ int main(int argc, char** argv) {
 
 	//pcbs.clear();
 	//return 0;
-
+	
 	if(argc > 1) {
+		VK::Logger::instance().start(argv[1]);
+
 		if(strcmp(argv[1], "any") == 0) {
 			run_any_test();
 		}

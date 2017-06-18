@@ -36,9 +36,10 @@ Release/
 x64/
 Obj/
 .svn/
-*.lib
+log/
 
 # Executables
 *.exe
 *.out
 *.app
+*.lib

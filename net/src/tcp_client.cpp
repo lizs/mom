@@ -13,14 +13,15 @@ namespace VK {
 		                                             m_port(port), m_handler(handler),
 		                                             m_host(host),
 		                                             m_keepAliveTimerId(INVALID_TIMER_ID) {
-			m_session = std::make_shared<Session>(shared_from_this());
 		}
 
 		TcpClient::~TcpClient() {
 			m_session = nullptr;
 		}
 
-		bool TcpClient::startup() const {
+		bool TcpClient::startup() {
+			m_session = std::make_shared<Session>(shared_from_this());
+
 			// session start
 			if (!m_session->prepare()) {
 				return false;

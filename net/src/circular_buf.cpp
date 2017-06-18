@@ -108,7 +108,10 @@ namespace VK {
 		}
 
 		bool CircularBuf::write(const char* str) {
-			strncpy(get_head_ptr(), str, strnlen(str, m_capacity - m_reserved - 1));
+			auto len = strnlen(str, m_capacity - m_reserved - 1);
+			strncpy(get_head_ptr(), str, len);
+			move_tail(len);
+			
 			return write<byte_t>(0);
 		}
 

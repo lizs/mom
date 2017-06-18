@@ -21,7 +21,7 @@ namespace VK {
 			          bool auto_reconnect_enabled = true,
 			          bool connect_by_host = true);
 			~TcpClient();
-			bool startup() const;
+			bool startup();
 			bool shutdown() const;
 
 #pragma region("Message patterns")

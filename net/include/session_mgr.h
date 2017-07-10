@@ -4,7 +4,7 @@
 #pragma once
 #include <map>
 #include "defines.h"
-#include <vector>
+#include "scheduler.h"
 
 namespace VK {
 	namespace Net {		
@@ -26,7 +26,7 @@ namespace VK {
 			bool add_session(session_ptr_t session);
 			void remove(session_ptr_t session);
 			size_t size() const;
-						
+			void close_expired();
 		private:
 #pragma warning(push)
 #pragma warning(disable:4251)

@@ -42,6 +42,11 @@ namespace VK {
 				return false;
 			}
 
+			// ping/pong check timer
+			m_scheduler.invoke(SESSION_CHECK_INTERVAL, SESSION_CHECK_INTERVAL, [this](any arg) {
+				                                         m_sessions.close_expired();
+			                                         });
+
 			Logger::instance().info("Server listening on port : {}", m_port);
 
 			return true;
@@ -62,6 +67,10 @@ namespace VK {
 
 		void TcpServer::sub(const char* subject, session_ptr_t session) {
 			m_subjects.add(subject, session);
+		}
+
+		void TcpServer::unsub(const char* sub) {
+			m_subjects.remove(sub);
 		}
 
 		void TcpServer::unsub(session_ptr_t session) {

@@ -13,7 +13,6 @@ namespace VK {
 
 		Session::Session(session_handler_ptr_t handler) :
 			m_id(++g_sessionId),
-			m_lastPingTime(time(nullptr)),
 			m_lastResponseTime(time(nullptr)),
 			m_keepAliveCounter(0),
 			m_cbuf(),
@@ -65,13 +64,10 @@ namespace VK {
 			                  [](uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf) {
 				                  auto session = static_cast<session_t*>(handle->data);
 
+								  // see : http://docs.libuv.org/en/v1.x/stream.html#c.uv_read_cb
 				                  if (nread < 0) {
-					                  /* Error or EOF */
-					                  if (nread != UV_EOF) {
-						                  session->close();
-						                  LOG_UV_ERR((int)nread);
-					                  }
-
+					                  session->close();
+					                  LOG_UV_ERR((int)nread);
 					                  return;
 				                  }
 
@@ -118,10 +114,6 @@ namespace VK {
 			if (pcb->write(subject)) {
 				send(pcb, nullptr, static_cast<pattern_t>(Unsub));
 			}
-		}
-
-		time_t Session::get_elapsed_since_last_ping() const {
-			return time(nullptr) - m_lastPingTime;
 		}
 
 		time_t Session::get_elapsed_since_last_response() const {
@@ -244,8 +236,6 @@ namespace VK {
 
 		void Session::on_message(cbuf_ptr_t pcb) {
 			m_lastResponseTime = time(nullptr);
-			if (m_keepAliveCounter > 0)
-				--m_keepAliveCounter;
 
 			byte_t cnt = 1;
 			if (!static_cast<byte_t>(pcb->read<byte_t>(cnt))) {
@@ -285,12 +275,13 @@ namespace VK {
 
 			switch (pattern) {
 				case Ping: {
-					m_lastPingTime = time(nullptr);
 					pong();
 					break;
 				}
 
 				case Pong: {
+					if (m_keepAliveCounter > 0)
+						--m_keepAliveCounter;
 					break;
 				}
 

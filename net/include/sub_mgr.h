@@ -8,9 +8,14 @@ namespace VK {
 	namespace Net {
 		// subjects manager
 		class SubMgr : public Mgr<std::string, Mgr<session_id_t, session_wk_ptr_t>> {
+			typedef Mgr<std::string, Mgr<session_id_t, session_wk_ptr_t>> Base;
 		public:
 			void add(const std::string & sub, session_ptr_t session) {
 				(*this)[sub][session->get_id()] = session;
+			}
+
+			void remove(const std::string & sub) {
+				Base::remove(sub);
 			}
 
 			void remove(const std::string & sub, session_id_t sid) {

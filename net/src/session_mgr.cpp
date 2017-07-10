@@ -18,6 +18,18 @@ namespace VK {
 			return m_sessions.size();
 		}
 
+		void SessionMgr::close_expired() {
+			for (auto kv : m_sessions) {
+				auto elapsed = kv.second->get_elapsed_since_last_response();
+				if (elapsed >= SESSION_EXPIRE_INTERVAL) {
+					kv.second->close();
+				}
+				else if (elapsed >= SESSION_EXPIRE_INTERVAL / 2) {
+					kv.second->ping();
+				}
+			}
+		}
+
 		void SessionMgr::close_all() {
 			for (auto kv : m_sessions) {
 				kv.second->close();

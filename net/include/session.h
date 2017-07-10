@@ -52,7 +52,6 @@ namespace VK {
 			bool post_read_req();
 
 			// return seconds
-			time_t get_elapsed_since_last_ping() const;
 			time_t get_elapsed_since_last_response() const;
 			uint8_t get_keep_alive_counter() const;
 
@@ -102,7 +101,6 @@ namespace VK {
 			uint16_t pack_desired_size = 0;
 
 			// last ping time
-			time_t m_lastPingTime;
 			time_t m_lastResponseTime;
 			uint8_t m_keepAliveCounter;
 

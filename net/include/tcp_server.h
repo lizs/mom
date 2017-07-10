@@ -26,6 +26,8 @@ namespace VK {
 			void pub(const char* sub, cbuf_ptr_t pcb);
 			// 订阅
 			void sub(const char* sub, session_ptr_t session);
+			// 清空主题
+			void unsub(const char * sub);
 			// 取消该会话的所有订阅
 			void unsub(session_ptr_t session);
 			// 取消某个主题的订阅

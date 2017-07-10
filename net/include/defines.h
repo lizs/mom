@@ -22,7 +22,9 @@
 #define MONITOR_ENABLED true
 #define CBUF_RESERVED_SIZE 32
 #define MAX_PACKAGE_SIZE 1 * 1024
-#define KEEP_ALIVE_INTERVAL 10 * 1000
+#define KEEP_ALIVE_INTERVAL 10 * 1000	// ms
+#define SESSION_EXPIRE_INTERVAL 60	// seconds
+#define SESSION_CHECK_INTERVAL 20 * 1000	// ms
 #define KEEP_ALIVE_COUNTER_DEAD_LINE 5
 #pragma endregion
 
@@ -69,6 +71,14 @@
 		printf(buf);				\
 	printf("]\n");                                      \
  } while (0)
+
+#define PRINT(format, ...)         \
+ do {                                                     \
+    fprintf(stdout,                                       \
+            format,										\
+			##__VA_ARGS__);                                       \
+ } while (0)
+
 
 #if TRACK_MESSAGE_AS_BINARY
 #define PRINT_MESSAGE PRINT_MESSAGE_AS_BINARY
@@ -117,7 +127,7 @@ typedef uint8_t byte_t;
 typedef uint16_t pack_size_t;
 typedef uint16_t serial_t;
 typedef uint16_t error_no_t;
-typedef uint16_t node_id_t;
+typedef uint16_t server_id_t;
 typedef uint8_t node_type_t;
 typedef uint16_t session_id_t;
 typedef uint16_t mask_t;

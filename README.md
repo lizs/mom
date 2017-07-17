@@ -2,7 +2,7 @@
 
 ## <b>特性</b>
 * 轻量、高效
-* PUSH REQ/REP BROADCAST消息模型实现
+* PUSH REQ/REP PUB/SUB 消息模型实现
 * 保活、自动重连
 * Signal/Property
 * Scheduler（基于uv_timer）

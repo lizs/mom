@@ -1,68 +1,87 @@
 # <b>基于libuv的MOM（消息中间件）实现</b>
 
-## <b>特性</b>
-* 轻量、高效
-* PUSH REQ/REP PUB/SUB 消息模型实现
-* 保活、自动重连
+## <b>Feature</b>
+* PUSH REQ/REP PUB/SUB pattern
+* Keep alive/Auto reconnect
 * Signal/Property
-* Scheduler（基于uv_timer）
-* 内存池
+* Scheduler（based on uv_timer）
+* Memory pool
 
 ## <b>Getting started</b>
-Tcp客户端：
+TcpServer
 ```c++
-  auto client = std::make_unique<TcpClient>(ip, port,
+// custom handler
+class ServerHandler : public VK::Net::IHandler {
+  void on_connected(bool success, session_ptr_t session) override { }
+  void on_closed(session_ptr_t session) override { }
 
-                         // session established callback
-                         [=](bool success, session_t* session_t) {},
+  void on_req(session_ptr_t session, cbuf_ptr_t pcb, resp_cb_t cb) override {
+    if (cb) {
+      // echo back
+      cb(Success, pcb);
+    }
+  }
 
-                         // session closed callback
-                         [](session_t* session_t) {},
+  error_no_t on_push(session_ptr_t session, cbuf_ptr_t pcb) override {
+    printf_s(pcb->get_head_ptr());
+    return Success;
+  }
+};
 
-                         // request handler
-                         [](session_t* session_t, cbuf_ptr_t pcb, req_cb_t cb) {
-                           return false;
-                         },
+// start server
+auto server = std::make_shared<TcpServer>("127.0.0.1", 5002, std::make_shared<ServerHandler>());
+server->startup();
 
-                         // push handler
-                         [](session_t* session_t, cbuf_ptr_t pcb) {},
+// pub
+VK::Net::Scheduler scheduler;
+scheduler.invoke(1000, 1000, [server](any token) {
+  auto pcb = alloc_cbuf(cbuf_len_t(strlen(pubBytes) + 1));
+  pcb->write_binary(pubBytes, cbuf_len_t(strlen(pubBytes) + 1));
+  server->pub("Channel", pcb);
+});
 
-                         // auto reconnect enabled
-                         true);
-
-  client->startup();
-  RUN_UV_DEFAULT_LOOP();
-  client->shutdown();
+RUN_UV_DEFAULT_LOOP();
+server->shutdown();
 ```
-### <b>REQ</b>
+TcpClient
 ```c++
-  // 分配请求所需内存
-  auto pcb = alloc_request(ops, node_id, buffer_size);
-  // 填充请求数据
-  pcb->write_binary(reqData, buffer_size);
-  // 请求
-  client->request(pcb, [](error_no_t error_no, cbuf_ptr_t pcb) {
-                      // 请求回调
-                      LOG(mom_str_err(error_no));
-                  });
-```
+// custom handler
+class ClientHandler : public VK::Net::IHandler {
+  void on_connected(bool success, session_ptr_t session) override {
+    if (success) {
+      // sub
+      session->sub("Channel");
+      request(session);
+    }
+  }
 
-### <b>PUSH</b>
-```c++
-  auto pcb = alloc_push(ops, node_id, buffer_size);
-  pcb->write_binary(pushData, buffer_size);
+  void on_closed(session_ptr_t session) override {	}
 
-  client->push(pcb, [](bool success) {
-               });
-```
-               
-### <b>Broadcast</b>
-```c++
-  auto pcb = alloc_broadcast(buffer_size);
-  pcb->write_binary(broadcastData, buffer_size);
+  void on_req(session_ptr_t session, cbuf_ptr_t pcb, resp_cb_t cb) override {
+    cb(0, nullptr);
+  }
 
-  client->push(pcb, [](bool success) {
-               });
+  error_no_t on_push(session_ptr_t session, cbuf_ptr_t pcb) override {
+    Logger::instance().debug(pcb->get_head_ptr());
+    return Success;
+  }
+
+  void request(session_ptr_t session) {
+    auto pcb = alloc_cbuf(cbuf_len_t(strlen(reqBytes) + 1));
+    pcb->write_binary(reqBytes, cbuf_len_t(strlen(reqBytes) + 1));
+
+    session->request(pcb, [this](session_ptr_t session, error_no_t err, cbuf_ptr_t pcb) {
+      if (!err)
+        request(session);
+    });
+  }
+};
+
+// start client
+auto client = std::make_shared<TcpClient>("127.0.0.1", 5002, std::make_shared<ClientHandler>(), true, false);
+client->startup();
+RUN_UV_DEFAULT_LOOP();
+client->shutdown();
 ```
 
 ### <b>CircularBuf</b>
@@ -120,42 +139,70 @@ Value：表达一个可跟踪的值<br>
 Property：表达一个可跟踪的值集合<br>
 Value示例：<br>
 ```c++
-  Value<int> intger(One, 1);
-  intger.conn([](val_id_t vid, const int& val) {
-    std::cout << "conn : Value " << vid << " Changed to : " << val << std::endl;
-  });
-  intger = 2;
-  intger = 3;
-  intger = 4;
-  // no longer callback here
-  intger = 4;
+enum Pid {
+	One = 1,
+	Two,
+	Three,
+};
+
+Value intger(One, 1);
+Value intger1(Two, 2);
+
+intger.conn([](val_id_t vid, const Value& val) {
+  std::cout << "conn : Value " << vid << " Changed to : " << val.to<int>() << std::endl;
+});
+
+// will throw exception
+// can only be assigned with same type
+//intger = intger1;
+
+intger = 2;
+intger = 3;
+intger = 4;
+// no longer callback here
+intger = 4;
 ```
 Property示例：<br>
 ```c++
-  enum Pid{
-    One,
-    Two,
-  };
-  
-  // 初始一个初值为0的int值包
-  Property<int> intgers({Pid::One, Pid::Two}, 0);
-  // 跟踪属性One修改
-  auto cid2 = intgers.conn(One, [](val_id_t vid, const int& val) {
-                             std::cout << "conn : Property " << vid << " Changed to : " << val << std::endl;
-                           });
-  // 跟踪任何属性修改
-  auto gcid = intgers.conn_all([](val_id_t vid, const int& val) {
-    std::cout << "conn_all : Property " << vid << " Changed to : " << val << std::endl;
-  });
+Property pack;
+pack.add<int>(One, 0);
+pack.add<float>(Two, 0);
+pack.add<std::string>(Three, "Hello world!");
 
-  // 修改One的值为1
-  intgers.set(One, 1);
-  // 停止对值One的跟踪
-  intgers.disconn(One, cid2);
-  intgers.set(One, 10);
-  intgers.set(Two, 20);
-  // 停止对属性包的跟踪
-  intgers.disconn_all(gcid);
+auto cid2 = pack.conn(One, [](val_id_t vid, const Value& val) {
+  std::cout << "conn : Property " << vid << " Changed to : ";
+  switch (static_cast<Pid>(vid)) {
+  case One:
+    std::cout << val.to<int>() << std::endl;
+    break;
+  default:
+    break;
+  }
+});
+
+auto gcid = pack.conn_all([](val_id_t vid, const Value& val) {
+  std::cout << "conn_all : Property " << vid << " Changed to : ";
+  switch (static_cast<Pid>(vid)) {
+  case One:
+    std::cout << val.to<int>() << std::endl;
+    break;
+  case Two:
+    std::cout << val.to<float>() << std::endl;
+    break;
+  case Three:
+    std::cout << val.to<std::string>() << std::endl;
+    break;
+  default:
+    break;
+  }
+});
+
+pack.set(One, 1);
+pack.disconn(One, cid2);
+pack.set(One, 10);
+pack.set(Two, 20.0f);
+pack.set<std::string>(Three, "Hello Property!");
+pack.disconn_all(gcid);
 ```
 ## Question
 QQ Group : [点击加入](http://jq.qq.com/?_wv=1027&k=VptNja)<br>

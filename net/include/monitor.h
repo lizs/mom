@@ -6,13 +6,9 @@
 namespace VK {
 	namespace Net {
 		class NET_EXPORT Monitor {
+			CUSTOM_SINGLETON(Monitor)
 			const timer_period_t DefaultPeriod = 5 * 1000;
 		public:
-			Monitor()
-				: m_readed(0),
-				  m_wroted(0), m_pending(0), m_pcbCount(0), m_timerID(INVALID_TIMER_ID) {
-			}
-
 			uint64_t get_readed() const {
 				return m_readed;
 			}
@@ -94,5 +90,9 @@ namespace VK {
 			Scheduler m_scheduler;
 			timer_id_t m_timerID;
 		};
+
+		inline Monitor::Monitor()
+			: m_readed(0),
+			  m_wroted(0), m_pending(0), m_pcbCount(0), m_timerID(INVALID_TIMER_ID) { }
 	}
 }

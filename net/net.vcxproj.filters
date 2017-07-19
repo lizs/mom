@@ -87,9 +87,6 @@
     <ClInclude Include="include\net.h">
       <Filter>头文件\net</Filter>
     </ClInclude>
-    <ClInclude Include="include\_singleton_.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="include\logger.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -107,6 +104,9 @@
     </ClInclude>
     <ClInclude Include="include\ihandler.h">
       <Filter>头文件\net</Filter>
+    </ClInclude>
+    <ClInclude Include="include\singleton.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -149,10 +149,5 @@
     <ClCompile Include="include\mgr.h">
       <Filter>头文件\util</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="include\_singleton_.inl">
-      <Filter>头文件</Filter>
-    </None>
   </ItemGroup>
 </Project>

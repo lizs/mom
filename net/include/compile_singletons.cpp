@@ -1,22 +1,19 @@
-#include "_singleton_.inl"
 #include "mem_pool.h"
 #include "monitor.h"
-#include "bytes_pool.h"
 
 namespace VK {
 	namespace Net {
-		// singletons
+		// 仅为了导出这些单例
 		void _compile_singletons_() {
-			_singleton_<Monitor>::instance();
-			_singleton_<BytesPool>::instance();
-			_singleton_<MemoryPool<CircularBuf>>::instance();
-			_singleton_<MemoryPool<write_req_t>>::instance();
+			Monitor::instance();
+			MemoryPool<CircularBuf>::instance();
+			MemoryPool<write_req_t>::instance();
 
-			_singleton_<MemoryPool<close_req_t>>::instance();
-			_singleton_<MemoryPool<connect_req_t>>::instance();
-			_singleton_<MemoryPool<getaddr_req_t>>::instance();
+			MemoryPool<close_req_t>::instance();
+			MemoryPool<connect_req_t>::instance();
+			MemoryPool<getaddr_req_t>::instance();
 
-			_singleton_<Logger>::instance();
+			Logger::instance();
 		}
 	}
 }

@@ -1,6 +1,5 @@
 // lizs 2017.6.14
 #include "logger.h"
-#include "_singleton_.inl"
 #include "str.h"
 #include "file.h"
 #include <spdlog/spdlog.h>

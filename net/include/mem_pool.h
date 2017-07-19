@@ -1,5 +1,6 @@
 #pragma once
 #include <list>
+#include "singleton.h"
 
 namespace VK {
 	namespace Net {
@@ -7,6 +8,7 @@ namespace VK {
 		// 本池中的T数量不超过Capacity
 		template <typename T, size_t Capacity>
 		class MemoryPool {
+			SINGLETON(MemoryPool)
 
 #pragma warning(push)
 #pragma warning(disable:4624)

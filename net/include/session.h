@@ -39,7 +39,7 @@ namespace VK {
 			// ping
 			void ping();
 			// pong
-			void pong();
+			void pong(pp_serial_t serial);
 			// sub
 			void sub(const char * subject);
 			// unsub
@@ -96,6 +96,7 @@ namespace VK {
 
 			// serial seed
 			serial_t m_serial = 0;
+			pp_serial_t m_pp_serial = 0;
 
 			// tmp len
 			uint16_t pack_desired_size = 0;

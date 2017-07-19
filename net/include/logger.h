@@ -1,6 +1,6 @@
 // lizs 2017.6.14
 #pragma once
-#include "_singleton_.h"
+#include "singleton.h"
 #include  <spdlog/logger.h>
 
 namespace VK {
@@ -15,7 +15,8 @@ namespace VK {
 
 
 	//	ÈÕÖ¾µ¥Àý
-	class NET_EXPORT Logger : public _singleton_<Logger> {
+	class NET_EXPORT Logger {
+		SINGLETON(Logger)
 		std::shared_ptr<spdlog::logger> m_console;
 		std::shared_ptr<spdlog::logger> m_daily;
 

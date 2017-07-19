@@ -1,8 +1,19 @@
 #include "bytes_pool.h"
+#include "mem_pool.h"
 #include <stdexcept>
 
 namespace VK {
 	namespace Net {
+		template <cbuf_len_t Capacity>
+		struct bytes_t {
+			enum _ {
+				Capacity = Capacity,
+			};
+
+			char bytes[Capacity];
+		};
+
+#define MP(size) MemoryPool<bytes_t<size>>::instance()
 
 		char* BytesPool::alloc(cbuf_len_t size) {
 			// ¶ÔÆë
@@ -14,23 +25,23 @@ namespace VK {
 				case 8:
 				case 16:
 				case 32:
-					return reinterpret_cast<char*>(m_32_pool.alloc());
+					return reinterpret_cast<char*>(MP(32).alloc());
 				case 64:
-					return reinterpret_cast<char*>(m_64_pool.alloc());
+					return reinterpret_cast<char*>(MP(64).alloc());
 				case 128:
-					return reinterpret_cast<char*>(m_128_pool.alloc());
+					return reinterpret_cast<char*>(MP(128).alloc());
 				case 256:
-					return reinterpret_cast<char*>(m_256_pool.alloc());
+					return reinterpret_cast<char*>(MP(256).alloc());
 				case 512:
-					return reinterpret_cast<char*>(m_512_pool.alloc());
+					return reinterpret_cast<char*>(MP(512).alloc());
 				case 1024:
-					return reinterpret_cast<char*>(m_1024_pool.alloc());
+					return reinterpret_cast<char*>(MP(1024).alloc());
 				case 2048:
-					return reinterpret_cast<char*>(m_2048_pool.alloc());
+					return reinterpret_cast<char*>(MP(2048).alloc());
 				case 4096:
-					return reinterpret_cast<char*>(m_4096_pool.alloc());
+					return reinterpret_cast<char*>(MP(4096).alloc());
 				case 8192:
-					return reinterpret_cast<char*>(m_8192_pool.alloc());
+					return reinterpret_cast<char*>(MP(8192).alloc());
 
 				default:
 					throw std::runtime_error("BytesPool::alloc, invalid size!");
@@ -47,23 +58,23 @@ namespace VK {
 				case 8:
 				case 16:
 				case 32:
-					return m_32_pool.dealloc(reinterpret_cast<bytes_t<32>*>(buf));
+					return MP(32).dealloc(reinterpret_cast<bytes_t<32>*>(buf));
 				case 64:
-					return m_64_pool.dealloc(reinterpret_cast<bytes_t<64>*>(buf));
+					return MP(64).dealloc(reinterpret_cast<bytes_t<64>*>(buf));
 				case 128:
-					return m_128_pool.dealloc(reinterpret_cast<bytes_t<128>*>(buf));
+					return MP(128).dealloc(reinterpret_cast<bytes_t<128>*>(buf));
 				case 256:
-					return m_256_pool.dealloc(reinterpret_cast<bytes_t<256>*>(buf));
+					return MP(256).dealloc(reinterpret_cast<bytes_t<256>*>(buf));
 				case 512:
-					return m_512_pool.dealloc(reinterpret_cast<bytes_t<512>*>(buf));
+					return MP(512).dealloc(reinterpret_cast<bytes_t<512>*>(buf));
 				case 1024:
-					return m_1024_pool.dealloc(reinterpret_cast<bytes_t<1024>*>(buf));
+					return MP(1024).dealloc(reinterpret_cast<bytes_t<1024>*>(buf));
 				case 2048:
-					return m_2048_pool.dealloc(reinterpret_cast<bytes_t<2048>*>(buf));
+					return MP(2048).dealloc(reinterpret_cast<bytes_t<2048>*>(buf));
 				case 4096:
-					return m_4096_pool.dealloc(reinterpret_cast<bytes_t<4096>*>(buf));
+					return MP(4096).dealloc(reinterpret_cast<bytes_t<4096>*>(buf));
 				case 8192:
-					return m_8192_pool.dealloc(reinterpret_cast<bytes_t<8192>*>(buf));
+					return MP(8192).dealloc(reinterpret_cast<bytes_t<8192>*>(buf));
 
 				default:
 					throw std::runtime_error("BytesPool::dealloc_cbuf, invalid size!");

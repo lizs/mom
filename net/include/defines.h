@@ -112,7 +112,7 @@ do{												\
 	int r;												\
 	uv_loop_t* loop;							\
 	loop = uv_default_loop();			\
-	_singleton_<Monitor>::instance().start(); \
+	monitor.start(); \
 	r = uv_run(loop, UV_RUN_DEFAULT);	\
 	if(r)												\
 		LOG_UV_ERR(r);						\
@@ -126,6 +126,7 @@ typedef int16_t ops_t;
 typedef uint8_t byte_t;
 typedef uint16_t pack_size_t;
 typedef uint16_t serial_t;
+typedef byte_t pp_serial_t;
 typedef uint16_t error_no_t;
 typedef uint16_t server_id_t;
 typedef uint8_t node_type_t;
@@ -202,14 +203,14 @@ enum NetError : error_no_t {
 
 #pragma endregion 
 
-#define monitor VK::_singleton_<VK::Net::Monitor>::instance()
+#define monitor VK::Net::Monitor::instance()
 
 #pragma region structs
 
-#define alloc_req(TYPE) VK::_singleton_<VK::Net::MemoryPool<##TYPE>>::instance().alloc()
-#define release_req(TYPE, req) \
+#define alloc_req(T) VK::Net::MemoryPool<T>::instance().alloc()
+#define release_req(T, req) \
 	req->clear();	\
-	VK::_singleton_<VK::Net::MemoryPool<##TYPE>>::instance().dealloc(req);
+	VK::Net::MemoryPool<T>::instance().dealloc(req);
 
 #define alloc_write_req() alloc_req(write_req_t)
 #define release_write_req(req) release_req(write_req_t, req)

@@ -176,7 +176,7 @@
     <ClInclude Include="include\session_mgr.h" />
     <ClInclude Include="include\str.h" />
     <ClCompile Include="include\sub_mgr.h" />
-    <ClInclude Include="include\_singleton_.h" />
+    <ClInclude Include="include\singleton.h" />
     <ClInclude Include="include\tcp_client.h" />
     <ClInclude Include="include\tcp_server.h" />
     <ClInclude Include="include\cbuf_alloc.h" />
@@ -194,9 +194,6 @@
     <ClCompile Include="src\str.cpp" />
     <ClCompile Include="src\tcp_client.cpp" />
     <ClCompile Include="src\tcp_server.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="include\_singleton_.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

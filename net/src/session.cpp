@@ -1,7 +1,6 @@
 #include <ctime>
 #include <memory>
 #include "session.h"
-#include "_singleton_.h"
 #include "monitor.h"
 #include "mem_pool.h"
 #include "ihandler.h"
@@ -64,7 +63,7 @@ namespace VK {
 			                  [](uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf) {
 				                  auto session = static_cast<session_t*>(handle->data);
 
-								  // see : http://docs.libuv.org/en/v1.x/stream.html#c.uv_read_cb
+				                  // see : http://docs.libuv.org/en/v1.x/stream.html#c.uv_read_cb
 				                  if (nread < 0) {
 					                  session->close();
 					                  LOG_UV_ERR((int)nread);
@@ -91,24 +90,24 @@ namespace VK {
 
 		void Session::ping() {
 			auto pcb = alloc_cbuf(0);
-			send(pcb, nullptr, static_cast<pattern_t>(Ping));
+			send(pcb, nullptr, ++m_pp_serial, static_cast<pattern_t>(Ping));
 			++m_keepAliveCounter;
 		}
 
-		void Session::pong() {
+		void Session::pong(pp_serial_t serial) {
 			auto pcb = alloc_cbuf(0);
-			send(pcb, nullptr, static_cast<pattern_t>(Pong));
+			send(pcb, nullptr, serial, static_cast<pattern_t>(Pong));
 		}
 
-		void Session::sub(const char * subject) {
+		void Session::sub(const char* subject) {
 			auto len = strlen(subject);
 			auto pcb = alloc_cbuf(len + 1);
-			if(pcb->write(subject)) {
+			if (pcb->write(subject)) {
 				send(pcb, nullptr, static_cast<pattern_t>(Sub));
 			}
 		}
 
-		void Session::unsub(const char * subject) {
+		void Session::unsub(const char* subject) {
 			auto len = strlen(subject);
 			auto pcb = alloc_cbuf(len + 1);
 			if (pcb->write(subject)) {
@@ -275,13 +274,26 @@ namespace VK {
 
 			switch (pattern) {
 				case Ping: {
-					pong();
+					pp_serial_t serial;
+					if (!pcb->read<pp_serial_t>(serial)) {
+						close();
+						return;
+					}
+
+					pong(serial);
 					break;
 				}
 
 				case Pong: {
+					pp_serial_t serial;
+					if (!pcb->read<pp_serial_t>(serial)) {
+						close();
+						return;
+					}
+
 					if (m_keepAliveCounter > 0)
 						--m_keepAliveCounter;
+
 					break;
 				}
 
@@ -406,9 +418,9 @@ namespace VK {
 					                          LOG_UV_ERR(status);
 					                          cb(false, nullptr);
 				                          }
-										  else if(res == nullptr) {
-											  cb(false, nullptr);
-										  }
+				                          else if (res == nullptr) {
+					                          cb(false, nullptr);
+				                          }
 				                          else {
 					                          cb(true, res->ai_addr);
 				                          }
@@ -507,7 +519,7 @@ namespace VK {
 				         Logger::instance().debug("Session {} closed!", session->get_id());
 
 				         if (session->m_handler) {
-							 session->m_handler->on_closed(session);
+					         session->m_handler->on_closed(session);
 				         }
 
 				         release_close_req(creq);

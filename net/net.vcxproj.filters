@@ -1,0 +1,150 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="头文件\net">
+      <UniqueIdentifier>{a30731ba-8ae6-45af-b7f0-001041b32e6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\data">
+      <UniqueIdentifier>{eadff53e-b471-47cd-b6db-3610fab95a0d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\observable">
+      <UniqueIdentifier>{56fac7d3-dab3-41ad-a77f-f7230d918b37}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\net">
+      <UniqueIdentifier>{e7cada55-20ec-4405-b5fd-2a9ba0c87067}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\util">
+      <UniqueIdentifier>{d84cd60f-2204-41d0-b927-f6492d72ba1b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\util">
+      <UniqueIdentifier>{aa3e9400-88d6-4454-af5f-4fb62d9f4d1d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\circular_buf.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
+    <ClInclude Include="include\monitor.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
+    <ClInclude Include="include\scheduler.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
+    <ClInclude Include="include\session.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
+    <ClInclude Include="include\session_mgr.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tcp_client.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tcp_server.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
+    <ClInclude Include="include\observable\slot.h">
+      <Filter>头文件\observable</Filter>
+    </ClInclude>
+    <ClInclude Include="include\bytes_pool.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mem_pool.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
+    <ClInclude Include="include\defines.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
+    <ClInclude Include="include\observable\signal.h">
+      <Filter>头文件\observable</Filter>
+    </ClInclude>
+    <ClInclude Include="include\observable\signal2.h">
+      <Filter>头文件\observable</Filter>
+    </ClInclude>
+    <ClInclude Include="include\data\any.h">
+      <Filter>头文件\data</Filter>
+    </ClInclude>
+    <ClInclude Include="include\data\value.h">
+      <Filter>头文件\data</Filter>
+    </ClInclude>
+    <ClInclude Include="include\data\property.h">
+      <Filter>头文件\data</Filter>
+    </ClInclude>
+    <ClInclude Include="include\logger.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ipeer.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ihandler.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
+    <ClInclude Include="include\singleton.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\net.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\util\file.h">
+      <Filter>头文件\util</Filter>
+    </ClInclude>
+    <ClInclude Include="include\util\mgr.h">
+      <Filter>头文件\util</Filter>
+    </ClInclude>
+    <ClInclude Include="include\util\str.h">
+      <Filter>头文件\util</Filter>
+    </ClInclude>
+    <ClInclude Include="include\watch.h">
+      <Filter>头文件\net</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\session.cpp">
+      <Filter>源文件\net</Filter>
+    </ClCompile>
+    <ClCompile Include="src\circular_buf.cpp">
+      <Filter>源文件\net</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bytes_pool.cpp">
+      <Filter>源文件\net</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scheduler.cpp">
+      <Filter>源文件\net</Filter>
+    </ClCompile>
+    <ClCompile Include="src\session_mgr.cpp">
+      <Filter>源文件\net</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tcp_client.cpp">
+      <Filter>源文件\net</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tcp_server.cpp">
+      <Filter>源文件\net</Filter>
+    </ClCompile>
+    <ClCompile Include="include\compile_singletons.cpp">
+      <Filter>源文件\net</Filter>
+    </ClCompile>
+    <ClCompile Include="src\logger.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\file.cpp">
+      <Filter>源文件\util</Filter>
+    </ClCompile>
+    <ClCompile Include="src\str.cpp">
+      <Filter>源文件\util</Filter>
+    </ClCompile>
+    <ClCompile Include="include\sub_mgr.h">
+      <Filter>头文件\net</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

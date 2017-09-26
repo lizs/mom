@@ -16,8 +16,7 @@ namespace VK {
 			m_keepAliveCounter(0),
 			m_cbuf(),
 			m_handler(handler) {
-			m_cbuf = alloc_cbuf(MAX_PACKAGE_SIZE);
-			memset(&m_stream, 0, sizeof(m_stream));
+			m_cbuf = alloc_cbuf(MAX_SINGLE_PACKAGE_SIZE);
 		}
 
 		Session::~Session() {
@@ -33,13 +32,13 @@ namespace VK {
 
 			loop = uv_default_loop();
 
-			r = uv_tcp_init(loop, &m_stream);
+			r = uv_tcp_init(loop, &m_readReq.stream);
 			if (r) {
 				LOG_UV_ERR(r);
 				return false;
 			}
 
-			r = uv_tcp_nodelay(&m_stream, 1);
+			r = uv_tcp_nodelay(&m_readReq.stream, 1);
 			if (r) {
 				LOG_UV_ERR(r);
 				return false;
@@ -52,16 +51,16 @@ namespace VK {
 			int r;
 
 			m_cbuf->reuse();
-			m_stream.data = this;
-			r = uv_read_start(reinterpret_cast<uv_stream_t*>(&m_stream),
+			m_readReq.session = shared_from_this();
+			r = uv_read_start(reinterpret_cast<uv_stream_t*>(&m_readReq.stream),
 			                  [](uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
-				                  auto session = static_cast<session_t*>(handle->data);
+				                  auto session = reinterpret_cast<read_req_t*>(handle)->session.lock();
 				                  auto cbuf = session->get_read_cbuf();
 				                  buf->base = cbuf->get_tail_ptr();
 				                  buf->len = cbuf->get_writable_len();
 			                  },
 			                  [](uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf) {
-				                  auto session = static_cast<session_t*>(handle->data);
+								  auto session = reinterpret_cast<read_req_t*>(handle)->session.lock();
 
 				                  // see : http://docs.libuv.org/en/v1.x/stream.html#c.uv_read_cb
 				                  if (nread < 0) {
@@ -123,25 +122,9 @@ namespace VK {
 			return m_keepAliveCounter;
 		}
 
-		void Session::connect(const char* ip, int port) {
-			struct sockaddr_in addr;
-			int r;
-
-			r = uv_ip4_addr(ip, port, &addr);
-			if (r) {
-				LOG_UV_ERR(r);
-				if (m_handler != nullptr) {
-					m_handler->on_connected(false, shared_from_this());
-				}
-				return;
-			}
-
-			connect(reinterpret_cast<sockaddr*>(&addr));
-		}
-
-		void Session::connect_by_host(const char* host, int port) {
+		void Session::connect(const char* ip_or_host, int port) {
 			auto _this = shared_from_this();
-			get_addr_info(host, port, [_this](bool success, sockaddr* addrinfo) {
+			get_addr_info(ip_or_host, port, [_this](bool success, sockaddr* addrinfo) {
 				              if (success) {
 					              _this->connect(addrinfo);
 				              }
@@ -158,21 +141,32 @@ namespace VK {
 		}
 
 		uv_tcp_t& Session::get_stream() {
-			return m_stream;
+			return m_readReq.stream;
 		}
 
 		cbuf_ptr_t Session::get_read_cbuf() const {
 			return m_cbuf;
 		}
 
+		session_handler_ptr_t Session::get_handler() const {
+			return m_handler;
+		}
+
 		void Session::send(cbuf_ptr_t pcb, send_cb_t cb) {
 			std::vector<cbuf_ptr_t> pcbs = {pcb};
-			this->send(pcbs, cb);
+			send(pcbs, cb);
 		}
 
 		void Session::send(std::vector<cbuf_ptr_t>& pcbs, send_cb_t cb) {
+			if (!uv_is_writable(reinterpret_cast<uv_stream_t*>(&m_readReq.stream))) {
+				if (cb)
+					cb(false, shared_from_this());
+
+				return;
+			}
+
 			auto cnt = pcbs.size();
-			if (cnt == 0) {
+			if (cnt == 0 || cnt > MAX_SLICE_COUNT) {
 				if (cb)
 					cb(false, shared_from_this());
 
@@ -196,7 +190,7 @@ namespace VK {
 #endif
 
 			int r = uv_write(&wr->req,
-			                 reinterpret_cast<uv_stream_t*>(&m_stream),
+			                 reinterpret_cast<uv_stream_t*>(&m_readReq.stream),
 			                 wr->uv_buf_array, static_cast<unsigned int>(cnt),
 			                 [](uv_write_t* req, int status) {
 				                 auto wr = reinterpret_cast<write_req_t*>(req);
@@ -247,6 +241,11 @@ namespace VK {
 				return;
 			}
 
+			if (cnt > MAX_SLICE_COUNT) {
+				close();
+				return;
+			}
+
 			m_pcbArray.push_back(pcb);
 			if (cnt == 1) {
 				// ×é°ü
@@ -256,6 +255,12 @@ namespace VK {
 				}
 
 				auto message = alloc_cbuf(totalLen);
+				if (message == nullptr) {
+					LOG_WARN("alloc_cbuf {} failed, so close the session.", totalLen);
+					close();
+					return;
+				}
+
 				for (auto p : m_pcbArray) {
 					message->write_binary(p->get_head_ptr(), p->get_len());
 				}
@@ -396,7 +401,7 @@ namespace VK {
 		void Session::stop_read() {
 			int r;
 
-			r = uv_read_stop(reinterpret_cast<uv_stream_t*>(&m_stream));
+			r = uv_read_stop(reinterpret_cast<uv_stream_t*>(&m_readReq.stream));
 			if (r) {
 				LOG_UV_ERR(r);
 			}
@@ -406,8 +411,8 @@ namespace VK {
 			auto greq = alloc_getaddr_req();
 			greq->cb = cb;
 
-			char device[32] = {0};
-			sprintf_s(device, "{%d}", port);
+			char service[32] = {0};
+			sprintf_s(service, "%d", port);
 
 			auto ret = uv_getaddrinfo(uv_default_loop(), &greq->req,
 			                          [](uv_getaddrinfo_t* req, int status, struct addrinfo* res) {
@@ -427,7 +432,7 @@ namespace VK {
 
 				                          uv_freeaddrinfo(res);
 				                          release_getaddr_req(greq);
-			                          }, host, device, nullptr/*&hints*/);
+			                          }, host, service, nullptr/*&hints*/);
 			if (ret) {
 				release_getaddr_req(greq);
 				LOG_UV_ERR(ret);
@@ -440,7 +445,7 @@ namespace VK {
 			int ret;
 
 			namelen = sizeof peerAddr;
-			ret = uv_tcp_getpeername(&m_stream, &peerAddr, &namelen);
+			ret = uv_tcp_getpeername(&m_readReq.stream, &peerAddr, &namelen);
 			if (ret) {
 				LOG_UV_ERR(ret);
 				return "";
@@ -465,7 +470,7 @@ namespace VK {
 			creq->session = shared_from_this();
 
 			r = uv_tcp_connect(&creq->req,
-			                   &m_stream,
+			                   &m_readReq.stream,
 			                   addr,
 			                   [](uv_connect_t* ct, int status) {
 				                   auto creq = reinterpret_cast<connect_req_t*>(ct);
@@ -533,19 +538,18 @@ namespace VK {
 			m_requestsPool.clear();
 
 			// close handle
-			auto creq = alloc_close_req();
-			creq->session = shared_from_this();
-			m_stream.data = creq;
-			uv_close(reinterpret_cast<uv_handle_t*>(&m_stream), [](uv_handle_t* stream) {
-				         auto creq = reinterpret_cast<close_req_t*>(stream->data);
-				         auto session = creq->session.lock();
-				         Logger::instance().debug("Session {} closed!", session->get_id());
+			// typedef void(*uv_close_cb)(uv_handle_t* handle);
+			uv_close(reinterpret_cast<uv_handle_t*>(&m_readReq.stream), [](uv_handle_t* handle) {
+				         auto req = reinterpret_cast<read_req_t*>(handle);
+				         auto session = req->session.lock();
+				         if (session != nullptr) {
+					         Logger::instance().debug("Session {} closed!", session->get_id());
 
-				         if (session->m_handler) {
-					         session->m_handler->on_closed(session);
+					         auto handler = session->get_handler();
+					         if (handler) {
+						         handler->on_closed(session);
+					         }
 				         }
-
-				         release_close_req(creq);
 			         });
 
 			return true;
@@ -562,7 +566,7 @@ namespace VK {
 						if (!cbuf->read<pack_size_t>(pack_desired_size))
 							return false;
 
-						if (pack_desired_size > MAX_PACKAGE_SIZE || pack_desired_size == 0) {
+						if (pack_desired_size > MAX_SINGLE_PACKAGE_SIZE || pack_desired_size == 0) {
 							Logger::instance().error("package much too huge : {} bytes", pack_desired_size);
 							pack_desired_size = 0;
 							return false;

@@ -19,6 +19,15 @@ namespace VK {
 	if	(m_daily)	\
 		m_daily->##level(fmt, args...);	\
 
+	enum LogLevel {
+		trace = 0,
+		debug = 1,
+		info = 2,
+		warn = 3,
+		err = 4,
+		critical = 5,
+		off = 6
+	};
 
 	//	ÈÕÖ¾µ¥Àý
 	class NET_EXPORT Logger {
@@ -27,7 +36,7 @@ namespace VK {
 		std::shared_ptr<spdlog::logger> m_daily;
 
 	public:
-		bool start(const char* path);
+		bool start(const char* path, LogLevel level = LogLevel::trace);
 		static void stop();
 
 		template <typename... Args>

@@ -7,7 +7,7 @@
 namespace VK {
 	const char* LOGGER_ROOT = "log";
 
-	bool Logger::start(const char* path) {
+	bool Logger::start(const char* path, LogLevel level) {
 		// 确保路径存在
 		auto items = std::move(split(const_cast<char*>(path), {'/', '\\'}));
 		if (items.empty()) {
@@ -28,7 +28,7 @@ namespace VK {
 		// 日志
 		try {
 			spdlog::set_pattern("[%T] [%t] [%l] %v");
-			spdlog::set_level(spdlog::level::trace);
+			spdlog::set_level(static_cast<spdlog::level::level_enum>(level));
 
 			// console
 			m_console = spdlog::stdout_color_mt("console");

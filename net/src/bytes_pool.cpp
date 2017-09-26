@@ -1,6 +1,7 @@
 #include "bytes_pool.h"
 #include "mem_pool.h"
 #include <stdexcept>
+#include <logger.h>
 
 namespace VK {
 	namespace Net {
@@ -14,6 +15,7 @@ namespace VK {
 		};
 
 #define MP(size) MemoryPool<bytes_t<size>>::instance()
+#define K 1024
 
 		char* BytesPool::alloc(cbuf_len_t size) {
 			// ¶ÔÆë
@@ -21,7 +23,6 @@ namespace VK {
 			switch (alignment) {
 				case 2:
 				case 4:
-				case 6:
 				case 8:
 				case 16:
 				case 32:
@@ -34,17 +35,20 @@ namespace VK {
 					return reinterpret_cast<char*>(MP(256).alloc());
 				case 512:
 					return reinterpret_cast<char*>(MP(512).alloc());
-				case 1024:
+				case K:
 					return reinterpret_cast<char*>(MP(1024).alloc());
-				case 2048:
-					return reinterpret_cast<char*>(MP(2048).alloc());
-				case 4096:
-					return reinterpret_cast<char*>(MP(4096).alloc());
-				case 8192:
-					return reinterpret_cast<char*>(MP(8192).alloc());
+				case 2 * K:
+					return reinterpret_cast<char*>(MP(2*K).alloc());
+				case 4 * K:
+					return reinterpret_cast<char*>(MP(4*K).alloc());
+				case 8 * K:
+					return reinterpret_cast<char*>(MP(8*K).alloc());
+				case 16 * K:
+					return reinterpret_cast<char*>(MP(16*K).alloc());
 
 				default:
-					throw std::runtime_error("BytesPool::alloc, invalid size!");
+					LOG_ERROR("Alloc cbuf failed : {} is much too huge than 16K.", size);
+					return nullptr;
 			}
 		}
 
@@ -67,14 +71,16 @@ namespace VK {
 					return MP(256).dealloc(reinterpret_cast<bytes_t<256>*>(buf));
 				case 512:
 					return MP(512).dealloc(reinterpret_cast<bytes_t<512>*>(buf));
-				case 1024:
-					return MP(1024).dealloc(reinterpret_cast<bytes_t<1024>*>(buf));
-				case 2048:
-					return MP(2048).dealloc(reinterpret_cast<bytes_t<2048>*>(buf));
-				case 4096:
-					return MP(4096).dealloc(reinterpret_cast<bytes_t<4096>*>(buf));
-				case 8192:
-					return MP(8192).dealloc(reinterpret_cast<bytes_t<8192>*>(buf));
+				case K:
+					return MP(K).dealloc(reinterpret_cast<bytes_t<K>*>(buf));
+				case 2 * K:
+					return MP(2*K).dealloc(reinterpret_cast<bytes_t<2 * K>*>(buf));
+				case 4 * K:
+					return MP(4*K).dealloc(reinterpret_cast<bytes_t<4 * K>*>(buf));
+				case 8 * K:
+					return MP(8*K).dealloc(reinterpret_cast<bytes_t<8 * K>*>(buf));
+				case 16 * K:
+					return MP(16*K).dealloc(reinterpret_cast<bytes_t<16 * K>*>(buf));
 
 				default:
 					throw std::runtime_error("BytesPool::dealloc_cbuf, invalid size!");

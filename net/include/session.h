@@ -16,7 +16,6 @@ namespace VK {
 		// represents a session between server and client
 		class NET_EXPORT Session final : public std::enable_shared_from_this<Session> {
 #pragma warning(pop)
-			friend class SubMgr;
 		public:
 			explicit Session(session_handler_ptr_t handler);
 			~Session();
@@ -24,12 +23,12 @@ namespace VK {
 			bool prepare();
 			bool close();
 
-			void connect(const char* ip, int port);
-			void connect_by_host(const char* host, int port);
-			
+			void connect(const char* ip_or_host, int port);
+
 			int get_id() const;
 			uv_tcp_t& get_stream();
 			cbuf_ptr_t get_read_cbuf() const;
+			session_handler_ptr_t get_handler() const;
 
 #pragma region("Message patterns")
 			// req/rep pattern
@@ -45,6 +44,13 @@ namespace VK {
 			// unsub
 			void unsub(const char * subject);
 #pragma endregion("Message patterns")
+			
+			// send data through underline stream
+			// donot call unless you know what you are doing...
+			template <typename ... Args>
+			void send(cbuf_ptr_t pcb, send_cb_t cb, Args ... args);
+			void send(cbuf_ptr_t pcb, send_cb_t cb);
+			void send(std::vector<cbuf_ptr_t>& pcbs, send_cb_t cb);
 
 			// post read request
 			// normally requested by a TcpServer
@@ -71,13 +77,7 @@ namespace VK {
 
 			// response
 			void on_response(serial_t serial, cbuf_ptr_t pcb);
-
-			// send data through underline stream
-			template <typename ... Args>
-			void send(cbuf_ptr_t pcb, send_cb_t cb, Args ... args);
-			void send(cbuf_ptr_t pcb, send_cb_t cb);
-			void send(std::vector<cbuf_ptr_t>& pcbs, send_cb_t cb);
-
+			
 			// 
 			bool enqueue_req(req_cb_t cb);
 
@@ -88,7 +88,7 @@ namespace VK {
 
 		private:
 			// underline uv stream
-			uv_tcp_t m_stream;
+			read_req_t m_readReq;
 			
 			// session id
 			// unique in current process

@@ -104,14 +104,17 @@ namespace VK {
 		void CircularBuf::reuse() {
 			m_head = m_reserved;
 			m_tail = m_reserved;
-			ZeroMemory(m_buf, m_capacity);
+
+			if (m_buf) {
+				ZeroMemory(m_buf, m_capacity);
+			}
 		}
 
 		bool CircularBuf::write(const char* str) {
 			auto len = strnlen(str, m_capacity - m_reserved - 1);
 			strncpy(get_head_ptr(), str, len);
 			move_tail(len);
-			
+
 			return write<byte_t>(0);
 		}
 
@@ -126,7 +129,11 @@ namespace VK {
 		}
 
 		cbuf_ptr_t alloc_cbuf(cbuf_len_t len) {
-			cbuf_ptr_t pcb(cbuf_pool_t::instance().alloc());
+			auto cbuf = cbuf_pool_t::instance().alloc();
+			if (cbuf == nullptr)
+				return nullptr;
+
+			cbuf_ptr_t pcb(cbuf);
 			pcb->reset(len);
 
 			return pcb;

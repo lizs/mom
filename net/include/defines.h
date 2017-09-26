@@ -21,7 +21,9 @@
 #define TRACK_MESSAGE_AS_BINARY true
 #define MONITOR_ENABLED true
 #define CBUF_RESERVED_SIZE 32
-#define MAX_PACKAGE_SIZE 1 * 1024
+#define MAX_SINGLE_PACKAGE_SIZE 1 * 1024
+#define MAX_SLICE_COUNT 16
+#define MAX_COMBINE_PACKAGE_SIZE MAX_SLICE_COUNT * MAX_SINGLE_PACKAGE_SIZE
 #define KEEP_ALIVE_INTERVAL 10 * 1000	// ms
 #define SESSION_EXPIRE_INTERVAL 60	// seconds
 #define SESSION_CHECK_INTERVAL 20 * 1000	// ms
@@ -30,7 +32,7 @@
 
 #define LOG_UV_ERR(code) \
 	if(code){\
-		VK::Logger::instance().debug("{} : {}", uv_err_name(code), uv_strerror(code));	\
+		VK::Logger::instance().error("{} : {}. {} : {}", uv_err_name(code), uv_strerror(code), __FILE__, __LINE__);	\
 	}
 
 #define ASSERT(expr)                                      \
@@ -214,25 +216,34 @@ enum NetError : error_no_t {
 
 #define alloc_write_req() alloc_req(write_req_t)
 #define release_write_req(req) release_req(write_req_t, req)
-typedef struct {
-	enum _ {
-		SliceCount = 10
-	};
+
+struct write_req_t {
 	uv_write_t req;
 	send_cb_t cb;
 	session_ptr_t session;
-	cbuf_ptr_t pcb_array[SliceCount];
-	uv_buf_t uv_buf_array[SliceCount];
+	cbuf_ptr_t pcb_array[MAX_SLICE_COUNT];
+	uv_buf_t uv_buf_array[MAX_SLICE_COUNT];
+
+	write_req_t() {
+		clear();
+	}
+
+	~write_req_t() {
+		clear();
+	}
+
 
 	void clear() {
-		//pcb_array.clear();
-		for (auto i = 0; i < SliceCount; ++i) {
-			pcb_array[i] = nullptr;
-		}
+		ZeroMemory(&req, sizeof(req));
+		ZeroMemory(uv_buf_array, sizeof(uv_buf_array));
 		cb = nullptr;
 		session = nullptr;
+
+		for (auto i = 0; i < MAX_SLICE_COUNT; ++i) {
+			pcb_array[i] = nullptr;
+		}
 	}
-} write_req_t;
+};
 
 #define alloc_connect_req() alloc_req(connect_req_t)
 #define release_connect_req(req) release_req(connect_req_t, req)
@@ -254,21 +265,20 @@ struct connect_req_t {
 	}
 };
 
-
-#define alloc_close_req() alloc_req(close_req_t)
-#define release_close_req(req) release_req(close_req_t, req)
-struct close_req_t {
+struct read_req_t {
+	uv_tcp_t stream;
 	session_wk_ptr_t session;
 
-	close_req_t() {
+	read_req_t() {
 		clear();
 	}
 
-	~close_req_t() {
+	~read_req_t() {
 		clear();
 	}
 
 	void clear() {
+		ZeroMemory(&stream, sizeof(stream));
 		session.reset();
 	}
 };

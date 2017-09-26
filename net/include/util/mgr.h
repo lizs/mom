@@ -90,12 +90,24 @@ namespace VK {
 		}
 
 		bool clear() {
-			for (auto & item : m_items) {
+			for (auto& item : m_items) {
 				EventRemoved(item.second);
 			}
 
 			m_items.clear();
 			return true;
+		}
+
+		void remove(std::function<bool(const key_t, const const_value_ref_t)> predicate) {
+			for (auto it = m_items.begin(); it != m_items.end();) {
+				if (predicate(it->first, it->second)) {
+					EventRemoved(it->second);
+					m_items.erase(it++);
+				}
+				else {
+					++it;
+				}
+			}
 		}
 
 		void remove(std::function<bool(const_value_ref_t)> predicate) {

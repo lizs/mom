@@ -18,8 +18,7 @@ namespace VK {
 		public:
 			TcpClient(const char* ip, int port,
 			          handler_ptr_t handle = nullptr,
-			          bool auto_reconnect_enabled = true,
-			          bool connect_by_host = true);
+			          bool auto_reconnect_enabled = true);
 			~TcpClient();
 			bool startup();
 			bool shutdown() const;
@@ -48,7 +47,6 @@ namespace VK {
 			Scheduler m_scheduler;
 
 			bool m_autoReconnect = true;
-			bool m_connectByHost = true;
 			int m_port;
 
 #pragma warning(push)

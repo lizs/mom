@@ -7,13 +7,10 @@ namespace VK {
 	namespace Net {
 		TcpClient::TcpClient(const char* host, int port,
 		                     handler_ptr_t handler,
-		                     bool auto_reconnect_enabled,
-		                     bool connect_by_host) : m_autoReconnect(auto_reconnect_enabled),
-		                                             m_connectByHost(connect_by_host),
-		                                             m_port(port), m_handler(handler),
-		                                             m_host(host),
-		                                             m_keepAliveTimerId(INVALID_TIMER_ID) {
-		}
+		                     bool auto_reconnect_enabled) : m_autoReconnect(auto_reconnect_enabled),
+		                                                    m_port(port), m_handler(handler),
+		                                                    m_host(host),
+		                                                    m_keepAliveTimerId(INVALID_TIMER_ID) { }
 
 		TcpClient::~TcpClient() {
 			m_session = nullptr;
@@ -28,12 +25,7 @@ namespace VK {
 			}
 
 			// conn
-			if(m_connectByHost) {
-				m_session->connect_by_host(m_host.c_str(), m_port);
-			}
-			else {
-				m_session->connect(m_host.c_str(), m_port);
-			}
+			m_session->connect(m_host.c_str(), m_port);
 			return true;
 		}
 
@@ -95,11 +87,11 @@ namespace VK {
 			}
 		}
 
-		void TcpClient::on_sub(session_ptr_t, const std::string &) {
+		void TcpClient::on_sub(session_ptr_t, const std::string&) {
 			Logger::instance().warn("TcpClient can't handle SUB.");
 		}
 
-		void TcpClient::on_unsub(session_ptr_t, const std::string &) {
+		void TcpClient::on_unsub(session_ptr_t, const std::string&) {
 			Logger::instance().warn("TcpClient can't handle UNSUB.");
 		}
 
@@ -108,12 +100,7 @@ namespace VK {
 			double_reonn_delay();
 
 			m_scheduler.invoke(m_reconnDelay, [this](any usr_data) {
-				                   if (m_connectByHost) {
-					                   m_session->connect_by_host(m_host.c_str(), m_port);
-				                   }
-				                   else {
-					                   m_session->connect(m_host.c_str(), m_port);
-				                   }
+				                   m_session->connect(m_host.c_str(), m_port);
 			                   });
 		}
 
@@ -139,7 +126,7 @@ namespace VK {
 		}
 
 		void TcpClient::sub(const char* sub) const {
-			m_session->sub(sub);			
+			m_session->sub(sub);
 		}
 
 		void TcpClient::unsub(const char* sub) const {

@@ -9,7 +9,7 @@ namespace VK {
 			MemoryPool<CircularBuf>::instance();
 			MemoryPool<write_req_t>::instance();
 
-			MemoryPool<close_req_t>::instance();
+			//MemoryPool<close_req_t>::instance();
 			MemoryPool<connect_req_t>::instance();
 			MemoryPool<getaddr_req_t>::instance();
 

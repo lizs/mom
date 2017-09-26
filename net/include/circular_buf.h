@@ -181,7 +181,7 @@ namespace VK {
 			if (!pcb->write_head(args...))
 				return ret;
 
-			cbuf_len_t limit = MAX_PACKAGE_SIZE - sizeof(byte_t);
+			cbuf_len_t limit = MAX_SINGLE_PACKAGE_SIZE - sizeof(byte_t);
 			if (pcb->get_len() > limit) {
 				// multi
 				auto cnt = pcb->get_len() / limit;
@@ -191,6 +191,10 @@ namespace VK {
 
 				if (cnt == 1)
 					goto Single;
+
+				if (cnt > MAX_SLICE_COUNT) {
+					return ret;
+				}
 
 				for (auto i = 0; i < cnt; ++i) {
 					cbuf_ptr_t slice;

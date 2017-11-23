@@ -1,7 +1,9 @@
 // author : lizs
 // 2017.2.22
 
-#pragma once
+#ifndef MOM_TCP_CLIENT_H
+#define MOM_TCP_CLIENT_H
+
 #include <functional>
 #include <chrono>
 #include "defines.h"
@@ -11,7 +13,7 @@
 namespace VK {
 	namespace Net {
 
-		class NET_EXPORT TcpClient final : public ISessionHandler, public std::enable_shared_from_this<ISessionHandler> {
+		class NET_EXPORT TcpClient final : public IPeerHandler, public std::enable_shared_from_this<IPeerHandler> {
 			const uint64_t MAX_RECONN_DELAY = 32000;
 			const uint64_t DEFAULT_RECONN_DELAY = 1000;
 
@@ -61,3 +63,5 @@ namespace VK {
 		};
 	}
 }
+
+#endif

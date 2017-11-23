@@ -1,5 +1,8 @@
 // lizs 2017.3.11
-#pragma once
+
+#ifndef MOM_SIGNAL_H
+#define MOM_SIGNAL_H
+
 #include <functional>
 #include <map>
 
@@ -52,3 +55,5 @@ namespace VK {
 		connector_id_t m_seed = 0;
 	};
 }
+
+#endif

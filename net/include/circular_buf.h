@@ -1,6 +1,8 @@
 // author : lizs
 // 2017.2.21
-#pragma once
+#ifndef MOM_CIRCULAR_BUF_H
+#define MOM_CIRCULAR_BUF_H
+
 #include <exception>
 #include <vector>
 #include "defines.h"
@@ -40,7 +42,7 @@ namespace VK {
 			cbuf_len_t get_tail() const;
 
 			void arrange();
-			
+
 			template <typename T>
 			void reset();
 			void reset(cbuf_len_t size = 0, cbuf_len_t reserved_size = CBUF_RESERVED_SIZE);
@@ -171,7 +173,6 @@ namespace VK {
 			return alloc_cbuf(sizeof(T));
 		}
 
-		// ´ò°ü
 		template <typename ... Args>
 		static std::vector<cbuf_ptr_t> pack(cbuf_ptr_t pcb, Args ... args) {
 			auto ret = std::vector<cbuf_ptr_t>();
@@ -188,9 +189,6 @@ namespace VK {
 				auto lastLen = pcb->get_len() % limit;
 				if (lastLen != 0)
 					++cnt;
-
-				if (cnt == 1)
-					goto Single;
 
 				if (cnt > MAX_SLICE_COUNT) {
 					return ret;
@@ -216,20 +214,19 @@ namespace VK {
 
 				return ret;
 			}
-			else {
-			Single:
-				// single
-				if (!pcb->write_head<byte_t>(1))
-					return ret;
 
-				if (!pcb->write_head<pack_size_t>(pcb->get_len()))
-					return ret;
+			// single
+			if (!pcb->write_head<byte_t>(1))
+				return ret;
 
-				ret.push_back(pcb);
-			}
+			if (!pcb->write_head<pack_size_t>(pcb->get_len()))
+				return ret;
 
+			ret.push_back(pcb);
 			return std::move(ret);
 		}
 #pragma endregion
 	}
 }
+
+#endif

@@ -1,8 +1,9 @@
 // author : lizs
 // 2017.2.22
-#pragma once
+#ifndef MOM_NET_H
+#define MOM_NET_H
 
-// net模块所有头文件
+// includes
 #include "watch.h"
 #include "logger.h"
 
@@ -27,3 +28,4 @@
 #include "util/file.h"
 #include "util/mgr.h"
 #include "util/str.h"
+#endif

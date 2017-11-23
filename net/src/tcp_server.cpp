@@ -62,26 +62,6 @@ namespace VK {
 			return true;
 		}
 
-		void TcpServer::pub(const std::string& subject, cbuf_ptr_t pcb) {
-			m_subjects.pub(subject, pcb);
-		}
-
-		void TcpServer::sub(const std::string& subject, session_ptr_t session) {
-			m_subjects.add(subject, session);
-		}
-
-		void TcpServer::unsub(const std::string& subject) {
-			m_subjects.remove(subject);
-		}
-
-		void TcpServer::unsub(session_ptr_t session) {
-			m_subjects.remove(session);
-		}
-
-		void TcpServer::unsub(const std::string& subject, session_ptr_t session) {
-			m_subjects.remove(subject, session);
-		}
-
 		void TcpServer::establish() {
 			// make session
 			auto session = std::make_shared<Session>(shared_from_this());
@@ -108,6 +88,10 @@ namespace VK {
 
 			// post first read request
 			session->post_read_req();
+		}
+
+		SubMgr& TcpServer::get_sub_mgr() {
+			return m_subjects;
 		}
 
 		void TcpServer::on_sub(session_ptr_t session, const std::string& subject) {

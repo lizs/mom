@@ -84,9 +84,6 @@
     <ClInclude Include="include\logger.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\ipeer.h">
-      <Filter>头文件\net</Filter>
-    </ClInclude>
     <ClInclude Include="include\ihandler.h">
       <Filter>头文件\net</Filter>
     </ClInclude>

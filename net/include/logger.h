@@ -1,5 +1,8 @@
 // lizs 2017.6.14
-#pragma once
+
+#ifndef MOM_LOGGER_H
+#define MOM_LOGGER_H
+
 #include "singleton.h"
 #include  <spdlog/logger.h>
 
@@ -19,6 +22,7 @@ namespace VK {
 	if	(m_daily)	\
 		m_daily->##level(fmt, args...);	\
 
+
 	enum LogLevel {
 		trace = 0,
 		debug = 1,
@@ -29,7 +33,7 @@ namespace VK {
 		off = 6
 	};
 
-	//	ÈÕÖ¾µ¥Àý
+	//	singleton of logger
 	class NET_EXPORT Logger {
 		SINGLETON(Logger)
 		std::shared_ptr<spdlog::logger> m_console;
@@ -65,3 +69,5 @@ namespace VK {
 		}
 	};
 }
+
+#endif

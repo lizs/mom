@@ -2,10 +2,12 @@
 #include <list>
 #include "singleton.h"
 
+#ifndef MOM_MEM_POOL_H
+#define MOM_MEM_POOL_H
+
 namespace VK {
 	namespace Net {
-		// 内存池
-		// 本池中的T数量不超过Capacity
+		// item pool
 		template <typename T, size_t Capacity>
 		class MemoryPool {
 			SINGLETON(MemoryPool)
@@ -35,6 +37,8 @@ namespace VK {
 
 				auto slot = reinterpret_cast<Slot*>(malloc(sizeof(Slot)));
 				slot->next = nullptr;
+
+				// construct
 				new(&slot->element) T(args...);
 
 				return &slot->element;
@@ -59,3 +63,5 @@ namespace VK {
 		};
 	}
 }
+
+#endif

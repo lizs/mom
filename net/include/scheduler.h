@@ -1,7 +1,9 @@
 // author : lizs
 // 2017.2.22
 
-#pragma once
+#ifndef MOM_SCHEDULER_H
+#define MOM_SCHEDULER_H
+
 #include <functional>
 #include <map>
 #include "defines.h"
@@ -19,6 +21,7 @@ namespace VK {
 			typedef std::function<void(any)> timer_cb_t;
 
 			Scheduler() : m_seed(INVALID_TIMER_ID) {}
+
 			~Scheduler();
 
 			timer_id_t invoke(timer_period_t delay, timer_cb_t cb);
@@ -47,3 +50,4 @@ namespace VK {
 	}
 }
 
+#endif

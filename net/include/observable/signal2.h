@@ -1,10 +1,12 @@
 // lizs 2017.3.4
-#pragma once
+
+#ifndef MOM_SIGNAL2_H
+#define MOM_SIGNAL2_H
 
 #include <list>
 #include "slot.h"
 
-// 参考delegate实现
+// refer to delegate
 namespace VK {
 #pragma region("Macros")
 #define SIGNAL_IMP \
@@ -33,11 +35,11 @@ private:\
 	std::list<slot_t> m_slots;
 #pragma endregion ("Macros")
 
-	// 泛型
+	// generic
 	template <typename T>
 	class Signal2;
 
-	// 普通方法特化
+	// function specialize
 	template <typename R, typename... Params>
 	class Signal2<R(*)(Params ...)> {
 	public:
@@ -45,7 +47,7 @@ private:\
 		SIGNAL_IMP
 	};
 
-	// 成员方法特化
+	// member method specialize
 	template <typename T, typename R, typename... Params>
 	class Signal2<R(T::*)(Params ...)> {
 	public:
@@ -53,3 +55,5 @@ private:\
 		SIGNAL_IMP
 	};
 }
+
+#endif

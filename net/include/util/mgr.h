@@ -1,5 +1,8 @@
 // lizs 2017.6.8
-#pragma once
+
+#ifndef MOM_MGR_H
+#define MOM_MGR_H
+
 #include <functional>
 #include <vector>
 #include <map>
@@ -179,7 +182,7 @@ namespace VK {
 		}
 
 		value_ref_t operator[](const_key_ref_t id) {
-			if(contains(id)) {
+			if (contains(id)) {
 				return m_items[id];
 			}
 
@@ -214,3 +217,5 @@ namespace VK {
 		std::map<key_t, value_t> m_items;
 	};
 }
+
+#endif

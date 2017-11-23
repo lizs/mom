@@ -1,7 +1,9 @@
 // author : lizs
 // 2017.2.22
 
-#pragma once
+#ifndef MOM_SESSION_H
+#define MOM_SESSION_H
+
 #include <functional>
 #include <map>
 #include "defines.h"
@@ -116,7 +118,7 @@ namespace VK {
 			// handler
 			session_handler_ptr_t m_handler;
 
-			// 大包组包
+			// huge package slices
 			std::vector<cbuf_ptr_t> m_pcbArray;
 
 			// request pool
@@ -145,3 +147,5 @@ namespace VK {
 		}
 	}
 }
+
+#endif

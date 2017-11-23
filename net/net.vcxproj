@@ -161,7 +161,6 @@
     <ClInclude Include="include\data\any.h" />
     <ClInclude Include="include\data\value.h" />
     <ClInclude Include="include\ihandler.h" />
-    <ClInclude Include="include\ipeer.h" />
     <ClInclude Include="include\logger.h" />
     <ClInclude Include="include\mem_pool.h" />
     <ClInclude Include="include\defines.h" />

@@ -1,6 +1,8 @@
 // lizs 2017.6.17
 #pragma once
-#include "defines.h"
+
+#ifndef MOM_IHANDLER_H
+#define MOM_IHANDLER_H
 
 namespace VK {
 	namespace Net {
@@ -15,9 +17,9 @@ namespace VK {
 			virtual void on_closed(session_ptr_t) = 0;
 		};
 
-		struct ISessionHandler : public IHandler {
+		struct IPeerHandler : public IHandler {
 		protected:
-			virtual ~ISessionHandler() {}
+			virtual ~IPeerHandler() {}
 
 		public:
 			virtual void on_sub(session_ptr_t, const std::string&) = 0;
@@ -25,3 +27,5 @@ namespace VK {
 		};
 	}
 }
+
+#endif

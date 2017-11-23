@@ -1,6 +1,7 @@
 // author : lizs
 // 2017.2.22
-#pragma once
+#ifndef MOM_DEFINES_H
+#define MOM_DEFINES_H
 
 #ifdef LINK_NET_DYN
 #ifdef INSIDE_NET
@@ -144,21 +145,21 @@ namespace VK {
 		class Session;
 		class CircularBuf;
 		class Monitor;
-		struct ISessionHandler;
+		struct IPeerHandler;
 		struct IHandler;
 
-		template<typename T, size_t Capacity = 1024>
+		template <typename T, size_t Capacity = 1024>
 		class MemoryPool;
 	}
 
-	template<typename T>
+	template <typename T>
 	class _singleton_;
 }
 
 typedef VK::Net::Session session_t;
 typedef std::shared_ptr<VK::Net::Session> session_ptr_t;
 typedef std::weak_ptr<VK::Net::Session> session_wk_ptr_t;
-typedef std::shared_ptr<VK::Net::ISessionHandler> session_handler_ptr_t;
+typedef std::shared_ptr<VK::Net::IPeerHandler> session_handler_ptr_t;
 typedef std::shared_ptr<VK::Net::IHandler> handler_ptr_t;
 
 typedef VK::Net::CircularBuf cbuf_t;
@@ -247,6 +248,7 @@ struct write_req_t {
 
 #define alloc_connect_req() alloc_req(connect_req_t)
 #define release_connect_req(req) release_req(connect_req_t, req)
+
 struct connect_req_t {
 	uv_connect_t req;
 	session_wk_ptr_t session;
@@ -285,6 +287,7 @@ struct read_req_t {
 
 #define alloc_shutdown_req() alloc_req(shutdown_req_t)
 #define release_shutdown_req(req) release_req(shutdown_req_t, req)
+
 struct shutdown_req_t {
 	uv_shutdown_t req;
 	session_wk_ptr_t session;
@@ -307,6 +310,7 @@ struct shutdown_req_t {
 
 #define alloc_getaddr_req() alloc_req(getaddr_req_t)
 #define release_getaddr_req(req) release_req(getaddr_req_t, req)
+
 struct getaddr_req_t {
 	uv_getaddrinfo_t req;
 	std::function<void(bool, sockaddr*)> cb;
@@ -326,3 +330,5 @@ struct getaddr_req_t {
 };
 
 #pragma endregion 
+
+#endif

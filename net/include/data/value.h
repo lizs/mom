@@ -1,13 +1,15 @@
 // lizs 2017.3.11
-#pragma once
+#ifndef MOM_VALUE_H
+#define MOM_VALUE_H
+
 #include "observable/signal.h"
 #include "any.h"
 
 namespace VK {
 	typedef uint16_t val_id_t;
 
-	// 值
-	// 基于Signal实现
+	// Value
+	// Based on signal
 	class Value {
 		val_id_t m_id;
 		any m_val;
@@ -25,7 +27,7 @@ namespace VK {
 		template <typename ValueType>
 		explicit Value(val_id_t id, ValueType&& Value)
 			: m_id(id), m_val(std::forward<ValueType&&>(Value)) { }
-		
+
 		template <class ValueType>
 		Value& operator=(ValueType&& val) {
 			if (m_val.type() != typeid(val))
@@ -69,3 +71,5 @@ namespace VK {
 		}
 	};
 }
+
+#endif

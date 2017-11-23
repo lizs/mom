@@ -1,16 +1,18 @@
 // lizs 2017.3.11
-#pragma once
+#ifndef MOM_PROPERTY_H
+#define MOM_PROPERTY_H
+
 #include "observable/signal.h"
 #include "value.h"
 #include <memory>
 
 namespace VK {
-	// 属性包
+	// Values package
 	class Property {
 	public:
 		typedef Value::slot_t slot_t;
-		
-		template<typename T>
+
+		template <typename T>
 		bool add(val_id_t pid, const T& value) {
 			auto it = m_values.find(pid);
 			if (it != m_values.end())
@@ -32,7 +34,7 @@ namespace VK {
 			return true;
 		}
 
-		template<typename T>
+		template <typename T>
 		void set(val_id_t pid, const T& value) {
 			auto it = m_values.find(pid);
 			if (it == m_values.end())return;
@@ -87,8 +89,10 @@ namespace VK {
 		}
 
 		std::map<val_id_t, std::shared_ptr<Value>> m_values;
-		// 包内所有属性监听
+		// subscribers for any changes in this package
 		std::map<connector_id_t, slot_t> m_subscribers;
 		connector_id_t m_seed = INVALID_CONNECTOR_ID;
 	};
 }
+
+#endif

@@ -1,5 +1,8 @@
 // 2017/3/11
-#pragma once
+
+#ifndef MOM_WATCH_H
+#define MOM_WATCH_H
+
 #include <chrono>
 #include "defines.h"
 
@@ -31,3 +34,5 @@ namespace VK {
 		clock::time_point m_end;
 	};
 }
+
+#endif

@@ -1,5 +1,6 @@
 # pragma once
-// 从boost/any.h移植，用标准库替代实现
+// ported from boost/any.h
+// implemented with STL
 #include <algorithm>
 #include <typeinfo>
 

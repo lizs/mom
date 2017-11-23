@@ -1,4 +1,6 @@
-#pragma once
+
+#ifndef MOM_SLOT_H
+#define MOM_SLOT_H
 
 // lizs 2017.3.4
 // ²Î¿¼
@@ -118,3 +120,5 @@ namespace VK {
 		return slot<T>(func);
 	}
 } // namespace slot
+
+#endif

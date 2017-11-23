@@ -1,14 +1,16 @@
 // author : lizs
 // 2017.2.22
 
-#pragma once
+#ifndef MOM_SESSION_MGR_H
+#define MOM_SESSION_MGR_H
+
 #include <map>
 #include "defines.h"
 #include "scheduler.h"
 
 namespace VK {
-	namespace Net {		
-		class TcpServer;	
+	namespace Net {
+		class TcpServer;
 		class Session;
 		class CircularBuf;
 
@@ -36,3 +38,5 @@ namespace VK {
 		};
 	}
 }
+
+#endif

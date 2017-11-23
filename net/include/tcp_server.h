@@ -1,7 +1,8 @@
 // author : lizs
 // 2017.2.22
 
-#pragma once
+#ifndef MOM_TCP_SERVER_H
+#define MOM_TCP_SERVER_H
 
 #include "defines.h"
 #include "scheduler.h"
@@ -13,7 +14,7 @@
 namespace VK {
 	namespace Net {
 
-		class NET_EXPORT TcpServer final : public ISessionHandler, public std::enable_shared_from_this<ISessionHandler> {
+		class NET_EXPORT TcpServer final : public IPeerHandler, public std::enable_shared_from_this<IPeerHandler> {
 		public:
 			~TcpServer() {}
 
@@ -21,20 +22,12 @@ namespace VK {
 
 			bool startup();
 			bool shutdown();
-
-			// 发布
-			void pub(const std::string& subject, cbuf_ptr_t pcb);
-			// 订阅
-			void sub(const std::string& subject, session_ptr_t session);
-			// 清空主题
-			void unsub(const std::string& subject);
-			// 取消该会话的所有订阅
-			void unsub(session_ptr_t session);
-			// 取消某个主题的订阅
-			void unsub(const std::string& subject, session_ptr_t session);
-
-			// 建立会话
+						
+			// establish an session
 			void establish();
+
+			// get subjects manager
+			SubMgr& get_sub_mgr();
 
 		protected:
 			void on_connected(bool success, session_ptr_t session) override;
@@ -61,3 +54,5 @@ namespace VK {
 		};
 	}
 }
+
+#endif

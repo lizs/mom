@@ -3,6 +3,9 @@
 #include "scheduler.h"
 #include "logger.h"
 
+#ifndef MOM_MONITOR_H
+#define MOM_MONITOR_H
+
 namespace VK {
 	namespace Net {
 		class NET_EXPORT Monitor {
@@ -96,3 +99,5 @@ namespace VK {
 			  m_wroted(0), m_pending(0), m_pcbCount(0), m_timerID(INVALID_TIMER_ID) { }
 	}
 }
+
+#endif

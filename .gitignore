@@ -42,3 +42,5 @@ Obj/
 *.exe
 *.out
 *.app
+publish/net.lib
+publish/*.pdb

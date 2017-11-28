@@ -38,6 +38,7 @@ namespace VK {
 		private:
 			void on_sub(session_ptr_t session, const std::string& subject) override;
 			void on_unsub(session_ptr_t session, const std::string& subject) override;
+			void on_pub(session_ptr_t session, const std::string& subject, cbuf_ptr_t pcb) override;
 			static void connection_cb(uv_stream_t* server, int status);
 
 			uv_tcp_t m_server;

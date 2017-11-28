@@ -44,6 +44,7 @@ namespace VK {
 			void on_closed(session_ptr_t) override;
 			void on_sub(session_ptr_t, const std::string&) override;
 			void on_unsub(session_ptr_t, const std::string&) override;
+			void on_pub(session_ptr_t session, const std::string& subject, cbuf_ptr_t pcb) override;
 
 		private:
 			Scheduler m_scheduler;

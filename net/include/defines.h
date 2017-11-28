@@ -191,6 +191,7 @@ enum Pattern : pattern_t {
 	Pong,
 	Sub,
 	Unsub,
+	Pub
 };
 
 enum NetError : error_no_t {

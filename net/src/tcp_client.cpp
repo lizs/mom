@@ -95,6 +95,10 @@ namespace VK {
 			Logger::instance().warn("TcpClient can't handle UNSUB.");
 		}
 
+		void TcpClient::on_pub(session_ptr_t session, const std::string& subject, cbuf_ptr_t pcb) {
+			Logger::instance().warn("TcpClient can't handle PUB.");
+		}
+
 		void TcpClient::reconnect() {
 			m_session->prepare();
 			double_reonn_delay();

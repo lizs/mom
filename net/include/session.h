@@ -45,6 +45,12 @@ namespace VK {
 			void sub(const char * subject);
 			// unsub
 			void unsub(const char * subject);
+			// pub
+			void pub(const char * subject, cbuf_ptr_t pcb);
+			// pub
+			void pub(cbuf_ptr_t pcb);
+			// pub
+			void pub(const char * subject);
 #pragma endregion("Message patterns")
 			
 			// send data through underline stream

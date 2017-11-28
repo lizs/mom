@@ -24,6 +24,7 @@ namespace VK {
 		public:
 			virtual void on_sub(session_ptr_t, const std::string&) = 0;
 			virtual void on_unsub(session_ptr_t, const std::string&) = 0;
+			virtual void on_pub(session_ptr_t, const std::string&, cbuf_ptr_t) = 0;
 		};
 	}
 }

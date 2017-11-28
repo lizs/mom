@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
 				run_client_test(1);
 		}
 		else if (strcmp(argv[1], "server") == 0) {
-			run_server_test();
+			run_server();
 		}
 	}
 

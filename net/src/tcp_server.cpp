@@ -102,6 +102,10 @@ namespace VK {
 			m_subjects.remove(subject, session);
 		}
 
+		void TcpServer::on_pub(session_ptr_t session, const std::string& subject, cbuf_ptr_t pcb) {
+			m_subjects.pub(subject, pcb);
+		}
+
 		void TcpServer::on_connected(bool success, session_ptr_t session) {
 			if (m_handler) {
 				m_handler->on_connected(success, session);

@@ -114,6 +114,30 @@ namespace VK {
 			}
 		}
 
+		// todo lizs
+		// memory copy
+		void Session::pub(const char* subject, cbuf_ptr_t pcb) {
+			auto len = strlen(subject);
+			auto _ = alloc_cbuf(len + 1 + pcb->get_len());
+			if (_->write(subject) && _->write_binary(pcb->get_head_ptr(), pcb->get_len())) {
+				send(_, nullptr, static_cast<pattern_t>(Pub));
+			}
+		}
+
+		// pcb already contains subject 
+		void Session::pub(cbuf_ptr_t pcb) {
+			send(pcb, nullptr, static_cast<pattern_t>(Pub));
+		}
+
+		// pub subject without data
+		void Session::pub(const char* subject) {
+			auto len = strlen(subject);
+			auto pcb = alloc_cbuf(len + 1);
+			if (pcb->write(pcb)) {
+				send(pcb, nullptr, static_cast<pattern_t>(Pub));
+			}
+		}
+
 		time_t Session::get_elapsed_since_last_response() const {
 			return time(nullptr) - m_lastResponseTime;
 		}
@@ -346,6 +370,8 @@ namespace VK {
 
 				case Sub: {
 					if (m_handler) {
+						// append \0
+						pcb->write(static_cast<byte>(0));
 						m_handler->on_sub(shared_from_this(), pcb->get_head_ptr());
 					}
 					break;
@@ -353,7 +379,21 @@ namespace VK {
 
 				case Unsub: {
 					if (m_handler) {
+						// append \0
+						pcb->write(static_cast<byte>(0));
 						m_handler->on_unsub(shared_from_this(), pcb->get_head_ptr());
+					}
+					break;
+				}
+
+				case Pub: {
+					if (m_handler) {
+						// subject
+						const char * subject = pcb->get_head_ptr();
+						auto len = strnlen(subject, pcb->get_len());
+
+						pcb->move_head(len == pcb->get_len() ? len : len + 1);
+						m_handler->on_pub(shared_from_this(), subject, pcb);
 					}
 					break;
 				}

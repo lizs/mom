@@ -2,23 +2,39 @@
     'targets':[
         {
             'target_name':'libnet',
-            'type':'<(net_library',
+            'type':'static_library',
             'include_dirs':[
                 'include',
                 'src',
+		'../third/libuv/include',
+		'../third/spdlog/include',
             ],
             'sources':[
-                'bytes_pool.cpp',
-                'circular_buf.cpp',
-                'file.cpp',
-                'logger.cpp',
-                'scheduler.cpp',
-                'session_mgr.cpp',
-                'session.cpp',
-                'str.cpp',
-                'tcp_client.cpp',
-                'tcp_server.cpp'
-            ]
+                'src/bytes_pool.cpp',
+                'src/circular_buf.cpp',
+                'src/file.cpp',
+                'src/logger.cpp',
+                'src/scheduler.cpp',
+                'src/session_mgr.cpp',
+                'src/session.cpp',
+                'src/str.cpp',
+                'src/tcp_client.cpp',
+                'src/tcp_server.cpp'
+            ],
+            'conditions':[  
+              ['OS=="win"',
+                {  
+                    'cflags':[],  
+                    'ldflags':[]  
+                },
+                {  
+                    'cflags':[  
+                        '--std=c++11',  
+                    ],  
+                    'ldflags':[]  
+                }  
+              ],  
+            ]  
         }
     ]
 }

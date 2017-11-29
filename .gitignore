@@ -1,46 +1,4 @@
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.obj
-
-*.suo
-*.VC.VC.opendb
-*.VC.db
-*.sln.DotSettings.user
-*.vcxproj.user
-*.vsp
-*.psess
-
-Debug/
-Release/
-x64/
-Obj/
-.svn/
+*.mk
+*.Makefile
+Makefile
 *.lib
-
-# Executables
-*.exe
-*.out
-*.app
-publish/net.lib
-publish/*.pdb

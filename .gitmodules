@@ -1,0 +1,6 @@
+[submodule "third/libuv"]
+	path = third/libuv
+	url = https://github.com/libuv/libuv.git
+[submodule "third/spdlog"]
+	path = third/spdlog
+	url = https://github.com/gabime/spdlog.git

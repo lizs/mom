@@ -1,0 +1,24 @@
+{
+    'targets':[
+        {
+            'target_name':'libnet',
+            'type':'<(net_library',
+            'include_dirs':[
+                'include',
+                'src',
+            ],
+            'sources':[
+                'bytes_pool.cpp',
+                'circular_buf.cpp',
+                'file.cpp',
+                'logger.cpp',
+                'scheduler.cpp',
+                'session_mgr.cpp',
+                'session.cpp',
+                'str.cpp',
+                'tcp_client.cpp',
+                'tcp_server.cpp'
+            ]
+        }
+    ]
+}

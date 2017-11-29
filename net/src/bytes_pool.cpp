@@ -5,10 +5,10 @@
 
 namespace VK {
 	namespace Net {
-		template <cbuf_len_t Capacity>
+		template <cbuf_len_t Cap>
 		struct bytes_t {
 			enum _ {
-				Capacity = Capacity,
+				Capacity = Cap,
 			};
 
 			char bytes[Capacity];

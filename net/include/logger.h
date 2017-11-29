@@ -45,27 +45,27 @@ namespace VK {
 
 		template <typename... Args>
 		void trace(const char* fmt, const Args&... args) {
-			_LOG_(trace, fmt, args...);
+			//_LOG_(trace, fmt, args...);
 		}
 
 		template <typename... Args>
 		void debug(const char* fmt, const Args&... args) {
-			_LOG_(debug, fmt, args...);
+			//_LOG_(debug, fmt, args...);
 		}
 
 		template <typename... Args>
 		void info(const char* fmt, const Args&... args) {
-			_LOG_(info, fmt, args...);
+			//_LOG_(info, fmt, args...);
 		}
 
 		template <typename... Args>
 		void warn(const char* fmt, const Args&... args) {
-			_LOG_(warn, fmt, args...);
+			//_LOG_(warn, fmt, args...);
 		}
 
 		template <typename... Args>
 		void error(const char* fmt, const Args&... args) {
-			_LOG_(error, fmt, args...);
+			//_LOG_(error, fmt, args...);
 		}
 	};
 }

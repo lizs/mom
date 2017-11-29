@@ -7,7 +7,7 @@
 
 namespace VK {
 #define SINGLETON(T) \
-		friend class std::_Ref_count_obj<T>; \
+		friend class std::shared_ptr<T>; \
 	public:\
 		static T& instance() {	\
 			static std::shared_ptr<T> _ins;\
@@ -16,13 +16,13 @@ namespace VK {
 			}\
 			return *_ins;	\
 	}\
-	private:	\
+	//private:	\
 		T() = default;\
 		~T() = default;
 
 
 #define CUSTOM_SINGLETON(T) \
-		friend class std::_Ref_count_obj<T>; \
+		friend class std::shared_ptr<T>; \
 	public:\
 		static T& instance() {	\
 			static std::shared_ptr<T> _ins;\
@@ -31,7 +31,7 @@ namespace VK {
 			}\
 			return *_ins;	\
 	}\
-	private:	\
+	//private:	\
 		T();\
 		~T() = default;
 }

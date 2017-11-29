@@ -1,4 +1,2 @@
-*.mk
-*.Makefile
-Makefile
-*.lib
+publish/*.lib
+.vscode/

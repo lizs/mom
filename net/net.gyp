@@ -6,8 +6,8 @@
             'include_dirs':[
                 'include',
                 'src',
-		'../third/libuv/include',
-		'../third/spdlog/include',
+                '../third/libuv/include',
+                '../third/spdlog/include',
             ],
             'sources':[
                 'src/bytes_pool.cpp',

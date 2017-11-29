@@ -2,7 +2,6 @@
 // ported from boost/any.h
 // implemented with STL
 #include <algorithm>
-#include <typeinfo>
 
 namespace VK {
 	// template class disable_if

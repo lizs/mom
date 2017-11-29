@@ -4,6 +4,8 @@ publish/*.lib
 *.opendb
 *.db
 *.vcxproj.user
+*.vcxproj
+*.vcxproj.filters
 
 x64/
 .vs/

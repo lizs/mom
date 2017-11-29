@@ -30,8 +30,8 @@ namespace VK {
 			}\
 			return *_ins;	\
 	}\
-	T() = default;\
-	~T() = default;
+	T();\
+	~T(){};
 }
 
 #endif

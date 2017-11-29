@@ -1,6 +1,7 @@
 {
     'targets':[
         {
+            # libnet
             'target_name':'libnet',
             'type':'static_library',
             'include_dirs':[
@@ -20,9 +21,9 @@
                 'src/str.cpp',
                 'src/tcp_client.cpp',
                 'src/tcp_server.cpp'
-            ],
+            ] 
             'conditions':[  
-              ['OS=="win"',
+                ['OS=="win"',
                 {  
                     'cflags':[],  
                     'ldflags':[]  
@@ -33,7 +34,7 @@
                     ],  
                     'ldflags':[]  
                 }  
-              ],  
+                ],  
             ]  
         }
     ]

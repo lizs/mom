@@ -206,7 +206,7 @@ namespace VK {
 		}
 
 		bool contains(std::function<bool(const_value_ref_t)> predicate) {
-			auto it = std::find_if(m_items.begin(), m_items.end(), [](auto it) {
+			auto it = std::find_if(m_items.begin(), m_items.end(), [predicate](auto it) {
 				                       return predicate(it->second);
 			                       });
 

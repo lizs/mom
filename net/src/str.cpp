@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <sstream>
+#include <algorithm>
 #include "util/str.h"
 
 namespace VK {

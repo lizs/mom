@@ -372,7 +372,7 @@ namespace VK {
 				case Sub: {
 					if (m_handler) {
 						// append \0
-						pcb->write(static_cast<byte>(0));
+						pcb->write(static_cast<byte_t>(0));
 						m_handler->on_sub(shared_from_this(), pcb->get_head_ptr());
 					}
 					break;
@@ -381,7 +381,7 @@ namespace VK {
 				case Unsub: {
 					if (m_handler) {
 						// append \0
-						pcb->write(static_cast<byte>(0));
+						pcb->write(static_cast<byte_t>(0));
 						m_handler->on_unsub(shared_from_this(), pcb->get_head_ptr());
 					}
 					break;
@@ -453,7 +453,7 @@ namespace VK {
 			greq->cb = cb;
 
 			char service[32] = {0};
-			sprintf_s(service, "%d", port);
+			sprintf(service, "%d", port);
 
 			auto ret = uv_getaddrinfo(uv_default_loop(), &greq->req,
 			                          [](uv_getaddrinfo_t* req, int status, struct addrinfo* res) {

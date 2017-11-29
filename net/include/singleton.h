@@ -16,9 +16,8 @@ namespace VK {
 			}\
 			return *_ins;	\
 	}\
-	//private:	\
-		T() = default;\
-		~T() = default;
+	T() = default;\
+	~T() = default;
 
 
 #define CUSTOM_SINGLETON(T) \
@@ -31,9 +30,8 @@ namespace VK {
 			}\
 			return *_ins;	\
 	}\
-	//private:	\
-		T();\
-		~T() = default;
+	T() = default;\
+	~T() = default;
 }
 
 #endif

@@ -1,5 +1,11 @@
 publish/*.lib
-.vscode/
-out/
 *Makefile*
 *.mk
+*.opendb
+*.db
+*.vcxproj.user
+
+x64/
+.vs/
+.vscode/
+out/

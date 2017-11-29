@@ -4,6 +4,7 @@
 #include "monitor.h"
 #include "mem_pool.h"
 #include "ihandler.h"
+#include "defines.h"
 
 namespace VK {
 	namespace Net {

@@ -2,6 +2,7 @@
 // ported from boost/any.h
 // implemented with STL
 #include <algorithm>
+#include <typeinfo>
 
 namespace VK {
 	// template class disable_if
@@ -86,7 +87,7 @@ namespace VK {
 			any().swap(*this);
 		}
 
-		const type_info& type() const {
+		const std::type_info& type() const {
 			return content ? content->type() : typeid(void);
 		}
 
@@ -96,7 +97,7 @@ namespace VK {
 			virtual ~placeholder() { }
 
 			// queries
-			virtual const type_info& type() const = 0;
+			virtual const std::type_info& type() const = 0;
 			virtual placeholder* clone() const = 0;
 		};
 
@@ -110,7 +111,7 @@ namespace VK {
 				: held(static_cast<ValueType&&>(value)) { }
 
 			// queries
-			const type_info& type() const override {
+			const std::type_info& type() const override {
 				return typeid(ValueType);
 			}
 
@@ -138,7 +139,7 @@ namespace VK {
 
 	class bad_any_cast : public std::bad_cast {
 	public:
-		const char* what() const override {
+		const char* what() const noexcept override {
 			return "boost::bad_any_cast: "
 					"failed conversion using boost::any_cast";
 		}

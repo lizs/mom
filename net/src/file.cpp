@@ -5,7 +5,7 @@
 namespace VK {
 	bool make_dir(const std::string & relative) {
 		char path[256] = {0};
-		strncpy_s(path, relative.c_str(), sizeof(path));
+		strncpy(path, relative.c_str(), sizeof(path));
 
 		return make_dir(path);
 	}

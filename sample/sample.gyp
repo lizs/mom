@@ -1,0 +1,32 @@
+{
+    'targets':[
+        {
+            # sample
+            'target_name':'sample',
+            'type':'excutable',
+            'include_dirs':[
+                '.',
+                '../net/include',
+                '../third/libuv/include',
+                '../third/spdlog/include',
+            ],
+            'sources':[
+                'main.cpp'
+            ] 
+            'conditions':[  
+                ['OS=="win"',
+                {  
+                    'cflags':[],  
+                    'ldflags':[]  
+                },
+                {  
+                    'cflags':[  
+                        '--std=c++14',  
+                    ],  
+                    'ldflags':[]  
+                }  
+                ],  
+            ]  
+        }
+    ]
+}

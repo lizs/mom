@@ -13,16 +13,6 @@
 #define LOG_ERROR(msg, ...)          VK::Logger::instance().error(msg, ##__VA_ARGS__)
 
 namespace VK {
-#define _LOG_(level, fmt, ...) \
-	if (m_console){	\
-		m_console->#level(fmt, args...);	\
-	}else{	\
-		PRINT(fmt, args...);	\
-	}	\
-	if	(m_daily)	\
-		m_daily->#level(fmt, args...);	\
-
-
 	enum LogLevel {
 		trace = 0,
 		debug = 1,
@@ -39,33 +29,74 @@ namespace VK {
 		std::shared_ptr<spdlog::logger> m_console;
 		std::shared_ptr<spdlog::logger> m_daily;
 
+	private:
+		template <typename... Args>
+		static void log(std::shared_ptr<spdlog::logger> logger, LogLevel level, const char* fmt, const Args&... args) {
+			switch (level) {
+				case LogLevel::trace:
+					logger->trace(fmt, args...);
+					break;
+				case LogLevel::debug:
+					logger->debug(fmt, args...);
+					break;
+				case LogLevel::info:
+					logger->info(fmt, args...);
+					break;
+				case LogLevel::warn:
+					logger->warn(fmt, args...);
+					break;
+				case err:
+					logger->error(fmt, args...);
+					break;
+				case critical:
+					logger->critical(fmt, args...);
+					break;
+				case off:
+				default: break;
+			}
+		}
+
+		template <typename... Args>
+		void log(LogLevel level, const char* fmt, const Args&... args) {
+			if (m_console) {
+				log(m_console, level, fmt, args...);
+			}
+			else {
+				PRINT(fmt, args...);
+			}
+
+			if (m_daily) {
+				log(m_daily, level, fmt, args...);
+			}
+		}
+
 	public:
 		bool start(const char* path, LogLevel level = LogLevel::trace);
 		static void stop();
 
 		template <typename... Args>
 		void trace(const char* fmt, const Args&... args) {
-			//_LOG_(trace, fmt, args...);
+			log(LogLevel::trace, fmt, args...);
 		}
 
 		template <typename... Args>
 		void debug(const char* fmt, const Args&... args) {
-			//_LOG_(debug, fmt, args...);
+			log(LogLevel::debug, fmt, args...);
 		}
 
 		template <typename... Args>
 		void info(const char* fmt, const Args&... args) {
-			//_LOG_(info, fmt, args...);
+			log(LogLevel::info, fmt, args...);
 		}
 
 		template <typename... Args>
 		void warn(const char* fmt, const Args&... args) {
-			//_LOG_(warn, fmt, args...);
+			log(LogLevel::warn, fmt, args...);
 		}
 
 		template <typename... Args>
 		void error(const char* fmt, const Args&... args) {
-			//_LOG_(error, fmt, args...);
+			log(LogLevel::err, fmt, args...);
 		}
 	};
 }

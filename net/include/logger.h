@@ -15,12 +15,12 @@
 namespace VK {
 #define _LOG_(level, fmt, ...) \
 	if (m_console){	\
-		m_console->##level(fmt, args...);	\
+		m_console->#level(fmt, args...);	\
 	}else{	\
 		PRINT(fmt, args...);	\
 	}	\
 	if	(m_daily)	\
-		m_daily->##level(fmt, args...);	\
+		m_daily->#level(fmt, args...);	\
 
 
 	enum LogLevel {

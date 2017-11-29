@@ -1,2 +1,5 @@
 publish/*.lib
 .vscode/
+.out/
+*Makefile*
+*.mk

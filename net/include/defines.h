@@ -16,6 +16,7 @@
 #include "uv.h"
 #include <memory>
 #include <functional>
+#include <string.h> // for linux memset
 
 #pragma region("≈‰÷√")
 #define MESSAGE_TRACK_ENABLED false

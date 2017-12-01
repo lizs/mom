@@ -7,31 +7,31 @@
 
 namespace VK {
 #define SINGLETON(T) \
-		friend class std::shared_ptr<T>; \
 	public:\
 		static T& instance() {	\
-			static std::shared_ptr<T> _ins;\
+			static T* _ins;\
 			if (!_ins) {			\
-				_ins = std::make_shared<T>();\
+				_ins = new T();\
 			}\
 			return *_ins;	\
 	}\
-	T() = default;\
-	~T() = default;
+	private:	\
+		T() = default;\
+		~T() = default;
 
 
 #define CUSTOM_SINGLETON(T) \
-		friend class std::shared_ptr<T>; \
 	public:\
 		static T& instance() {	\
-			static std::shared_ptr<T> _ins;\
+			static T* _ins;\
 			if (!_ins) {			\
-				_ins = std::make_shared<T>();\
+				_ins =new T();\
 			}\
 			return *_ins;	\
 	}\
-	T();\
-	~T(){};
+	private:\
+		T();\
+		~T(){};
 }
 
 #endif

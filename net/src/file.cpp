@@ -30,7 +30,7 @@ namespace VK {
 
 			ret = uv_fs_mkdir(loop, &req, cur.c_str(), 0, nullptr);
 			if (ret && ret != UV_EEXIST) {
-				printf(uv_strerror(ret));
+				printf("%s", uv_strerror(ret));
 
 				return false;
 			}

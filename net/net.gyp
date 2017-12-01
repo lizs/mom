@@ -21,7 +21,7 @@
                 'src/str.cpp',
                 'src/tcp_client.cpp',
                 'src/tcp_server.cpp'
-            ] 
+            ],
             'conditions':[  
                 ['OS=="win"',
                 {  

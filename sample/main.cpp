@@ -3,21 +3,49 @@
 #include "any_test.h"
 #include "net_test.h"
 
-int main(int argc, char** argv) {
+static std::map<std::string, std::string> parse_command_line(int argc, char* argv[]) {
+	std::map<std::string, std::string> dic;
 
-	//srand(time(0));
+	std::string key = "";
+	for (auto i = 0; i < argc; ++i) {
+		auto str = std::string(argv[i]);
+		if (str.find("-") != std::string::npos) {
+			key.clear();
+			key.reserve(str.length());
+			for (auto c : str) {
+				if (c != '-') {
+					key += (c);
+				}
+			}
+			dic[key] = "";
+		}
+		else {
+			dic[key] = argv[i];
+		}
+	}
 
-	//std::vector<cbuf_ptr_t> pcbs;
-	//for(auto i = 0; i < 1000; ++i) {
-	//	auto len = rand() % 8 * 1023 + 1;
-	//	auto pcb = alloc_cbuf(len);
-	//	pcb->move_tail(len);
-	//	pcbs.push_back(pcb);
-	//}
+	return std::move(dic);
+}
 
-	//pcbs.clear();
-	//return 0;
-	
+int main(int argc, char** argv) {	
+	// ½âÎöÃüÁîÐÐ
+	auto dic = std::move(parse_command_line(argc, argv));
+	for (auto& kv : dic) {
+		if (kv.first == "c" || kv.first == "config") {
+		}
+		else if (kv.first == "ll" || kv.first == "loglevel") {
+		}
+		else if (kv.first == "i" || kv.first == "id") {
+		}
+		else if (kv.first == "ds" || kv.first == "distributestep") {
+		}
+		else if (kv.first == "af" || kv.first == "address4frontend") {
+		}
+		else if (kv.first == "ab" || kv.first == "address4backend") {
+		}
+	}
+
+
 	if(argc > 1) {
 		VK::Logger::instance().start(argv[1]);
 

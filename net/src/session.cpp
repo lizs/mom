@@ -346,7 +346,7 @@ namespace VK {
 
 					if (m_handler) {
 						auto _this = shared_from_this();
-						m_handler->on_req(shared_from_this(), pcb, [_this, serial](error_no_t en, cbuf_ptr_t pcb) {
+						m_handler->on_req(_this, pcb, [_this, serial](error_no_t en, cbuf_ptr_t pcb) {
 							                  _this->response(en, serial, pcb, nullptr);
 						                  });
 					}
@@ -448,7 +448,7 @@ namespace VK {
 			}
 		}
 
-		void Session::get_addr_info(const char* host, int port, std::function<void(bool, sockaddr*)> cb) const {
+		void Session::get_addr_info(const char* host, int port, std::function<void(bool, sockaddr*)> cb) {
 			auto greq = alloc_getaddr_req();
 			greq->cb = cb;
 

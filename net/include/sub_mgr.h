@@ -43,6 +43,15 @@ namespace VK {
 				multicast(pcb, sessions);
 			}
 
+			session_ptr_t get_unique(const std::string& sub) {
+				auto& mgr = (*this)[sub];
+				if (mgr.count() > 1)
+					return nullptr;
+
+				auto s = mgr.get_first();
+				return s == nullptr ? nullptr : s->lock();
+			}
+
 		private:
 #pragma region ("multicast")
 			void multicast(cbuf_ptr_t pcb, std::vector<session_wk_ptr_t>& sessions) const {

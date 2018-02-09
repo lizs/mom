@@ -91,7 +91,7 @@ namespace VK {
 
 			// stop read
 			void stop_read();
-			void get_addr_info(const char* host, int port, std::function<void(bool, sockaddr*)> cb) const;
+			static void get_addr_info(const char* host, int port, std::function<void(bool, sockaddr*)> cb);
 			void connect(sockaddr* addr);
 
 		private:

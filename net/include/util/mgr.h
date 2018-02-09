@@ -205,6 +205,10 @@ namespace VK {
 			return m_items.find(id) != m_items.end();
 		}
 
+		size_t count() {
+			return m_items.size();
+		}
+
 		bool contains(std::function<bool(const_value_ref_t)> predicate) {
 			auto it = std::find_if(m_items.begin(), m_items.end(), [predicate](auto it) {
 				                       return predicate(it->second);

@@ -75,6 +75,8 @@ namespace VK {
 
 			template <typename T>
 			bool get(T& out, cbuf_offset_t offset = 0);
+
+			bool read_str(char* buf, cbuf_len_t len);
 		};
 
 		template <typename T>

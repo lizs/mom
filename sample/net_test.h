@@ -31,8 +31,8 @@ class ServerHandler : public VK::Net::IHandler {
 	}
 };
 
-static void run_server() {
-	auto server = std::make_shared<TcpServer>("127.0.0.1", 5002, std::make_shared<ServerHandler>());
+static void run_server(const char* ip, int port) {
+	auto server = std::make_shared<TcpServer>(ip, port, std::make_shared<ServerHandler>());
 	server->startup();
 
 	RUN_UV_DEFAULT_LOOP();
@@ -91,10 +91,10 @@ class ClientHandler : public VK::Net::IHandler {
 	}
 };
 
-static void run_client_test(int cnt) {
+static void run_client_test(const char* ip, int port, int cnt) {
 	std::vector<std::shared_ptr<TcpClient>> clients;
 	for (auto i = 0; i < cnt; ++i) {
-		clients.push_back(std::make_shared<TcpClient>("127.0.0.1", 5002, std::make_shared<ClientHandler>()));
+		clients.push_back(std::make_shared<TcpClient>(ip, port, std::make_shared<ClientHandler>()));
 	}
 
 	for (auto client : clients) {

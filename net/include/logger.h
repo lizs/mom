@@ -3,6 +3,7 @@
 #ifndef MOM_LOGGER_H
 #define MOM_LOGGER_H
 
+#include "defines.h"
 #include "singleton.h"
 #include  <spdlog/logger.h>
 

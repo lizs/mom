@@ -2,9 +2,6 @@
 #ifndef MOM_SINGLETON_H
 #define MOM_SINGLETON_H
 
-#include "defines.h"
-#include <memory>
-
 namespace VK {
 #define SINGLETON(T) \
 	public:\

@@ -106,14 +106,12 @@
 	} while (0)
 
 /* Fully close a loop */
-static void close_walk_cb(uv_handle_t *handle, void *arg)
-{
+static void close_walk_cb(uv_handle_t* handle, void* arg) {
 	if (!uv_is_closing(handle))
 		uv_close(handle, nullptr);
 }
 
-static void close_loop(uv_loop_t *loop)
-{
+static void close_loop(uv_loop_t* loop) {
 	uv_walk(loop, close_walk_cb, nullptr);
 	uv_run(loop, UV_RUN_DEFAULT);
 }
@@ -151,22 +149,20 @@ typedef int16_t cbuf_offset_t;
 typedef uint8_t pattern_t;
 typedef uint8_t component_id_t;
 
-namespace VK
-{
-namespace Net
-{
-class Session;
-class CircularBuf;
-class Monitor;
-struct IPeerHandler;
-struct IHandler;
+namespace VK {
+	namespace Net {
+		class Session;
+		class CircularBuf;
+		class Monitor;
+		struct IPeerHandler;
+		struct IHandler;
 
-template <typename T, size_t Capacity = 1024>
-class MemoryPool;
-}
+		template <typename T, size_t Capacity = 1024>
+		class MemoryPool;
+	}
 
-template <typename T>
-class _singleton_;
+	template <typename T>
+	class _singleton_;
 }
 
 typedef VK::Net::Session session_t;
@@ -189,15 +185,14 @@ typedef std::function<void(error_no_t, cbuf_ptr_t)> resp_cb_t;
 
 typedef std::function<void(session_ptr_t, cbuf_ptr_t, resp_cb_t)> req_handler_t;
 typedef std::function<void(session_ptr_t, cbuf_ptr_t)> push_handler_t;
-typedef std::function<void(session_ptr_t, const char *, cbuf_ptr_t)> pub_handler_t;
-typedef std::function<void(session_ptr_t, const char *)> sub_handler_t;
+typedef std::function<void(session_ptr_t, const char*, cbuf_ptr_t)> pub_handler_t;
+typedef std::function<void(session_ptr_t, const char*)> sub_handler_t;
 
 #pragma endregion
 
 #pragma region("enums")
 
-enum Pattern : pattern_t
-{
+enum Pattern : pattern_t {
 	Push,
 	Request,
 	Response,
@@ -208,15 +203,17 @@ enum Pattern : pattern_t
 	Pub
 };
 
-enum NetError : error_no_t
-{
+enum NetError : error_no_t {
 	Success = 0,
+	NE_ExceptionCatched,
 	NE_Write,
 	NE_Read,
+	NE_RequestDataIsEmpty,
 	NE_SerialConflict,
 	NE_NoHandler,
 	NE_ReadErrorNo,
 	NE_SessionClosed,
+	NE_SubOverflow,
 	NE_End,
 };
 
@@ -234,33 +231,28 @@ enum NetError : error_no_t
 #define alloc_write_req() alloc_req(write_req_t)
 #define release_write_req(req) release_req(write_req_t, req)
 
-struct write_req_t
-{
+struct write_req_t {
 	uv_write_t req;
 	send_cb_t cb;
 	session_ptr_t session;
 	cbuf_ptr_t pcb_array[MAX_SLICE_COUNT];
 	uv_buf_t uv_buf_array[MAX_SLICE_COUNT];
 
-	write_req_t()
-	{
+	write_req_t() {
 		clear();
 	}
 
-	~write_req_t()
-	{
+	~write_req_t() {
 		clear();
 	}
 
-	void clear()
-	{
+	void clear() {
 		memset(&req, 0, sizeof(req));
 		memset(uv_buf_array, 0, sizeof(uv_buf_array));
 		cb = nullptr;
 		session = nullptr;
 
-		for (auto i = 0; i < MAX_SLICE_COUNT; ++i)
-		{
+		for (auto i = 0; i < MAX_SLICE_COUNT; ++i) {
 			pcb_array[i] = nullptr;
 		}
 	}
@@ -269,45 +261,37 @@ struct write_req_t
 #define alloc_connect_req() alloc_req(connect_req_t)
 #define release_connect_req(req) release_req(connect_req_t, req)
 
-struct connect_req_t
-{
+struct connect_req_t {
 	uv_connect_t req;
 	session_wk_ptr_t session;
 
-	connect_req_t()
-	{
+	connect_req_t() {
 		clear();
 	}
 
-	~connect_req_t()
-	{
+	~connect_req_t() {
 		clear();
 	}
 
-	void clear()
-	{
+	void clear() {
 		memset(&req, 0, sizeof(req));
 		session.reset();
 	}
 };
 
-struct read_req_t
-{
+struct read_req_t {
 	uv_tcp_t stream;
 	session_wk_ptr_t session;
 
-	read_req_t()
-	{
+	read_req_t() {
 		clear();
 	}
 
-	~read_req_t()
-	{
+	~read_req_t() {
 		clear();
 	}
 
-	void clear()
-	{
+	void clear() {
 		memset(&stream, 0, sizeof(stream));
 		session.reset();
 	}
@@ -316,24 +300,20 @@ struct read_req_t
 #define alloc_shutdown_req() alloc_req(shutdown_req_t)
 #define release_shutdown_req(req) release_req(shutdown_req_t, req)
 
-struct shutdown_req_t
-{
+struct shutdown_req_t {
 	uv_shutdown_t req;
 	session_wk_ptr_t session;
 	std::function<void(session_ptr_t)> cb;
 
-	shutdown_req_t()
-	{
+	shutdown_req_t() {
 		clear();
 	}
 
-	~shutdown_req_t()
-	{
+	~shutdown_req_t() {
 		clear();
 	}
 
-	void clear()
-	{
+	void clear() {
 		memset(&req, 0, sizeof(req));
 		session.reset();
 		cb = nullptr;
@@ -343,23 +323,19 @@ struct shutdown_req_t
 #define alloc_getaddr_req() alloc_req(getaddr_req_t)
 #define release_getaddr_req(req) release_req(getaddr_req_t, req)
 
-struct getaddr_req_t
-{
+struct getaddr_req_t {
 	uv_getaddrinfo_t req;
-	std::function<void(bool, sockaddr *)> cb;
+	std::function<void(bool, sockaddr*)> cb;
 
-	getaddr_req_t()
-	{
+	getaddr_req_t() {
 		clear();
 	}
 
-	~getaddr_req_t()
-	{
+	~getaddr_req_t() {
 		clear();
 	}
 
-	void clear()
-	{
+	void clear() {
 		memset(&req, 0, sizeof(req));
 		cb = nullptr;
 	}

@@ -1,6 +1,4 @@
 publish/*.lib
-*Makefile*
-*.mk
 *.opendb
 *.db
 *.vcxproj.user
